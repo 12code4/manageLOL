@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+
+# test / coverage
+coverage/
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# local env
+.env
+.env.local
+
+# saves produced by devtools runs
+*.save.json
+/tmp-saves/

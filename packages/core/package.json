@@ -1,0 +1,19 @@
+{
+  "name": "@managelol/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The manageLOL simulation engine: pure, deterministic, no UI/DOM dependencies.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@managelol/data": "workspace:*"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "managelol",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A single-player management game about running a professional League of Legends team.",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b",
+    "sim": "tsx packages/devtools/src/simulate.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
