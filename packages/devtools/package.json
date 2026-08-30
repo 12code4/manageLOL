@@ -1,0 +1,15 @@
+{
+  "name": "@managelol/devtools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless CLI: generate a world, simulate seasons, print balance reports.",
+  "scripts": {
+    "sim": "tsx src/simulate.ts",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@managelol/core": "workspace:*",
+    "@managelol/data": "workspace:*"
+  }
+}

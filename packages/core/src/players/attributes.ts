@@ -197,38 +197,38 @@ export function readAttr(p: Player, key: AttrKey): number | undefined {
   const meta = ATTR_BY_KEY[key];
   switch (meta.group) {
     case 'mechanical':
-      return (a.mechanical as Record<string, number>)[key];
+      return (a.mechanical as unknown as Record<string, number>)[key];
     case 'gameKnowledge':
-      return (a.gameKnowledge as Record<string, number>)[key];
+      return (a.gameKnowledge as unknown as Record<string, number>)[key];
     case 'mental':
-      return (a.mental as Record<string, number>)[key];
+      return (a.mental as unknown as Record<string, number>)[key];
     case 'growth':
-      return (a.growth as Record<string, number>)[key];
+      return (a.growth as unknown as Record<string, number>)[key];
     case 'brand':
-      return (a.brand as Record<string, number>)[key];
+      return (a.brand as unknown as Record<string, number>)[key];
     case 'state':
-      return (p.state as Record<string, number>)[key];
+      return (p.state as unknown as Record<string, number>)[key];
     case 'personality':
       // ambition/loyalty/professionalism are numeric; nationality/residency are not.
       return key === 'nationality' || key === 'residencyRegion'
         ? undefined
-        : (a.personality as Record<string, number>)[key];
+        : (a.personality as unknown as Record<string, number>)[key];
     case 'chemistryDriver':
       // preferredArchetype (enum) and languageIds (array) are non-numeric.
       return key === 'preferredArchetype' || key === 'languageIds'
         ? undefined
-        : (a.chemistry as Record<string, number>)[key];
+        : (a.chemistry as unknown as Record<string, number>)[key];
     case 'roleAptitude': {
       if (key === 'primaryRole' || key === 'secondaryRole') return undefined;
       if (key === 'roleFlexibility') return a.roleAptitude.roleFlexibility;
       // roleAptitudeTop → top, etc.
       const role = key.slice('roleAptitude'.length).toLowerCase();
-      return (a.roleAptitude as Record<string, number>)[role];
+      return (a.roleAptitude as unknown as Record<string, number>)[role];
     }
     case 'championAptitude': {
       // aptTankEngage → tankEngage
       const arch = key.charAt(3).toLowerCase() + key.slice(4);
-      return (a.championAptitude as Record<string, number>)[arch];
+      return (a.championAptitude as unknown as Record<string, number>)[arch];
     }
     default:
       return undefined;

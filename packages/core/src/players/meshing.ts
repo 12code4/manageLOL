@@ -142,7 +142,7 @@ export function initRosterChemistry(lineup: Lineup): RosterChemistry {
  * (full scrim week ≈ 1.0, plus official games). Pure; no RNG.
  */
 export function rampWeek(chem: RosterChemistry, lineup: Lineup, gel: number): void {
-  const byId = new Map(Object.values(lineup).map((p) => [p.id, p]));
+  const byId = new Map<string, Player>(Object.values(lineup).map((p) => [p.id as string, p]));
   for (const key of Object.keys(chem.pairs).sort()) {
     const pc = chem.pairs[key]!;
     const a = byId.get(pc.a);
@@ -160,7 +160,7 @@ export function rampWeek(chem: RosterChemistry, lineup: Lineup, gel: number): vo
  */
 export function onLineupChange(prev: RosterChemistry, newLineup: Lineup): RosterChemistry {
   const players = Object.values(newLineup);
-  const ids = new Set(players.map((p) => p.id));
+  const ids = new Set<string>(players.map((p) => p.id as string));
   const pairs: Record<string, PairChem> = {};
   for (let i = 0; i < players.length; i++) {
     for (let j = i + 1; j < players.length; j++) {
@@ -193,8 +193,8 @@ function maxSharedLangCount(lineup: Lineup): number {
 
 /** Collapse the matrix + team gates into the match-sim multiplier (design §4). */
 export function computeCohesion(chem: RosterChemistry, lineup: Lineup): CohesionBreakdown {
-  const roleById = new Map(
-    (Object.entries(lineup) as [Role, Player][]).map(([role, p]) => [p.id, role]),
+  const roleById = new Map<string, Role>(
+    (Object.entries(lineup) as [Role, Player][]).map(([role, p]) => [p.id as string, role]),
   );
 
   let weighted = 0;

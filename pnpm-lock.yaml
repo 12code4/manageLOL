@@ -26,6 +26,15 @@ importers:
 
   packages/data: {}
 
+  packages/devtools:
+    dependencies:
+      '@managelol/core':
+        specifier: workspace:*
+        version: link:../core
+      '@managelol/data':
+        specifier: workspace:*
+        version: link:../data
+
 packages:
 
   '@esbuild/aix-ppc64@0.21.5':

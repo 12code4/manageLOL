@@ -85,7 +85,7 @@ export function roleCoreRating(a: PlayerAttributes, role: Role): number {
   let sum = 0;
   for (const [key, w] of Object.entries(weights)) {
     const k = key as keyof MechanicalAttrs | keyof GameKnowledgeAttrs;
-    const v = (a.mechanical as Record<string, number>)[k] ?? (a.gameKnowledge as Record<string, number>)[k] ?? 0;
+    const v = (a.mechanical as unknown as Record<string, number>)[k] ?? (a.gameKnowledge as unknown as Record<string, number>)[k] ?? 0;
     sum += v * (w as number);
   }
   return sum;
