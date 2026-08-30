@@ -1,0 +1,1202 @@
+<title>manageLOL Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* ============================ tokens ============================ */
+:root{
+  --bg:#0d1016; --grid:rgba(120,140,170,.04);
+  --surface:#151a22; --surface-2:#1b212b; --surface-3:#222a35;
+  --line:#2a3340; --line-soft:#1f2530;
+  --ink:#e7eaf1; --muted:#93a0b4; --faint:#606d7e;
+  --gold:#e3b24d; --gold-deep:#b98a2e; --gold-ghost:rgba(227,178,77,.12);
+  --gel:#4bc08d; --toxic:#e46a5e; --info:#65a1e6; --warn:#e0a94a;
+  --shadow:0 12px 30px -12px rgba(0,0,0,.6);
+  --r:6px; --r-lg:10px;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#e7eaf0; --grid:rgba(30,50,90,.05);
+  --surface:#ffffff; --surface-2:#f1f4f9; --surface-3:#e7ecf3;
+  --line:#d2d9e3; --line-soft:#e4e8ef;
+  --ink:#141b28; --muted:#54607394; --muted:#556074; --faint:#8b95a6;
+  --gold:#9a7413; --gold-deep:#7d5f0f; --gold-ghost:rgba(154,116,19,.10);
+  --gel:#1f9160; --toxic:#c1493d; --info:#2f68c0; --warn:#b57d18;
+  --shadow:0 10px 26px -14px rgba(20,30,60,.28);
+  color-scheme:light;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1016; --grid:rgba(120,140,170,.04);
+  --surface:#151a22; --surface-2:#1b212b; --surface-3:#222a35;
+  --line:#2a3340; --line-soft:#1f2530;
+  --ink:#e7eaf1; --muted:#93a0b4; --faint:#606d7e;
+  --gold:#e3b24d; --gold-deep:#b98a2e; --gold-ghost:rgba(227,178,77,.12);
+  --gel:#4bc08d; --toxic:#e46a5e; --info:#65a1e6; --warn:#e0a94a;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:14px; line-height:1.5;
+  background-image:radial-gradient(var(--grid) 1px, transparent 1px);
+  background-size:22px 22px;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.cond{font-family:"Barlow Condensed","Arial Narrow",sans-serif}
+button{font-family:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:3px}
+::selection{background:var(--gold-ghost)}
+
+/* ============================ app shell ============================ */
+.app{display:grid;grid-template-columns:216px 1fr;grid-template-rows:52px 1fr;height:100vh;height:100dvh}
+.topbar{
+  grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 16px;
+  border-bottom:1px solid var(--line);background:linear-gradient(var(--surface),var(--bg));
+}
+.brand{font-family:"Barlow Condensed";font-weight:700;font-size:22px;letter-spacing:.02em;line-height:1}
+.brand b{color:var(--gold)}
+.brand .tag{font-family:"IBM Plex Mono";font-size:9.5px;letter-spacing:.18em;color:var(--faint);
+  text-transform:uppercase;display:block;margin-top:1px;font-weight:500}
+.stat-strip{margin-left:auto;display:flex;gap:6px;align-items:stretch}
+.stat{
+  display:flex;flex-direction:column;justify-content:center;padding:4px 12px;min-width:74px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);
+}
+.stat .k{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+.stat .v{font-family:"IBM Plex Mono";font-weight:600;font-size:15px;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat .v.gold{color:var(--gold)}
+.iconbtn{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);
+  border-radius:var(--r);background:var(--surface)}
+.iconbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ---- left rail ---- */
+.rail{border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;
+  padding:12px 10px;gap:3px;overflow:auto}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r);color:var(--muted);
+  border:1px solid transparent;background:none;width:100%;text-align:left;font-size:13.5px;font-weight:500}
+.nav svg{width:17px;height:17px;flex:none;stroke-width:1.7}
+.nav:hover{background:var(--surface-2);color:var(--ink)}
+.nav.active{background:var(--gold-ghost);color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent)}
+.nav .badge{margin-left:auto;font-family:"IBM Plex Mono";font-size:10px;padding:1px 6px;border-radius:20px;
+  background:var(--surface-3);color:var(--muted)}
+.nav.active .badge{background:var(--gold);color:#1a1206}
+.rail-sep{height:1px;background:var(--line-soft);margin:10px 4px}
+.rail-title{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);padding:2px 11px 6px}
+
+/* ---- pyramid mini ---- */
+.pyr{display:flex;flex-direction:column-reverse;gap:3px;padding:0 8px}
+.pyr .step{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;font-size:12px;
+  color:var(--faint);border:1px solid transparent;position:relative}
+.pyr .dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex:none}
+.pyr .step.done{color:var(--muted)}
+.pyr .step.done .dot{background:var(--gel)}
+.pyr .step.cur{color:var(--gold);background:var(--gold-ghost);border-color:color-mix(in srgb,var(--gold) 25%,transparent)}
+.pyr .step.cur .dot{background:var(--gold);box-shadow:0 0 0 3px var(--gold-ghost)}
+
+/* ---- main ---- */
+.main{overflow:auto;padding:20px 24px 40px}
+.screen-head{margin-bottom:16px}
+.eyebrow{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 4px}
+h1.title{font-family:"Barlow Condensed";font-weight:700;font-size:30px;letter-spacing:.01em;margin:0;line-height:1}
+.sub{color:var(--muted);font-size:13px;margin:5px 0 0;max-width:70ch}
+
+/* ============================ generic bits ============================ */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--r);
+  border:1px solid var(--line);background:var(--surface-2);font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--gold);color:#1a1206;border-color:var(--gold)}
+.btn.primary:hover{filter:brightness(1.06);color:#1a1206}
+.btn.ghost{background:none}
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:"IBM Plex Mono";font-size:10.5px;
+  padding:2px 8px;border-radius:20px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.good{color:var(--gel);border-color:color-mix(in srgb,var(--gel) 40%,transparent);background:color-mix(in srgb,var(--gel) 10%,transparent)}
+.pill.bad{color:var(--toxic);border-color:color-mix(in srgb,var(--toxic) 40%,transparent);background:color-mix(in srgb,var(--toxic) 10%,transparent)}
+.pill.info{color:var(--info);border-color:color-mix(in srgb,var(--info) 40%,transparent);background:color-mix(in srgb,var(--info) 10%,transparent)}
+.pill.gold{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 40%,transparent);background:var(--gold-ghost)}
+.role-tag{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* tier gem badge */
+.gem{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Mono";font-size:11px;font-weight:600}
+.gem i{width:11px;height:11px;transform:rotate(45deg);border-radius:2px;display:inline-block;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+
+/* ============================ scout screen ============================ */
+.scout-grid{display:grid;grid-template-columns:1fr 372px;gap:18px;align-items:start}
+@media(max-width:1080px){.scout-grid{grid-template-columns:1fr}}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+select,input[type=text]{font-family:inherit;font-size:12.5px;background:var(--surface-2);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--r);padding:6px 9px}
+.ladder{width:100%;border-collapse:collapse}
+.ladder thead th{font-family:"IBM Plex Mono";font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);text-align:left;padding:0 10px 8px;font-weight:500;position:sticky;top:0;background:var(--bg)}
+.ladder td{padding:9px 10px;border-top:1px solid var(--line-soft)}
+.ladder tbody tr{cursor:pointer}
+.ladder tbody tr:hover{background:var(--surface)}
+.ladder tbody tr.sel{background:var(--gold-ghost);box-shadow:inset 2px 0 0 var(--gold)}
+.ladder tbody tr.signed{opacity:.42}
+.handle{font-family:"Barlow Condensed";font-weight:600;font-size:16.5px;letter-spacing:.01em}
+.wr{font-family:"IBM Plex Mono";font-size:12px;color:var(--muted)}
+.flagline{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+
+/* detail panel */
+.detail{position:sticky;top:0}
+.detail .dh{padding:16px 16px 12px;border-bottom:1px solid var(--line)}
+.detail .db{padding:14px 16px}
+.detail .empty{padding:40px 20px;text-align:center;color:var(--faint);font-size:13px}
+.fog-row{margin:0 0 9px}
+.fog-row .lab{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.fog-row .lab .nm{color:var(--muted)}
+.fog-row .lab .rd{font-family:"IBM Plex Mono";font-size:11px;color:var(--ink)}
+.track{position:relative;height:8px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+.band{position:absolute;top:0;bottom:0;border-radius:5px;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--gold) 55%,transparent),transparent);
+  transition:left .5s cubic-bezier(.4,0,.2,1),right .5s cubic-bezier(.4,0,.2,1)}
+.band.exact{background:var(--gold)}
+.mark{position:absolute;top:-2px;width:2px;height:12px;background:var(--ink);border-radius:2px}
+.scoutbar{display:flex;align-items:center;gap:8px;margin:6px 0 14px}
+.confbar{flex:1;height:5px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+.confbar i{display:block;height:100%;background:var(--info);width:0;transition:width .4s}
+
+/* ============================ squad screen ============================ */
+.squad-grid{display:grid;grid-template-columns:1fr 440px;gap:18px;align-items:start}
+@media(max-width:1080px){.squad-grid{grid-template-columns:1fr}}
+.slot-row{display:flex;flex-direction:column;gap:8px}
+.pcard{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 14px}
+.pcard .rl{font-family:"Barlow Condensed";font-weight:700;font-size:12px;color:var(--gold);text-align:center;
+  border-right:1px solid var(--line-soft);padding-right:10px;letter-spacing:.05em;text-transform:uppercase}
+.pcard .nm{font-family:"Barlow Condensed";font-weight:600;font-size:19px;line-height:1}
+.pcard .meta{font-size:11px;color:var(--muted);margin-top:2px}
+.ov{font-family:"Barlow Condensed";font-weight:700;font-size:26px;line-height:1;text-align:center}
+.ov small{display:block;font-family:"IBM Plex Mono";font-size:8.5px;letter-spacing:.12em;color:var(--faint);font-weight:500}
+.mini-bars{display:flex;gap:9px;margin-top:7px;flex-wrap:wrap}
+.mb{font-size:10px;color:var(--muted)}
+.mb b{font-family:"IBM Plex Mono";color:var(--ink);font-weight:600}
+.state-chips{display:flex;gap:5px;margin-top:6px}
+.chip{font-family:"IBM Plex Mono";font-size:9.5px;padding:1px 6px;border-radius:4px;background:var(--surface-3);color:var(--muted)}
+.slot-empty{display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px dashed var(--line);
+  border-radius:var(--r-lg);color:var(--faint);background:repeating-linear-gradient(135deg,transparent,transparent 8px,var(--line-soft) 8px,var(--line-soft) 9px)}
+
+/* chemistry web */
+.web-wrap{padding:16px 16px 8px;text-align:center}
+.coh-label{font-family:"Barlow Condensed";font-weight:700;font-size:26px;line-height:1;margin-top:4px}
+.analyst{font-size:12.5px;color:var(--muted);padding:12px 16px;border-top:1px solid var(--line-soft);line-height:1.55}
+.analyst b{color:var(--ink);font-weight:600}
+.legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:8px 16px 14px;font-size:10px;color:var(--faint)}
+.legend i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+
+/* ============================ compete screen ============================ */
+.vs{display:grid;grid-template-columns:1fr 60px 1fr;gap:14px;align-items:center;margin-bottom:16px}
+.teamcard{padding:16px}
+.teamcard.you{border-color:color-mix(in srgb,var(--gold) 35%,var(--line))}
+.teamcard .tn{font-family:"Barlow Condensed";font-weight:700;font-size:22px;line-height:1}
+.teamcard .ts{font-family:"Barlow Condensed";font-weight:700;font-size:40px;line-height:1;margin-top:6px}
+.teamcard .ts small{font-family:"IBM Plex Mono";font-size:9px;letter-spacing:.12em;color:var(--faint);font-weight:500;display:block}
+.vs .mid{text-align:center;font-family:"Barlow Condensed";font-weight:700;color:var(--faint);font-size:18px}
+.wpbar{height:26px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--line);margin-bottom:16px;font-family:"IBM Plex Mono";font-size:11px;font-weight:600}
+.wpbar .you{background:var(--gold-ghost);color:var(--gold);display:flex;align-items:center;padding:0 10px}
+.wpbar .opp{background:var(--surface-2);color:var(--muted);display:flex;align-items:center;justify-content:flex-end;padding:0 10px;margin-left:auto}
+.games{display:flex;gap:8px;margin-bottom:14px}
+.gpip{flex:1;padding:8px;border-radius:6px;border:1px solid var(--line);text-align:center;font-size:11px;color:var(--muted);background:var(--surface)}
+.gpip.win{border-color:var(--gel);color:var(--gel)}
+.gpip.loss{border-color:var(--toxic);color:var(--toxic)}
+.timeline{list-style:none;margin:0;padding:0}
+.timeline li{padding:8px 0 8px 18px;border-left:2px solid var(--line);position:relative;font-size:12.5px;color:var(--muted);
+  opacity:0;transform:translateX(-4px);animation:reveal .35s forwards}
+.timeline li:before{content:"";position:absolute;left:-5px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+@keyframes reveal{to{opacity:1;transform:none}}
+.statline{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+.statline th{font-family:"IBM Plex Mono";font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:right;padding:4px 8px;font-weight:500}
+.statline th:first-child{text-align:left}
+.statline td{padding:5px 8px;border-top:1px solid var(--line-soft);text-align:right;font-family:"IBM Plex Mono";font-variant-numeric:tabular-nums}
+.statline td:first-child{text-align:left;font-family:"IBM Plex Sans"}
+.mvp{color:var(--gold)}
+
+/* ============================ sponsors ============================ */
+.sponsor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.sponsor{padding:16px;display:flex;flex-direction:column;gap:8px}
+.sponsor .snm{font-family:"Barlow Condensed";font-weight:700;font-size:20px;line-height:1}
+.sponsor .flav{font-size:11.5px;color:var(--muted);min-height:32px}
+.terms{display:flex;flex-direction:column;gap:5px;font-size:12px;margin:2px 0}
+.terms .t{display:flex;justify-content:space-between;color:var(--muted)}
+.terms .t b{font-family:"IBM Plex Mono";color:var(--ink);font-weight:600}
+
+/* inbox / log */
+.log{display:flex;flex-direction:column;gap:0;max-height:230px;overflow:auto}
+.log .li{padding:8px 2px;border-top:1px solid var(--line-soft);font-size:12px;display:flex;gap:9px;align-items:baseline}
+.log .li .wk{font-family:"IBM Plex Mono";font-size:10px;color:var(--faint);flex:none;width:38px}
+.log .li .tx{color:var(--muted)}
+.log .li .tx b{color:var(--ink);font-weight:600}
+
+/* toast */
+.toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.toast{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--r);
+  padding:11px 14px;box-shadow:var(--shadow);max-width:320px;font-size:13px;animation:pop .3s}
+.toast.good{border-left-color:var(--gel)} .toast.bad{border-left-color:var(--toxic)}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.section-label{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+.empty-note{color:var(--faint);font-size:13px;padding:24px;text-align:center}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important}}
+
+/* narrow */
+@media(max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:52px auto 1fr}
+  .rail{grid-row:2;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);padding:8px}
+  .nav{width:auto;white-space:nowrap} .rail-sep,.rail-title,.pyr{display:none}
+  .stat-strip .stat:nth-child(n+3){display:none}
+}
+</style>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand cond">manage<b>LOL</b><span class="tag">esports team manager · prototype</span></div>
+    <div class="stat-strip" id="stats"></div>
+    <button class="iconbtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </div>
+
+  <nav class="rail">
+    <button class="nav" data-screen="scout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M11 7v8M7 11h8M21 21l-4-4"/></svg><span>Scout the Ladder</span><span class="badge" id="nb-scout">0</span></button>
+    <button class="nav" data-screen="squad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M15 20c0-2.3 1-4 4-4s4 1.7 4 4"/></svg><span>Squad &amp; Chemistry</span><span class="badge" id="nb-squad">0/5</span></button>
+    <button class="nav" data-screen="compete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 4h10v4a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 15h6M8 20h8M12 13v2"/></svg><span>Compete</span></button>
+    <button class="nav" data-screen="sponsors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 12l-8 8-9-9V4h7zM7.5 7.5h.01"/></svg><span>Sponsors</span><span class="badge" id="nb-sponsors">0</span></button>
+    <div class="rail-sep"></div>
+    <div class="rail-title">The Climb</div>
+    <div class="pyr" id="pyr"></div>
+    <div class="rail-sep"></div>
+    <button class="nav" id="newGameBtn" style="color:var(--faint)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12a9 9 0 1 1 3 6.7M3 20v-5h5"/></svg><span>New career</span></button>
+  </nav>
+
+  <main class="main" id="main"></main>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* manageLOL — self-contained sim (faithful JS port of @managelol/core).
+   Same algorithms as packages/core; kept dependency-free for the prototype. */
+(function (root) {
+  'use strict';
+
+  // ---------- RNG (xmur3 + mulberry32) ----------
+  function xmur3(str) {
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    return function () {
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      h ^= h >>> 16;
+      return h >>> 0;
+    };
+  }
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function Rng(seed, stream) {
+    const s = xmur3(seed + '::' + stream);
+    this.next = mulberry32(s());
+    this._spare = null;
+  }
+  Rng.prototype.float = function () { return this.next(); };
+  Rng.prototype.range = function (lo, hi) { return lo + (hi - lo) * this.next(); };
+  Rng.prototype.int = function (lo, hi) { return Math.floor(this.range(lo, hi + 1)); };
+  Rng.prototype.chance = function (p) { return this.next() < Math.max(0, Math.min(1, p)); };
+  Rng.prototype.pick = function (arr) { return arr[Math.floor(this.next() * arr.length)]; };
+  Rng.prototype.normal = function () {
+    if (this._spare !== null) { const s = this._spare; this._spare = null; return s; }
+    const u1 = 1 - this.next(), u2 = this.next();
+    const mag = Math.sqrt(-2 * Math.log(u1));
+    this._spare = mag * Math.sin(2 * Math.PI * u2);
+    return mag * Math.cos(2 * Math.PI * u2);
+  };
+  Rng.prototype.gaussian = function (m, sd, lo, hi) {
+    let v = m + sd * this.normal();
+    if (lo !== undefined) v = Math.max(lo, v);
+    if (hi !== undefined) v = Math.min(hi, v);
+    return v;
+  };
+
+  const clamp = (x, lo, hi) => (x < lo ? lo : x > hi ? hi : x);
+  const c100 = (x) => clamp(x, 0, 100);
+  const mean = (xs) => xs.reduce((s, x) => s + x, 0) / xs.length;
+  const round = (x, dp) => { const f = Math.pow(10, dp || 0); return Math.round(x * f) / f; };
+  function winProb(diff, scale) { return 1 / (1 + Math.pow(10, -diff / (scale || 120))); }
+
+  // ---------- content: roles / archetypes / regions ----------
+  const ROLES = ['top', 'jungle', 'mid', 'bot', 'support'];
+  const ARCHES = ['tankEngage', 'skirmisher', 'assassin', 'scalingCarry', 'laneBully', 'controlMage', 'poke', 'enchanter', 'catcher', 'splitPush', 'earlyJungle'];
+  const ROLE_ARCH = {
+    top: ['tankEngage', 'skirmisher', 'splitPush', 'controlMage'],
+    jungle: ['earlyJungle', 'skirmisher', 'assassin', 'tankEngage', 'catcher'],
+    mid: ['assassin', 'controlMage', 'scalingCarry', 'poke', 'laneBully'],
+    bot: ['scalingCarry', 'laneBully', 'poke'],
+    support: ['enchanter', 'catcher', 'tankEngage'],
+  };
+  const REGIONS = {
+    kyo: { name: 'Kyorin', wealth: 1.05, langs: ['kyoril', 'common'], bias: { mechanics: 8, reflexes: 7, laning: 6, waveManagement: 5, consistency: 4, professionalism: 6, workEthic: 6, streamAppeal: -3 }, on: ['Se', 'Ky', 'Ji', 'Ha', 'Do', 'Mu', 'Ry', 'Ta', 'Wo', 'Bi', 'Gu', 'Sh'], nu: ['a', 'eo', 'u', 'i', 'o', 'ae', 'ya'], co: ['n', 'k', 'ng', 'l', 'm', 'ru', 'ho', ''] },
+    tia: { name: 'Tianxu', wealth: 1.5, langs: ['tianhua', 'common'], bias: { teamfighting: 7, playstyleAggression: 10, mechanics: 5, objectiveControl: 5, ego: 5, ambition: 6, mapAwareness: -2 }, on: ['Xi', 'Zh', 'Ru', 'Ka', 'Ll', 'Sh', 'Ti', 'Ya', 'Fo', 'We', 'Ji', 'Ma'], nu: ['a', 'ao', 'e', 'ai', 'ou', 'u', 'ei'], co: ['n', 'ng', 'o', 'i', 'x', 'ge', 'ke', ''] },
+    mer: { name: 'Meridia', wealth: 1.1, langs: ['meric', 'auran', 'common'], bias: { rotations: 7, shotcalling: 6, adaptability: 6, visionControl: 5, leadership: 5, communication: 6, mediaHandling: 4, mechanics: -3 }, on: ['Ca', 'Vi', 'Lu', 'Ma', 'Re', 'Th', 'Ni', 'Ga', 'Br', 'El', 'Or', 'Fe'], nu: ['a', 'e', 'i', 'o', 'au', 'ie', 'ea'], co: ['s', 'x', 'n', 'r', 'z', 'll', 'ne', ''] },
+    van: { name: 'Vantia', wealth: 1.55, langs: ['vanto', 'common'], bias: { starPower: 8, streamAppeal: 10, marketability: 8, fanbase: 6, ego: 4, mechanics: -2, professionalism: -3, consistency: -3 }, on: ['Ja', 'Ma', 'Da', 'Ko', 'Ze', 'Ni', 'Bl', 'Tr', 'Sn', 'Vi', 'Ra', 'Cl'], nu: ['a', 'e', 'i', 'o', 'u', 'ay', 'oo'], co: ['x', 'z', 'n', 'r', 'sh', 'ke', 'per', ''] },
+    wilds: { name: 'the Wilds', wealth: 0.5, langs: ['common'], bias: { potential: 4, playstyleRiskTaking: 8, consistency: -6, professionalism: -4, mechanics: 2 }, on: ['Ak', 'Zu', 'Ne', 'Ov', 'Ka', 'Ri', 'Ta', 'Yo', 'Mi', 'Du', 'Fa', 'Pe'], nu: ['a', 'e', 'i', 'o', 'u', 'ia', 'ou'], co: ['n', 'k', 's', 'r', 'm', 'to', 'vi', ''] },
+  };
+  function handle(rng, reg) {
+    const syl = () => rng.pick(reg.on) + rng.pick(reg.nu) + rng.pick(reg.co);
+    let h = syl();
+    if (rng.chance(0.35)) h += rng.pick(reg.nu) + rng.pick(reg.co);
+    h = h.charAt(0).toUpperCase() + h.slice(1).toLowerCase();
+    return h.slice(0, 10);
+  }
+
+  // ---------- player generation ----------
+  function genPlayer(rng, opts) {
+    const reg = REGIONS[opts.region];
+    const bias = reg.bias, c = opts.qualityCenter, sd = opts.spread || 8;
+    const b = (k) => c100(rng.gaussian(c + (bias[k] || 0), sd));
+    const ar = opts.ageRange || [16, 27];
+    const age = rng.int(ar[0], ar[1]);
+    const primaryRole = opts.primaryRole || rng.pick(ROLES);
+    const roleApt = {};
+    ROLES.forEach((r) => { if (r !== primaryRole) roleApt[r] = c100(rng.gaussian(c - 18, 12)); });
+    const bestOff = Math.max.apply(null, ROLES.filter((r) => r !== primaryRole).map((r) => roleApt[r]));
+    roleApt[primaryRole] = c100(Math.max(rng.gaussian(c + 12, 6), bestOff + rng.range(2, 8)));
+    const secondaryRole = ROLES.filter((r) => r !== primaryRole).sort((x, y) => roleApt[y] - roleApt[x])[0];
+    const preferredArchetype = rng.pick(ROLE_ARCH[primaryRole]);
+    const champ = {};
+    ARCHES.forEach((a) => { let v = rng.gaussian(c - 8, 10); if (ROLE_ARCH[primaryRole].indexOf(a) >= 0) v += 12; if (a === preferredArchetype) v += 10; champ[a] = c100(v); });
+    const peakAge = rng.int(20, 24), declineStartAge = peakAge + rng.int(1, 4);
+    const yearsToPeak = Math.max(0, peakAge - age);
+    const gapMean = yearsToPeak * 2.2 + (bias.potential || 0);
+    const reflexYouth = c100((peakAge - age) * 1.3);
+    const A = {
+      mechanical: { mechanics: b('mechanics'), laning: b('laning'), teamfighting: b('teamfighting'), reflexes: c100(c100(rng.gaussian(c + (bias.reflexes || 0), sd)) + reflexYouth - 4), positioning: b('positioning') },
+      gameKnowledge: { mapAwareness: b('mapAwareness'), waveManagement: b('waveManagement'), objectiveControl: b('objectiveControl'), visionControl: b('visionControl'), rotations: b('rotations'), adaptability: b('adaptability'), shotcalling: b('shotcalling') },
+      mental: { composure: b('composure'), consistency: b('consistency'), focus: b('focus'), clutch: c100(rng.gaussian(50, 18)), tiltResistance: c100(rng.gaussian(52, 16)) },
+      roleAptitude: { primaryRole: primaryRole, secondaryRole: secondaryRole, top: roleApt.top, jungle: roleApt.jungle, mid: roleApt.mid, bot: roleApt.bot, support: roleApt.support, roleFlexibility: c100(rng.gaussian(45, 18)) },
+      championAptitude: champ,
+      growth: { potential: 0, growthRate: c100(rng.gaussian(60, 15)), peakAge: peakAge, declineStartAge: declineStartAge, declineRate: c100(rng.gaussian(50, 15)), mechanicalDeclineBias: Math.max(0.3, rng.gaussian(1.1, 0.35)), learningRate: c100(rng.gaussian(58, 15)), workEthic: b('workEthic'), burnoutProneness: c100(rng.gaussian(45, 18)) },
+      personality: { ambition: b('ambition'), loyalty: c100(rng.gaussian(50, 20)), professionalism: b('professionalism') },
+      chemistry: { communication: b('communication'), leadership: c100(rng.gaussian(45, 18)), ego: c100(rng.gaussian(45, 18) + (bias.ego || 0)), temperament: c100(rng.gaussian(50, 20)), coachability: c100(rng.gaussian(55, 18)), introversion: c100(rng.gaussian(52, 20)), mentorship: c100(rng.gaussian(40, 18) + Math.max(0, age - 22) * 2), teamplayOrientation: c100(rng.gaussian(52, 18)), playstyleAggression: b('playstyleAggression'), playstyleTempo: c100(rng.gaussian(50, 20)), playstyleRiskTaking: b('playstyleRiskTaking'), preferredArchetype: preferredArchetype },
+      brand: { starPower: c100(rng.gaussian(30, 15) + (bias.starPower || 0)), streamAppeal: b('streamAppeal'), fanbase: c100(rng.gaussian(25, 15) + (bias.fanbase || 0)), marketability: b('marketability'), mediaHandling: b('mediaHandling') },
+    };
+    const ca = currentAbility(A);
+    A.growth.potential = c100(Math.max(ca + 1, ca + rng.gaussian(gapMean, 6)));
+    const langs = [reg.langs[0]];
+    if (reg.langs[0] !== 'common' && rng.chance(0.7)) langs.push('common');
+    return {
+      id: opts.id, name: handle(rng, reg), age: age, region: opts.region,
+      nationality: opts.region, languageIds: langs, attributes: A,
+      state: { form: Math.round(rng.gaussian(50, 8)), fatigue: Math.round(c100(rng.gaussian(15, 10))), morale: Math.round(c100(rng.gaussian(58, 12))), sharpness: Math.round(c100(rng.gaussian(70, 15))) },
+    };
+  }
+
+  // ---------- ratings ----------
+  function currentAbility(A) {
+    const m = A.mechanical, k = A.gameKnowledge, mn = A.mental;
+    const mechAvg = mean([m.mechanics, m.laning, m.teamfighting, m.reflexes, m.positioning]);
+    const knowAvg = mean([k.mapAwareness, k.waveManagement, k.objectiveControl, k.visionControl, k.rotations, k.adaptability, k.shotcalling]);
+    const menAvg = mean([mn.composure, mn.consistency, mn.focus, mn.clutch, mn.tiltResistance]);
+    return 0.34 * mechAvg + 0.34 * knowAvg + 0.22 * menAvg + 0.10 * m.teamfighting;
+  }
+  const formMult = (s) => 1 + (s.form - 50) / 250;
+  const fatigueMult = (s) => 1 - (s.fatigue / 100) * 0.25;
+  const sharpMult = (s) => 0.9 + 0.1 * (s.sharpness / 100);
+  const stateMult = (s) => formMult(s) * fatigueMult(s) * sharpMult(s);
+  const roleMult = (A, r) => 0.4 + 0.6 * (A.roleAptitude[r] / 100);
+  const discomfort = (A, r) => (r === A.roleAptitude.primaryRole ? 1 : 0.85 + 0.15 * (A.roleAptitude.roleFlexibility / 100));
+  const effRoleMult = (A, r) => roleMult(A, r) * discomfort(A, r);
+  const ROLE_W = {
+    top: { laning: 0.35, mechanics: 0.2, waveManagement: 0.15, teamfighting: 0.15, mapAwareness: 0.15 },
+    jungle: { mapAwareness: 0.3, objectiveControl: 0.25, mechanics: 0.2, teamfighting: 0.15, waveManagement: 0.1 },
+    mid: { laning: 0.35, mechanics: 0.25, waveManagement: 0.15, mapAwareness: 0.15, teamfighting: 0.1 },
+    bot: { laning: 0.3, mechanics: 0.25, teamfighting: 0.25, positioning: 0.15, waveManagement: 0.05 },
+    support: { visionControl: 0.25, mapAwareness: 0.2, teamfighting: 0.2, objectiveControl: 0.15, positioning: 0.1, mechanics: 0.1 },
+  };
+  function roleCore(A, r) {
+    const w = ROLE_W[r]; let sum = 0;
+    for (const k in w) { const v = A.mechanical[k] !== undefined ? A.mechanical[k] : A.gameKnowledge[k] || 0; sum += v * w[k]; }
+    return sum;
+  }
+  const effRoleStrength = (A, s, r) => roleCore(A, r) * effRoleMult(A, r) * stateMult(s);
+
+  // ---------- ladder ----------
+  const TIERS = [
+    { key: 'slate', name: 'Slate', floor: 500 }, { key: 'copper', name: 'Copper', floor: 900 },
+    { key: 'quartz', name: 'Quartz', floor: 1200 }, { key: 'amber', name: 'Amber', floor: 1500 },
+    { key: 'jade', name: 'Jade', floor: 1800 }, { key: 'cobalt', name: 'Cobalt', floor: 2050 },
+    { key: 'onyx', name: 'Onyx', floor: 2300 }, { key: 'ascendant', name: 'Ascendant', floor: 2600 },
+    { key: 'paragon', name: 'Paragon', floor: 2850 }, { key: 'apex', name: 'Apex', floor: 3050 },
+  ];
+  function tierFromMmr(m) { let o = TIERS[0]; for (const t of TIERS) if (m >= t.floor) o = t; return o; }
+  function divFromMmr(m) { const t = tierFromMmr(m), i = TIERS.indexOf(t), n = TIERS[i + 1]; if (!n) return 1; const w = (n.floor - t.floor) / 4; return 4 - Math.min(3, Math.floor((m - t.floor) / w)); }
+  function soloAbility(A) {
+    const m = A.mechanical, k = A.gameKnowledge;
+    return c100(0.26 * m.mechanics + 0.16 * m.laning + 0.14 * m.teamfighting + 0.12 * k.mapAwareness + 0.10 * m.reflexes + 0.08 * m.positioning + 0.08 * k.waveManagement + 0.06 * A.mental.composure);
+  }
+  const SOLO_APTS = ['assassin', 'laneBully', 'skirmisher', 'scalingCarry', 'earlyJungle', 'catcher'];
+  const maxSoloApt = (A) => Math.max.apply(null, SOLO_APTS.map((x) => A.championAptitude[x]));
+  function computeMmr(i) {
+    const RANGE = 2900, base = 500 + RANGE * Math.pow(i.soloAbility / 100, 1.6);
+    const bMeta = RANGE * 0.1 * ((i.maxSoloApt - 50) / 50);
+    const bMental = RANGE * 0.04 * (((i.composure - 50) / 50) + ((i.tiltResistance - 50) / 50)) / 2;
+    const bRole = i.autofill ? -RANGE * 0.05 : 0;
+    const steady = clamp(base + bMeta + bMental + bRole + i.boost, 500, 3400);
+    const placement = 1200 + 0.15 * steady;
+    const conv = 1 - Math.exp(-i.games / 120);
+    const cur = clamp(placement + (steady - placement) * conv, 500, 3400);
+    return { base: base, steady: steady, current: cur, tier: tierFromMmr(cur).key };
+  }
+  function genLadderEntity(rng, opts) {
+    const plant = opts.plant || null;
+    let qc = 55, ar = [16, 24];
+    if (plant === 'hiddenGem' || plant === 'smurf') { qc = 72; ar = [16, 19]; }
+    if (plant === 'boosted' || plant === 'bust') { qc = 58; ar = [20, 25]; }
+    const player = genPlayer(rng, { id: opts.id, region: opts.region, qualityCenter: qc, ageRange: ar });
+    if (plant === 'hiddenGem') player.attributes.growth.potential = c100(Math.max(player.attributes.growth.potential, 82 + rng.range(0, 10)));
+    if (plant === 'bust') player.attributes.growth.potential = c100(Math.min(player.attributes.growth.potential, 55));
+    const solo = soloAbility(player.attributes), pot = player.attributes.growth.potential;
+    const autofill = plant === 'hiddenGem' || rng.chance(0.12);
+    const boost = plant === 'boosted' ? rng.range(350, 600) : (rng.chance(0.08) ? rng.range(150, 400) : 0);
+    const games = (plant === 'smurf' || plant === 'hiddenGem') ? Math.round(rng.range(30, 70)) : Math.round(rng.range(140, 320));
+    const mmr = computeMmr({ soloAbility: solo, maxSoloApt: maxSoloApt(player.attributes), composure: player.attributes.mental.composure, tiltResistance: player.attributes.mental.tiltResistance, autofill: autofill, boost: boost, games: games });
+    const flags = [];
+    if (autofill) flags.push('autofillVictim');
+    if (boost > 300) flags.push('boosted');
+    if (mmr.current < mmr.steady - 250) flags.push('smurf');
+    if (maxSoloApt(player.attributes) > 82 && solo < 70) flags.push('oneTrick');
+    if (pot >= 80 && tierFromMmr(mmr.current).floor < TIERS[6].floor) flags.push('hiddenGem');
+    if (pot < 56 && mmr.current > 2050) flags.push('bust');
+    return {
+      id: opts.id, handle: player.name, region: opts.region, roleGuess: player.attributes.roleAptitude.primaryRole,
+      age: player.age, mmr: Math.round(mmr.current), tier: mmr.tier, division: divFromMmr(mmr.current),
+      games: games, winRate: clamp(0.5 + (mmr.current - mmr.steady) / 4000 + rng.range(-0.03, 0.03), 0.4, 0.72),
+      topArch: player.attributes.chemistry.preferredArchetype,
+      hidden: { player: player, soloAbility: solo, steady: Math.round(mmr.steady), flags: flags, potential: pot },
+    };
+  }
+  function revealedFlags(e, conf) {
+    const out = [], has = (f) => e.hidden.flags.indexOf(f) >= 0;
+    if (conf >= 0.5) { if (has('oneTrick')) out.push('oneTrick'); if (has('autofillVictim')) out.push('autofillVictim'); }
+    if (conf >= 0.65) { ['smurf', 'boosted', 'hiddenGem', 'bust'].forEach((f) => { if (has(f)) out.push(f); }); }
+    return out;
+  }
+
+  // ---------- meshing ----------
+  const STRUCT_W = { 'bot|support': 2, 'jungle|mid': 1.6, 'jungle|top': 1.3, 'bot|jungle': 1.2, 'jungle|support': 1.1, 'mid|support': 1, 'bot|mid': 0.9, 'mid|top': 0.8, 'support|top': 0.7, 'bot|top': 0.6 };
+  const STRUCT_SUM = 11.2;
+  const rolePairW = (a, b) => STRUCT_W[[a, b].sort().join('|')] || 0;
+  const n100 = (x) => x / 100, mean2 = (x, y) => (x + y) / 200;
+  const pairKey = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
+  const sharedLang = (a, b) => a.languageIds.some((l) => b.languageIds.indexOf(l) >= 0);
+  function pairTarget(a, b) {
+    const ca = a.attributes.chemistry, cb = b.attributes.chemistry;
+    const egoClash = n100(ca.ego) * n100(cb.ego);
+    const egoTerm = 1 - 0.5 * egoClash * (0.5 + 0.5 * mean2(ca.temperament, cb.temperament));
+    const tempTerm = 1 - 0.3 * n100(ca.temperament) * n100(cb.temperament);
+    const fitPersona = egoTerm * tempTerm;
+    const fitTeam = 0.7 + 0.3 * mean2(ca.teamplayOrientation, cb.teamplayOrientation);
+    const diffPlay = (Math.abs(ca.playstyleAggression - cb.playstyleAggression) + Math.abs(ca.playstyleTempo - cb.playstyleTempo) + Math.abs(ca.playstyleRiskTaking - cb.playstyleRiskTaking)) / 300;
+    const fitPlay = 0.6 + 0.4 * (1 - diffPlay);
+    const commCeil = 0.85 + 0.15 * mean2(ca.communication, cb.communication);
+    const older = a.age >= b.age ? a : b, younger = older === a ? b : a, gap = Math.abs(a.age - b.age);
+    const fitMentor = 1 + 0.15 * n100(older.attributes.chemistry.mentorship) * clamp((25 - younger.age) / 8, 0, 1) * (gap >= 3 ? 1 : 0);
+    return c100(100 * fitPersona * fitTeam * fitPlay * commCeil * fitMentor);
+  }
+  function rampSpeed(a, b) {
+    const langRamp = sharedLang(a, b) ? 1 : 0.55;
+    const introFac = 1 - 0.4 * mean2(a.attributes.chemistry.introversion, b.attributes.chemistry.introversion);
+    const commRamp = 0.7 + 0.3 * mean2(a.attributes.chemistry.communication, b.attributes.chemistry.communication);
+    return langRamp * introFac * commRamp;
+  }
+  function initChem(lineup) {
+    const ps = ROLES.map((r) => lineup[r]).filter(Boolean), pairs = {};
+    for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+      const a = ps[i], b = ps[j], t = pairTarget(a, b);
+      pairs[pairKey(a.id, b.id)] = { a: a.id, b: b.id, target: t, current: 0.35 * t, gel: 0 };
+    }
+    return { pairs: pairs };
+  }
+  function rampWeek(chem, lineup, gel) {
+    const byId = {}; ROLES.forEach((r) => { if (lineup[r]) byId[lineup[r].id] = lineup[r]; });
+    Object.keys(chem.pairs).sort().forEach((k) => {
+      const pc = chem.pairs[k], a = byId[pc.a], b = byId[pc.b]; if (!a || !b) return;
+      pc.current = c100(pc.current + 0.1 * rampSpeed(a, b) * gel * (pc.target - pc.current));
+      pc.gel += gel;
+    });
+  }
+  function reconcileChem(prev, lineup) {
+    const ps = ROLES.map((r) => lineup[r]).filter(Boolean), ids = {}; ps.forEach((p) => (ids[p.id] = 1));
+    const pairs = {};
+    for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+      const a = ps[i], b = ps[j], key = pairKey(a.id, b.id), ex = prev && prev.pairs[key];
+      if (ex && ids[ex.a] && ids[ex.b]) pairs[key] = ex;
+      else { const t = pairTarget(a, b); pairs[key] = { a: a.id, b: b.id, target: t, current: 0.35 * t, gel: 0 }; }
+    }
+    return { pairs: pairs };
+  }
+  function maxSharedLang(lineup) {
+    const counts = {}; ROLES.forEach((r) => { if (lineup[r]) lineup[r].languageIds.forEach((l) => (counts[l] = (counts[l] || 0) + 1)); });
+    let mx = 1; for (const l in counts) mx = Math.max(mx, counts[l]); return mx;
+  }
+  function cohesion(chem, lineup) {
+    const roleById = {}; ROLES.forEach((r) => { if (lineup[r]) roleById[lineup[r].id] = r; });
+    let weighted = 0; const list = [];
+    Object.keys(chem.pairs).sort().forEach((k) => {
+      const pc = chem.pairs[k], ra = roleById[pc.a], rb = roleById[pc.b]; if (!ra || !rb) return;
+      weighted += rolePairW(ra, rb) * pc.current; list.push({ key: k, current: pc.current, target: pc.target, a: pc.a, b: pc.b });
+    });
+    const pairScore = weighted / STRUCT_SUM;
+    let voices = 0; ROLES.forEach((r) => { const p = lineup[r]; if (!p) return; const call = clamp((p.attributes.gameKnowledge.shotcalling - 50) / 30, 0, 1); voices += call * (0.5 + 0.5 * n100(p.attributes.chemistry.leadership)); });
+    const shotBalance = clamp(1 - 0.3 * Math.max(0, 0.8 - voices) - 0.1 * Math.max(0, voices - 2), 0.7, 1);
+    const langCov = 0.9 + 0.1 * (maxSharedLang(lineup) / 5);
+    const coh = pairScore * shotBalance * langCov;
+    const meshMult = 0.88 + 0.24 * (coh / 100);
+    const gelling = Object.keys(chem.pairs).some((k) => chem.pairs[k].current < 0.8 * chem.pairs[k].target);
+    return { pairScore: pairScore, shotBalance: shotBalance, langCoverage: langCov, cohesion: coh, meshMult: meshMult, voices: voices, gelling: gelling, pairs: list };
+  }
+
+  // ---------- match ----------
+  const CARRY = { top: 0.2, jungle: 0.14, mid: 0.26, bot: 0.3, support: 0.1 };
+  function teamBreakdown(team) {
+    const rs = {}; let sum = 0;
+    ROLES.forEach((r) => { const p = team.lineup[r]; const s = p ? effRoleStrength(p.attributes, p.state, r) : 0; rs[r] = round(s, 1); sum += s; });
+    const base = sum / 5 + (team.draftScore || 0);
+    const co = cohesion(team.chem, team.lineup);
+    return { name: team.name, roleStrength: rs, base: round(base, 1), meshMult: round(co.meshMult, 3), cohesion: round(co.cohesion, 1), strength: round(base * co.meshMult, 1) };
+  }
+  function genLines(team, won, totalKills, rng) {
+    const lines = [], weights = ROLES.map((r) => CARRY[r] * rng.range(0.6, 1.4)), wsum = weights.reduce((s, w) => s + w, 0);
+    ROLES.forEach((role, i) => {
+      const p = team.lineup[role], share = weights[i] / wsum;
+      const kills = Math.max(0, Math.round(totalKills * share * (won ? 1 : 0.85)));
+      const deaths = Math.max(0, Math.round(rng.gaussian(won ? 1.6 : 3, 1.1)));
+      const am = role === 'support' ? 1.8 : role === 'jungle' ? 1.4 : 1;
+      const assists = Math.max(0, Math.round(totalKills * 0.4 * am * rng.range(0.5, 1.1)));
+      let dmg = clamp(CARRY[role] * rng.range(0.75, 1.25), 0.03, 0.45);
+      const kda = (kills + assists) / Math.max(1, deaths), indiv = effRoleStrength(p.attributes, p.state, role) / 100;
+      const rating = clamp(3 + kda * 0.7 + indiv * 3 + (won ? 0.8 : -0.4) + rng.range(-0.6, 0.6), 0, 10);
+      lines.push({ playerId: p.id, name: p.name, role: role, kills: kills, deaths: deaths, assists: assists, dmgShare: dmg, rating: round(rating, 1) });
+    });
+    const ds = lines.reduce((s, l) => s + l.dmgShare, 0); lines.forEach((l) => (l.dmgShare = round(l.dmgShare / ds, 3)));
+    return lines;
+  }
+  function timeline(winName, wl, len, rng) {
+    const ev = [], srt = wl.slice().sort((a, b) => b.rating - a.rating), star = srt[0], jg = wl.filter((l) => l.role === 'jungle')[0];
+    ev.push('Min 3 — Both teams path safely; an even start.');
+    ev.push('Min ' + rng.int(6, 10) + ' — ' + jg.name + ' finds a gank ' + rng.pick(['bot', 'top', 'mid']) + '. First blood, ' + winName + '.');
+    ev.push('Min ' + rng.int(14, 20) + ' — A neutral-objective fight breaks; ' + winName + ' comes out ahead.');
+    if (len > 30) ev.push('Min ' + rng.int(24, 30) + ' — The losing side stabilizes and stalls for scaling.');
+    ev.push('Min ' + rng.int(28, Math.max(30, Math.floor(len) - 2)) + ' — ' + star.name + ' pops off (' + star.kills + '/' + star.deaths + '/' + star.assists + '). ' + winName + ' takes the deciding fight.');
+    ev.push('Min ' + Math.round(len) + ' — ' + winName + ' closes it out.');
+    return ev;
+  }
+  function simulateGame(a, b, rng) {
+    const ba = teamBreakdown(a), bb = teamBreakdown(b), pA = winProb(ba.strength - bb.strength, 15);
+    const aWins = rng.chance(pA), dom = Math.abs(pA - 0.5) * 2;
+    const len = round(clamp(rng.gaussian(34 - dom * 6, 5), 22, 52), 0);
+    const totalKills = Math.max(6, Math.round(rng.gaussian(24, 6) * (len / 32)));
+    const wShare = 0.55 + dom * 0.2 + rng.range(-0.05, 0.05), wK = Math.round(totalKills * wShare), lK = Math.max(0, totalKills - wK);
+    const lw = genLines(aWins ? a : b, true, wK, rng), ll = genLines(aWins ? b : a, false, lK, rng);
+    const mvp = lw.slice().sort((x, y) => y.rating - x.rating)[0];
+    return {
+      winner: aWins ? 'a' : 'b', lengthMin: len, killsA: aWins ? wK : lK, killsB: aWins ? lK : wK,
+      linesA: aWins ? lw : ll, linesB: aWins ? ll : lw,
+      mvp: { side: aWins ? 'a' : 'b', name: mvp.name }, winProbA: round(pA, 3),
+      breakdown: { a: ba, b: bb }, timeline: timeline(aWins ? a.name : b.name, lw, len, rng),
+    };
+  }
+  function simulateSeries(a, b, bestOf, rng) {
+    const need = Math.ceil(bestOf / 2); let sa = 0, sb = 0; const games = [];
+    while (sa < need && sb < need) { const g = simulateGame(a, b, rng); games.push(g); if (g.winner === 'a') sa++; else sb++; }
+    return { bestOf: bestOf, winner: sa > sb ? 'a' : 'b', scoreA: sa, scoreB: sb, games: games };
+  }
+
+  root.LOLSim = {
+    Rng: Rng, ROLES: ROLES, ARCHES: ARCHES, REGIONS: REGIONS, TIERS: TIERS,
+    genPlayer: genPlayer, currentAbility: currentAbility, effRoleStrength: effRoleStrength,
+    soloAbility: soloAbility, computeMmr: computeMmr, tierFromMmr: tierFromMmr, divFromMmr: divFromMmr,
+    genLadderEntity: genLadderEntity, revealedFlags: revealedFlags,
+    initChem: initChem, rampWeek: rampWeek, reconcileChem: reconcileChem, cohesion: cohesion, pairTarget: pairTarget,
+    teamBreakdown: teamBreakdown, simulateGame: simulateGame, simulateSeries: simulateSeries,
+    clamp: clamp, round: round,
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* ============================================================= game layer ============================================================= */
+const S = window.LOLSim;
+const $ = (s,el)=> (el||document).querySelector(s);
+const el = (tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+const fmt = (n)=> (Math.round(n)).toLocaleString();
+const ROLE_ORDER=['top','jungle','mid','bot','support'];
+const ROLE_LABEL={top:'Top',jungle:'Jungle',mid:'Mid',bot:'Bot',support:'Support'};
+const ARCH_LABEL={tankEngage:'Tank / Engage',skirmisher:'Skirmisher',assassin:'Assassin',scalingCarry:'Scaling Carry',laneBully:'Lane Bully',controlMage:'Control Mage',poke:'Poke',enchanter:'Enchanter',catcher:'Catcher',splitPush:'Split Push',earlyJungle:'Early Jungle'};
+const REGION_NAME={kyo:'Kyorin',tia:'Tianxu',mer:'Meridia',van:'Vantia',wilds:'the Wilds'};
+const TIER_HUE={slate:'#7b8794',copper:'#c1824a',quartz:'#c3ccd6',amber:'#e0a93f',jade:'#46b98a',cobalt:'#4f83d6',onyx:'#8a6fd0',ascendant:'#d15b8f',paragon:'#e0803a',apex:'#f0d45e'};
+const TIER_NAME={};S.TIERS.forEach(t=>TIER_NAME[t.key]=t.name);
+const FLAG_META={
+  smurf:{label:'SMURF',cls:'good',tip:'True skill far above this rank — climbs fast'},
+  hiddenGem:{label:'HIDDEN GEM',cls:'good',tip:'Low rank, huge ceiling — the jackpot'},
+  autofillVictim:{label:'AUTOFILL',cls:'info',tip:'Forced off-role on ladder; rank understates them'},
+  oneTrick:{label:'ONE-TRICK',cls:'info',tip:'Ladder-inflated on one archetype; risky pro value'},
+  boosted:{label:'BOOSTED',cls:'bad',tip:'Rank propped up by a duo; will fall'},
+  bust:{label:'BUST',cls:'bad',tip:'Looks pro-ready, but no growth left'},
+};
+const STAGES=[
+  {key:'local',name:'Local Opens',oppCenter:46,wins:3,prize:7,rep:5,fee:1.0,blurb:'Amateur weekend brackets. Field a five, win three, and earn a Regional invite.'},
+  {key:'regional',name:'Regional Circuit',oppCenter:55,wins:3,prize:12,rep:7,fee:1.25,blurb:'Regional qualifiers. Beat established amateur orgs to reach the Second Division.'},
+  {key:'second',name:'Second Division',oppCenter:63,wins:4,prize:18,rep:9,fee:1.6,blurb:'Semi-pro league play. Top the table to enter the Promotion Gauntlet.'},
+  {key:'league',name:'The Prime League',oppCenter:71,wins:4,prize:30,rep:13,fee:2.2,blurb:'The top league — revenue share and real stakes. Win the split to qualify for Worlds.'},
+  {key:'worlds',name:'Worlds',oppCenter:81,wins:5,prize:70,rep:24,fee:3.0,blurb:'The mountaintop. Cross-region knockouts against the best teams alive.'},
+];
+const SPONSOR_TEMPLATES=[
+  {nm:'Brambley Café',flav:'A local coffee chain that just wants its logo on your jerseys.',tier:0,base:2,weekly:0.6,clause:null,ob:'Low-key'},
+  {nm:'Kessel Peripherals',flav:'Mid-tier keyboards and mice. Reliable, unglamorous money.',tier:1,base:4,weekly:1.1,clause:'+3 if you reach playoffs',ob:'1 content day / month'},
+  {nm:'Voltcurrent Energy',flav:'Loud energy-drink brand chasing a young audience. Pays well, demands airtime.',tier:2,base:7,weekly:2.0,clause:'+6 on a title',ob:'2 content days / month (−fatigue)'},
+  {nm:'Meridian Telecom',flav:'A regional carrier that backs winners and expects results.',tier:2,base:9,weekly:2.6,clause:'−4 if you miss playoffs',ob:'Media obligations'},
+  {nm:'Nyx Exchange',flav:'A crypto exchange with more money than sense. Huge upside, reputational risk.',tier:3,base:16,weekly:4.2,clause:'volatile — may pull out',ob:'Heavy branding'},
+  {nm:'Aurora Apparel',flav:'Premium apparel label. Only signs teams with real brand pull.',tier:3,base:13,weekly:3.6,clause:'+10 at Worlds',ob:'Photoshoots'},
+];
+
+let G=null, seedCtr=0;
+
+function pushLog(text,kind){G.inbox.unshift({week:G.week,text:text,kind:kind||'info'});if(G.inbox.length>60)G.inbox.pop();}
+function toast(text,kind){
+  const box=$('#toasts');
+  while(box.children.length>=4)box.firstChild.remove(); // never let toasts pile up
+  const t=el('div','toast'+(kind?' '+kind:''),text);box.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .4s,transform .4s';t.style.opacity='0';t.style.transform='translateY(6px)';setTimeout(()=>t.remove(),400);},3400);
+}
+
+function newGame(seed){
+  seed = seed || ('career-'+(Date.now?.()||seedCtr++)+'-'+Math.floor((typeof performance!=='undefined'?performance.now():seedCtr)*7%9973));
+  const rng=new S.Rng(seed,'world');
+  const ladder=[];
+  // a home-region ladder pool: mostly ordinary, a controlled sprinkle of archetypes
+  const plants=[null,null,null,null,null,null,'hiddenGem',null,null,'boosted',null,'smurf',null,null,'bust',null,'hiddenGem',null,null,'boosted'];
+  const regions=['mer','mer','mer','kyo','tia','van','wilds'];
+  for(let i=0;i<46;i++){
+    const region=rng.pick(regions);
+    const e=S.genLadderEntity(new S.Rng(seed,'lad:'+i),{id:'lad'+i,region:region,plant:plants[i%plants.length]});
+    e.scout={conf:0,status:'spotted',revealed:[]};
+    ladder.push(e);
+  }
+  ladder.sort((a,b)=>b.mmr-a.mmr);
+  G={
+    seed:seed, week:1, cash:60, reputation:8, scoutPts:6, scoutBudget:6,
+    stageIndex:0, stageWins:0,
+    ladder:ladder, roster:{top:null,jungle:null,mid:null,bot:null,support:null}, chem:null,
+    sponsors:{active:[],offers:[]}, inbox:[], ui:{screen:'scout',selLad:ladder[0]?.id||null,match:null},
+    orgName:'Your Org', matchOpp:null,
+  };
+  refreshSponsorOffers();
+  pushLog('Career started. You take over a broke amateur org — fill five seats and earn a Regional invite.','info');
+  render();
+}
+
+function stage(){return STAGES[G.stageIndex];}
+function rosterCount(){return ROLE_ORDER.filter(r=>G.roster[r]).length;}
+function lineup(){const l={};ROLE_ORDER.forEach(r=>{if(G.roster[r])l[r]=G.roster[r];});return l;}
+function recomputeChem(){G.chem=S.reconcileChem(G.chem,lineup());}
+
+function scoutedRange(tv,conf){const half=22*(1-conf);return [Math.max(0,tv-half),Math.min(100,tv+half)];}
+function potentialRead(pot,conf){
+  const tiers=[['limited',0],['solid',55],['high',68],['elite',80],['generational',90]];
+  let label='limited';for(const[l,f]of tiers)if(pot>=f)label=l;
+  const cl=conf>=.85?'certain':conf>=.6?'confident':conf>=.3?'a read':'a hunch';
+  if(conf<0.35)return {label:'?',conf:cl};
+  return {label:label,conf:cl};
+}
+function overall(p){return Math.round(S.currentAbility(p.attributes));}
+function signingFee(e){
+  const base=S.clamp((e.mmr-1000)/140+1,1,45);
+  const pot=e.hidden.potential;
+  const mult=1+0.8*e.scout.conf*S.clamp((pot-55)/45,0,1);
+  return Math.max(1,Math.round(base*mult*stage().fee));
+}
+
+function refreshSponsorOffers(){
+  const rng=new S.Rng(G.seed,'spon:'+G.week);
+  const pull=G.reputation/100 + rosterBrand()/200; // 0..~1
+  const pool=SPONSOR_TEMPLATES.filter(t=>t.tier<= (pull>0.5?3:pull>0.28?2:pull>0.12?1:0));
+  const offers=[];const used={};
+  for(let i=0;i<Math.min(3,pool.length);i++){
+    let pick;let guard=0;do{pick=rng.pick(pool);guard++;}while(used[pick.nm]&&guard<12);used[pick.nm]=1;
+    offers.push(Object.assign({id:'spo'+G.week+'_'+i},pick));
+  }
+  G.sponsors.offers=offers.filter(o=>!G.sponsors.active.some(a=>a.nm===o.nm));
+}
+function rosterBrand(){let s=0,n=0;ROLE_ORDER.forEach(r=>{if(G.roster[r]){s+=G.roster[r].attributes.brand.starPower;n++;}});return n?s/n:0;}
+
+/* -------- actions -------- */
+function doScout(id){
+  const e=G.ladder.find(x=>x.id===id);if(!e||G.scoutPts<=0||e.signed)return;
+  G.scoutPts--; e.scout.conf=Math.min(1,e.scout.conf+0.2);
+  const before=e.scout.revealed.length;
+  e.scout.revealed=S.revealedFlags(e,e.scout.conf);
+  if(e.scout.revealed.length>before){
+    const nf=e.scout.revealed[e.scout.revealed.length-1];
+    const m=FLAG_META[nf];toast('Scouting revealed <b>'+m.label+'</b> on '+e.handle+' — '+m.tip,m.cls==='good'?'good':m.cls==='bad'?'bad':'');
+    pushLog('Analyst read <b>'+m.label+'</b> on '+e.handle+' ('+TIER_NAME[e.tier]+').',m.cls);
+  }
+  render();
+}
+function doSign(id,role){
+  const e=G.ladder.find(x=>x.id===id);if(!e||e.signed)return;
+  role=role||e.roleGuess;
+  if(G.roster[role]){toast('That role is already filled — release the '+ROLE_LABEL[role]+' first.','bad');return;}
+  const fee=signingFee(e);
+  if(G.cash<fee){toast('Not enough credits ('+fee+'◈ needed).','bad');return;}
+  G.cash-=fee; e.signed=true;
+  const p=e.hidden.player; p.ladder=e; p.signedRole=role;
+  G.roster[role]=p; recomputeChem();
+  pushLog('Signed <b>'+e.handle+'</b> ('+ROLE_LABEL[role]+', '+TIER_NAME[e.tier]+') for '+fee+'◈.','good');
+  toast('Signed <b>'+e.handle+'</b> as your '+ROLE_LABEL[role]+'.','good');
+  render();
+}
+function doRelease(role){
+  const p=G.roster[role];if(!p)return;
+  if(p.ladder)p.ladder.signed=false;
+  G.roster[role]=null;recomputeChem();
+  pushLog('Released the '+ROLE_LABEL[role]+', '+p.name+'.','info');render();
+}
+function advanceWeek(){
+  G.week++;
+  // gel chemistry (scrims)
+  if(G.chem)S.rampWeek(G.chem,lineup(),1.0);
+  // ladder churn: drift toward steady, boosted decay, mild noise
+  const rng=new S.Rng(G.seed,'churn:'+G.week);
+  G.ladder.forEach(e=>{
+    if(e.signed)return;
+    const step=0.12; e.mmr=Math.round(e.mmr+(e.hidden.steady-e.mmr)*step+rng.range(-25,25));
+    e.tier=S.tierFromMmr(e.mmr).key; e.division=S.divFromMmr(e.mmr);
+  });
+  // fatigue / sharpness
+  ROLE_ORDER.forEach(r=>{const p=G.roster[r];if(p){p.state.fatigue=S.clamp(p.state.fatigue+3,0,100);p.state.sharpness=S.clamp(p.state.sharpness+2,0,100);}});
+  // sponsor income
+  let inc=0;G.sponsors.active.forEach(s=>inc+=s.weekly);
+  if(inc>0){G.cash+=inc;}
+  G.scoutPts=G.scoutBudget;
+  if(G.week%2===0)refreshSponsorOffers();
+  pushLog('Week '+G.week+' — scrims run'+(inc>0?', +'+inc.toFixed(1)+'◈ sponsor income':'')+'. Scouting budget refreshed.','info');
+  render();
+}
+function makeOpponent(){
+  const st=stage();const rng=new S.Rng(G.seed,'opp:'+G.stageIndex+':'+G.stageWins);
+  const names=['Ashfall','Kestrel','Meridian B','Onyx Guard','Riptide','Vantablack','Zephyr','Ironclad','Sunder','Halcyon','Nightfall','Gravel'];
+  const nm=names[(G.stageIndex*3+G.stageWins)%names.length];
+  const lu={};ROLE_ORDER.forEach(role=>{lu[role]=S.genPlayer(rng,{id:'opp'+role,region:rng.pick(['mer','kyo','tia','van']),qualityCenter:st.oppCenter+rng.range(-4,4),primaryRole:role,ageRange:[19,26]});lu[role].languageIds=['common'];});
+  let ch=S.initChem(lu);const wk=Math.round(rng.range(6,26));for(let i=0;i<wk;i++)S.rampWeek(ch,lu,1);
+  return {name:nm,lineup:lu,chem:ch};
+}
+function playMatch(){
+  if(rosterCount()<5){toast('You need all five roles filled to compete.','bad');return;}
+  const you={name:'Your Org',lineup:lineup(),chem:G.chem};
+  const opp=G.matchOpp||makeOpponent();G.matchOpp=opp;
+  const series=S.simulateSeries(you,opp,3,new S.Rng(G.seed,'series:'+G.week+':'+G.stageWins));
+  const won=series.winner==='a';
+  const st=stage();
+  G.ui.match={series:series,opp:opp,won:won};
+  if(won){
+    G.cash+=st.prize;G.reputation=Math.min(100,G.reputation+st.rep);G.stageWins++;
+    // sponsor clause bonuses (playoffs/title flavor): small rep-driven
+    pushLog('Won the series vs <b>'+opp.name+'</b> '+series.scoreA+'-'+series.scoreB+' (+'+st.prize+'◈, +'+st.rep+' rep).','good');
+    toast('Series won vs '+opp.name+' — '+series.scoreA+'-'+series.scoreB+'!','good');
+    G.matchOpp=null;
+    if(G.stageWins>=st.wins){
+      if(G.stageIndex<STAGES.length-1){
+        G.stageIndex++;G.stageWins=0;G.matchOpp=null;
+        const ns=stage();
+        pushLog('★ Promoted to <b>'+ns.name+'</b>!','good');
+        toast('★ You\'ve reached '+ns.name+'!','good');
+        refreshSponsorOffers();
+      } else {
+        pushLog('★★ You are WORLD CHAMPIONS. The garage org made it all the way.','good');
+        toast('★★ WORLDS CHAMPIONS. You did it.','good');
+      }
+    }
+  } else {
+    pushLog('Lost the series vs '+opp.name+' '+series.scoreB+'-'+series.scoreA+'. Regroup and try again.','bad');
+    toast('Series lost vs '+opp.name+'. Back to the drawing board.','bad');
+  }
+  advanceWeekQuiet();
+  render();
+}
+function advanceWeekQuiet(){ // a match consumes a week without the separate log line
+  G.week++;if(G.chem)S.rampWeek(G.chem,lineup(),1.0);
+  ROLE_ORDER.forEach(r=>{const p=G.roster[r];if(p){p.state.fatigue=S.clamp(p.state.fatigue+5,0,100);}});
+  let inc=0;G.sponsors.active.forEach(s=>inc+=s.weekly);G.cash+=inc;G.scoutPts=G.scoutBudget;
+}
+function acceptSponsor(id){
+  const o=G.sponsors.offers.find(x=>x.id===id);if(!o)return;
+  G.cash+=o.base;G.sponsors.active.push({nm:o.nm,weekly:o.weekly,clause:o.clause});
+  G.sponsors.offers=G.sponsors.offers.filter(x=>x.id!==id);
+  pushLog('Signed sponsor <b>'+o.nm+'</b> (+'+o.base+'◈ now, +'+o.weekly+'◈/wk).','good');
+  toast('Sponsor secured: '+o.nm,'good');render();
+}
+
+/* ============================================================= rendering ============================================================= */
+function render(){
+  renderStats();renderNav();renderPyramid();
+  const scr=G.ui.screen;
+  const main=$('#main');main.innerHTML='';
+  if(scr==='scout')renderScout(main);
+  else if(scr==='squad')renderSquad(main);
+  else if(scr==='compete')renderCompete(main);
+  else if(scr==='sponsors')renderSponsors(main);
+}
+function renderStats(){
+  const s=$('#stats');s.innerHTML='';
+  const items=[['Week',G.week,''],['Credits',fmt(G.cash)+'◈','gold'],['Reputation',Math.round(G.reputation),''],['Scouting',G.scoutPts+'/'+G.scoutBudget,'']];
+  items.forEach(([k,v,c])=>{const d=el('div','stat');d.innerHTML='<span class="k">'+k+'</span><span class="v '+c+'">'+v+'</span>';s.appendChild(d);});
+}
+function renderNav(){
+  document.querySelectorAll('.nav[data-screen]').forEach(n=>n.classList.toggle('active',n.dataset.screen===G.ui.screen));
+  $('#nb-scout').textContent=G.ladder.filter(e=>!e.signed&&e.scout.conf>0).length||'0';
+  $('#nb-squad').textContent=rosterCount()+'/5';
+  $('#nb-sponsors').textContent=G.sponsors.offers.length||'0';
+}
+function renderPyramid(){
+  const p=$('#pyr');p.innerHTML='';
+  STAGES.forEach((st,i)=>{
+    const cls=i<G.stageIndex?'done':i===G.stageIndex?'cur':'';
+    const d=el('div','step '+cls);d.innerHTML='<span class="dot"></span><span>'+st.name+'</span>';
+    p.appendChild(d);
+  });
+}
+
+/* ---------- scout ---------- */
+function renderScout(main){
+  const head=el('div','screen-head');
+  head.innerHTML='<p class="eyebrow">Talent discovery</p><h1 class="title cond">Scout the Ladder</h1>'+
+    '<p class="sub">Rank is public; true skill is not. Spend scouting to narrow the fog and surface the flags — a smurf hiding in Jade is the bargain of the season; a boosted Ascendant is the trap.</p>';
+  main.appendChild(head);
+
+  const grid=el('div','scout-grid');
+  // left: table + toolbar
+  const left=el('div');
+  const bar=el('div','toolbar');
+  bar.innerHTML='<span class="section-label" style="margin:0">Home &amp; reachable ladders</span>';
+  const spacer=el('span');spacer.style.flex='1';bar.appendChild(spacer);
+  const roleSel=el('select');roleSel.innerHTML='<option value="">All roles</option>'+ROLE_ORDER.map(r=>'<option value="'+r+'">'+ROLE_LABEL[r]+'</option>').join('');
+  roleSel.value=G.ui.scoutRole||'';roleSel.onchange=()=>{G.ui.scoutRole=roleSel.value;render();};
+  bar.appendChild(roleSel);
+  left.appendChild(bar);
+
+  const cardT=el('div','card');cardT.style.overflow='hidden';cardT.style.padding='6px 8px 8px';
+  const tbl=el('table','ladder');
+  tbl.innerHTML='<thead><tr><th>Prospect</th><th>Rank</th><th>Role</th><th>Age</th><th>Games</th><th>WR</th><th>Read</th></tr></thead>';
+  const tb=el('tbody');
+  let rows=G.ladder.filter(e=>!G.ui.scoutRole||e.roleGuess===G.ui.scoutRole);
+  rows.forEach(e=>{
+    const tr=el('tr');if(e.id===G.ui.selLad)tr.classList.add('sel');if(e.signed)tr.classList.add('signed');
+    tr.onclick=()=>{G.ui.selLad=e.id;render();};
+    const pr=potentialRead(e.hidden.potential,e.scout.conf);
+    const flags=e.scout.revealed.map(f=>'<span class="pill '+FLAG_META[f].cls+'">'+FLAG_META[f].label+'</span>').join('');
+    tr.innerHTML=
+      '<td><div class="handle">'+e.handle+'</div>'+(flags?'<div class="flagline">'+flags+'</div>':'')+'</td>'+
+      '<td>'+gemBadge(e.tier)+'<div class="role-tag" style="margin-top:2px">'+(e.tier==='ascendant'||e.tier==='paragon'||e.tier==='apex'?fmt(e.mmr)+' mmr':'Div '+toRoman(e.division))+'</div></td>'+
+      '<td><span class="role-tag">'+ROLE_LABEL[e.roleGuess]+'</span></td>'+
+      '<td class="mono">'+e.age+'</td>'+
+      '<td class="mono">'+e.games+'</td>'+
+      '<td class="wr">'+Math.round(e.winRate*100)+'%</td>'+
+      '<td>'+(e.signed?'<span class="role-tag">signed</span>':pr.label==='?'?'<span class="role-tag" style="color:var(--faint)">— unscouted</span>':'<span class="pill">'+cap(pr.label)+'</span>')+'</td>';
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);cardT.appendChild(tbl);left.appendChild(cardT);
+  grid.appendChild(left);
+
+  // right: detail
+  const det=el('div','card detail');
+  const e=G.ladder.find(x=>x.id===G.ui.selLad);
+  if(!e){det.innerHTML='<div class="empty">Select a prospect to scout.</div>';}
+  else renderScoutDetail(det,e);
+  grid.appendChild(det);
+  main.appendChild(grid);
+}
+function renderScoutDetail(det,e){
+  const p=e.hidden.player, conf=e.scout.conf;
+  const dh=el('div','dh');
+  const pr=potentialRead(e.hidden.potential,conf);
+  dh.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+
+    '<div><div class="handle" style="font-size:24px">'+e.handle+'</div>'+
+    '<div class="role-tag" style="margin-top:3px">'+ROLE_LABEL[e.roleGuess]+' · '+REGION_NAME[e.region]+' · age '+e.age+'</div></div>'+
+    gemBadge(e.tier,true)+'</div>'+
+    '<div class="flagline" style="margin-top:10px">'+
+      (e.scout.revealed.length?e.scout.revealed.map(f=>'<span class="pill '+FLAG_META[f].cls+'" title="'+FLAG_META[f].tip+'">'+FLAG_META[f].label+'</span>').join(''):'<span class="role-tag" style="color:var(--faint)">no flags surfaced yet</span>')+
+    '</div>';
+  det.appendChild(dh);
+
+  const db=el('div','db');
+  // scouting control
+  const sc=el('div');
+  sc.innerHTML='<div class="fog-row"><div class="lab"><span class="nm">Scouting confidence</span><span class="rd">'+Math.round(conf*100)+'% · '+pr.conf+'</span></div>'+
+    '<div class="confbar"><i style="width:'+(conf*100)+'%"></i></div></div>';
+  db.appendChild(sc);
+  const scoutBtn=el('button','btn ghost');scoutBtn.style.width='100%';scoutBtn.style.marginBottom='14px';
+  scoutBtn.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Scout ('+(e.signed?'signed':G.scoutPts>0?'−1 pt':'no points')+')';
+  scoutBtn.disabled=e.signed||G.scoutPts<=0||conf>=1;
+  scoutBtn.onclick=()=>doScout(e.id);
+  db.appendChild(scoutBtn);
+
+  // fogged attributes
+  const attrs=[['Mechanics',p.attributes.mechanical.mechanics],['Laning',p.attributes.mechanical.laning],
+    ['Teamfighting',p.attributes.mechanical.teamfighting],['Map Awareness',p.attributes.gameKnowledge.mapAwareness],
+    ['Composure',p.attributes.mental.composure]];
+  const al=el('div');al.innerHTML='<div class="section-label">Scouted attributes</div>';
+  attrs.forEach(([nm,tv])=>{
+    const [lo,hi]=scoutedRange(tv,conf);const exact=(hi-lo)<1;
+    const row=el('div','fog-row');
+    row.innerHTML='<div class="lab"><span class="nm">'+nm+'</span><span class="rd">'+(exact?Math.round(tv):Math.round(lo)+'–'+Math.round(hi))+'</span></div>'+
+      '<div class="track"><div class="band'+(exact?' exact':'')+'" style="left:'+lo+'%;right:'+(100-hi)+'%"></div>'+(exact?'<div class="mark" style="left:'+tv+'%"></div>':'')+'</div>';
+    al.appendChild(row);
+  });
+  db.appendChild(al);
+
+  // potential + archetype
+  const meta=el('div');meta.style.margin='12px 0';
+  meta.innerHTML='<div class="fog-row"><div class="lab"><span class="nm">Potential ceiling</span><span class="rd">'+(pr.label==='?'?'unknown':cap(pr.label))+' · '+pr.conf+'</span></div></div>'+
+    '<div class="fog-row"><div class="lab"><span class="nm">Plays</span><span class="rd">'+ARCH_LABEL[e.topArch]+'</span></div></div>';
+  db.appendChild(meta);
+
+  // sign
+  const fee=signingFee(e);
+  const roleOpen=!G.roster[e.roleGuess];
+  const signBtn=el('button','btn primary');signBtn.style.width='100%';
+  signBtn.textContent=e.signed?'Signed to your roster':(roleOpen?'Sign as '+ROLE_LABEL[e.roleGuess]+' — '+fee+'◈':ROLE_LABEL[e.roleGuess]+' slot is full');
+  signBtn.disabled=e.signed||!roleOpen||G.cash<fee;
+  signBtn.onclick=()=>doSign(e.id);
+  db.appendChild(signBtn);
+  if(!e.signed&&roleOpen&&G.cash<fee){const w=el('div','role-tag');w.style.cssText='color:var(--toxic);margin-top:6px;text-align:center';w.textContent='Need '+fee+'◈ — you have '+Math.round(G.cash)+'◈';db.appendChild(w);}
+  det.appendChild(db);
+}
+
+/* ---------- squad ---------- */
+function renderSquad(main){
+  const head=el('div','screen-head');
+  head.innerHTML='<p class="eyebrow">Roster · chemistry</p><h1 class="title cond">Squad &amp; Chemistry</h1>'+
+    '<p class="sub">Five players are not a team. Chemistry builds every week you keep a lineup together and resets on the pairs a new signing touches — a superstar can make you worse the day they arrive.</p>';
+  main.appendChild(head);
+
+  const grid=el('div','squad-grid');
+  // left: slots
+  const slots=el('div','slot-row');
+  ROLE_ORDER.forEach(role=>{
+    const p=G.roster[role];
+    if(!p){
+      const empty=el('div','slot-empty');
+      empty.innerHTML='<div><span class="role-tag" style="color:var(--gold)">'+ROLE_LABEL[role]+'</span><div style="font-size:12px;margin-top:2px">Empty seat</div></div>';
+      const b=el('button','btn ghost');b.textContent='Scout a '+ROLE_LABEL[role];b.onclick=()=>{G.ui.screen='scout';G.ui.scoutRole=role;render();};
+      empty.appendChild(b);slots.appendChild(empty);
+    } else {
+      const c=el('div','card pcard');
+      const ov=overall(p);
+      const bars=[['MEC',p.attributes.mechanical.mechanics],['LAN',p.attributes.mechanical.laning],['TF',p.attributes.mechanical.teamfighting],['MAC',Math.round((p.attributes.gameKnowledge.mapAwareness+p.attributes.gameKnowledge.rotations)/2)]];
+      c.innerHTML='<div class="rl">'+ROLE_LABEL[role]+'</div>'+
+        '<div><div class="nm">'+p.name+'</div>'+
+        '<div class="meta">'+REGION_NAME[p.region]+' · age '+p.age+' · '+ARCH_LABEL[p.attributes.chemistry.preferredArchetype]+'</div>'+
+        '<div class="mini-bars">'+bars.map(([k,v])=>'<span class="mb">'+k+' <b>'+Math.round(v)+'</b></span>').join('')+'</div>'+
+        '<div class="state-chips"><span class="chip">Form '+p.state.form+'</span><span class="chip">Fatigue '+p.state.fatigue+'</span><span class="chip">Sharp '+p.state.sharpness+'</span></div></div>'+
+        '<div><div class="ov" style="color:'+ovColor(ov)+'">'+ov+'<small>OVERALL</small></div></div>';
+      const rel=el('button','btn ghost');rel.style.cssText='margin-top:8px;font-size:11px;padding:4px 8px';rel.textContent='Release';rel.onclick=()=>doRelease(role);
+      c.querySelector('div:nth-child(2)').appendChild(rel);
+      slots.appendChild(c);
+    }
+  });
+  grid.appendChild(slots);
+
+  // right: chemistry web
+  const right=el('div','card');
+  if(rosterCount()<2){
+    right.innerHTML='<div class="empty-note">Sign at least two players to see the Chemistry Web.</div>';
+  } else {
+    const co=S.cohesion(G.chem,lineup());
+    const wrap=el('div','web-wrap');
+    wrap.appendChild(chemistryWeb(co));
+    const lab=cohesionLabel(co.cohesion);
+    wrap.insertAdjacentHTML('beforeend','<div class="role-tag">Team cohesion</div><div class="coh-label" style="color:'+lab.color+'">'+lab.text+'</div>'+
+      '<div class="mono" style="color:var(--muted);font-size:12px;margin-top:2px">match strength ×'+co.meshMult.toFixed(3)+' · '+(co.gelling?'<span style="color:var(--warn)">still gelling ↑</span>':'settled')+'</div>');
+    right.appendChild(wrap);
+    right.insertAdjacentHTML('beforeend','<div class="legend"><span><i style="background:var(--toxic)"></i>Toxic</span><span><i style="background:#8794a4"></i>Cold</span><span><i style="background:var(--gold)"></i>Warming</span><span><i style="background:#78c9a0"></i>Solid</span><span><i style="background:var(--gel)"></i>Locked-in</span></div>');
+    right.appendChild(el('div','analyst',analystRead(co)));
+  }
+  grid.appendChild(right);
+  main.appendChild(grid);
+}
+function chemistryWeb(co){
+  const size=300,cx=size/2,cy=size/2+6,R=110;
+  const ang={top:-90,jungle:-18,bot:54,support:126,mid:198};
+  const pos={};ROLE_ORDER.forEach(r=>{const a=ang[r]*Math.PI/180;pos[r]={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)};});
+  const roleById={};ROLE_ORDER.forEach(r=>{if(G.roster[r])roleById[G.roster[r].id]=r;});
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');svg.setAttribute('viewBox','0 0 '+size+' '+size);svg.setAttribute('width','300');svg.setAttribute('height','300');svg.setAttribute('role','img');svg.setAttribute('aria-label','Chemistry web: pairwise team chemistry');
+  // edges
+  co.pairs.forEach(pc=>{
+    const ra=roleById[pc.a],rb=roleById[pc.b];if(!ra||!rb)return;
+    const band=chemBand(pc.current);
+    const wgt=({'bot|support':2,'jungle|mid':1.6,'jungle|top':1.3,'bot|jungle':1.2,'jungle|support':1.1,'mid|support':1,'bot|mid':0.9,'mid|top':0.8,'support|top':0.7,'bot|top':0.6})[[ra,rb].sort().join('|')]||0.6;
+    const line=document.createElementNS(svgNS,'line');
+    line.setAttribute('x1',pos[ra].x);line.setAttribute('y1',pos[ra].y);line.setAttribute('x2',pos[rb].x);line.setAttribute('y2',pos[rb].y);
+    line.setAttribute('stroke',band.color);line.setAttribute('stroke-width',(1+wgt*1.6).toFixed(1));line.setAttribute('stroke-linecap','round');
+    line.setAttribute('opacity',(0.35+0.55*(pc.current/100)).toFixed(2));
+    if(pc.current<0.8*pc.target)line.setAttribute('stroke-dasharray','2 5');
+    svg.appendChild(line);
+  });
+  // nodes
+  ROLE_ORDER.forEach(r=>{if(!G.roster[r])return;const pp=pos[r];
+    const g=document.createElementNS(svgNS,'g');
+    const c=document.createElementNS(svgNS,'circle');c.setAttribute('cx',pp.x);c.setAttribute('cy',pp.y);c.setAttribute('r','20');
+    c.setAttribute('fill','var(--surface-2)');c.setAttribute('stroke','var(--line)');c.setAttribute('stroke-width','1.5');g.appendChild(c);
+    const t=document.createElementNS(svgNS,'text');t.setAttribute('x',pp.x);t.setAttribute('y',pp.y-1);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','9');t.setAttribute('font-family','IBM Plex Mono');t.setAttribute('fill','var(--gold)');t.setAttribute('font-weight','600');t.textContent=r.slice(0,3).toUpperCase();g.appendChild(t);
+    const nm=document.createElementNS(svgNS,'text');nm.setAttribute('x',pp.x);nm.setAttribute('y',pp.y+10);nm.setAttribute('text-anchor','middle');nm.setAttribute('font-size','8');nm.setAttribute('fill','var(--muted)');nm.textContent=G.roster[r].name.slice(0,8);g.appendChild(nm);
+    svg.appendChild(g);
+  });
+  return svg;
+}
+function analystRead(co){
+  const weak=co.pairs.slice().sort((a,b)=>a.current-b.current)[0];
+  const roleById={};ROLE_ORDER.forEach(r=>{if(G.roster[r])roleById[G.roster[r].id]=r;});
+  let s='<b>Analyst.</b> ';
+  if(co.voices<0.8)s+='No clear shotcaller — the team goes quiet in the mid-game. ';
+  else if(co.voices>2.0)s+='Too many voices calling shots; comms are crowded. ';
+  if(co.langCoverage<0.98)s+='The roster has no single shared language, so they sync slower. ';
+  if(weak&&roleById[weak.a]&&roleById[weak.b]){
+    s+='Weakest link: <b>'+ROLE_LABEL[roleById[weak.a]]+'–'+ROLE_LABEL[roleById[weak.b]]+'</b> '+(weak.current<0.8*weak.target?'is still gelling':'sits low')+'. ';
+  }
+  if(co.cohesion>=70)s+='Overall this is a tight, trusting unit.';
+  else if(co.cohesion>=55)s+='They function, but there is another level in them with time.';
+  else s+='They are a long way from clicking — give it weeks, or change the mix.';
+  return s;
+}
+
+/* ---------- compete ---------- */
+function renderCompete(main){
+  const st=stage();
+  const head=el('div','screen-head');
+  head.innerHTML='<p class="eyebrow">'+st.name+'</p><h1 class="title cond">Compete</h1><p class="sub">'+st.blurb+' <b style="color:var(--ink)">'+G.stageWins+' / '+st.wins+'</b> series won at this tier.</p>';
+  main.appendChild(head);
+
+  if(rosterCount()<5){
+    const c=el('div','card');c.innerHTML='<div class="empty-note">You need all five roles filled before you can enter a match.<br>Head to <b>Scout the Ladder</b> and sign a full starting five.</div>';
+    main.appendChild(c);return;
+  }
+  const you={name:'Your Org',lineup:lineup(),chem:G.chem};
+  const opp=G.matchOpp||(G.matchOpp=makeOpponent());
+  const byou=S.teamBreakdown(you),bopp=S.teamBreakdown(opp);
+  const pA=1/(1+Math.pow(10,-(byou.strength-bopp.strength)/15));
+
+  const vs=el('div','vs');
+  vs.innerHTML=
+    '<div class="card teamcard you"><div class="role-tag" style="color:var(--gold)">You</div><div class="tn">'+you.name+'</div><div class="ts">'+byou.strength.toFixed(1)+'<small>TEAM STRENGTH</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+byou.base.toFixed(1)+' × mesh '+byou.meshMult.toFixed(3)+'</div></div>'+
+    '<div class="mid">VS</div>'+
+    '<div class="card teamcard"><div class="role-tag">'+st.name+'</div><div class="tn">'+opp.name+'</div><div class="ts">'+bopp.strength.toFixed(1)+'<small>TEAM STRENGTH</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+bopp.base.toFixed(1)+' × mesh '+bopp.meshMult.toFixed(3)+'</div></div>';
+  main.appendChild(vs);
+
+  const wp=el('div','wpbar');
+  wp.innerHTML='<div class="you" style="width:'+(pA*100)+'%">'+Math.round(pA*100)+'% '+you.name+'</div><div class="opp" style="width:'+((1-pA)*100)+'%">'+opp.name+' '+Math.round((1-pA)*100)+'%</div>';
+  main.appendChild(wp);
+
+  const controls=el('div');controls.style.cssText='display:flex;gap:10px;margin-bottom:18px';
+  const play=el('button','btn primary');play.innerHTML='Play Bo3 series';play.onclick=()=>{playMatch();};
+  const wk=el('button','btn');wk.textContent='Advance a week (scrim & gel)';wk.onclick=()=>advanceWeek();
+  controls.appendChild(play);controls.appendChild(wk);main.appendChild(controls);
+
+  if(G.ui.match){
+    const m=G.ui.match;const st2=el('div','card');st2.style.padding='16px';
+    const g=m.series.games[m.series.games.length-1];
+    let pips='';m.series.games.forEach((gm,i)=>{const w=gm.winner==='a';pips+='<div class="gpip '+(w?'win':'loss')+'">Game '+(i+1)+'<div style="font-family:Barlow Condensed;font-weight:700;font-size:18px">'+(w?'W':'L')+'</div><div class="mono" style="font-size:10px">'+gm.killsA+'–'+gm.killsB+' · '+gm.lengthMin+'m</div></div>';});
+    st2.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><div class="section-label" style="margin:0">Series result</div>'+
+      '<div class="cond" style="font-weight:700;font-size:22px;color:'+(m.won?'var(--gel)':'var(--toxic)')+'">'+(m.won?'VICTORY':'DEFEAT')+' '+m.series.scoreA+'–'+m.series.scoreB+'</div></div>'+
+      '<div class="games">'+pips+'</div>';
+    // last game timeline + statline
+    const tl=el('ul','timeline');g.timeline.forEach((t,i)=>{const li=el('li',null,t);li.style.animationDelay=(i*0.12)+'s';tl.appendChild(li);});
+    st2.insertAdjacentHTML('beforeend','<div class="section-label" style="margin:14px 0 6px">Deciding game — '+g.lengthMin+' min · MVP <span class="mvp">'+g.mvp.name+'</span></div>');
+    st2.appendChild(tl);
+    // your statline
+    const yourLines=(g.winner==='a')?g.linesA:g.linesB;const isYouA=true;
+    const sl=el('table','statline');
+    sl.innerHTML='<thead><tr><th>Your player</th><th>K</th><th>D</th><th>A</th><th>DMG%</th><th>Rating</th></tr></thead>';
+    const tb=el('tbody');
+    ROLE_ORDER.forEach(r=>{const line=g.linesA.find(l=>l.role===r);if(!line)return;
+      const tr=el('tr');const mv=(g.mvp.side==='a'&&g.mvp.name===line.name);
+      tr.innerHTML='<td>'+(mv?'<span class="mvp">★ </span>':'')+ROLE_LABEL[r]+' · '+line.name+'</td><td>'+line.kills+'</td><td>'+line.deaths+'</td><td>'+line.assists+'</td><td>'+Math.round(line.dmgShare*100)+'</td><td style="color:'+ratingColor(line.rating)+'">'+line.rating.toFixed(1)+'</td>';
+      tb.appendChild(tr);});
+    sl.appendChild(tb);st2.insertAdjacentHTML('beforeend','<div class="section-label" style="margin:16px 0 4px">Your box score</div>');st2.appendChild(sl);
+    main.appendChild(st2);
+  }
+  // log
+  const logc=el('div','card');logc.style.cssText='padding:14px 16px;margin-top:18px';
+  logc.innerHTML='<div class="section-label">Inbox</div>';logc.appendChild(logList());main.appendChild(logc);
+}
+
+/* ---------- sponsors ---------- */
+function renderSponsors(main){
+  const head=el('div','screen-head');
+  head.innerHTML='<p class="eyebrow">Money · brand</p><h1 class="title cond">Sponsors</h1><p class="sub">Salaries are oxygen. Sponsor offers scale with your reputation and your roster’s star power — bigger stage, bigger cheques, heavier clauses.</p>';
+  main.appendChild(head);
+
+  const g2=el('div','grid-2');
+  // offers
+  const offCol=el('div');
+  offCol.innerHTML='<div class="section-label">Available offers · reputation '+Math.round(G.reputation)+'</div>';
+  if(!G.sponsors.offers.length)offCol.insertAdjacentHTML('beforeend','<div class="card"><div class="empty-note">No offers right now. Win matches and grow your reputation to attract bigger brands.</div></div>');
+  const og=el('div','sponsor-grid');
+  G.sponsors.offers.forEach(o=>{
+    const c=el('div','card sponsor');
+    c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start"><div class="snm">'+o.nm+'</div><span class="pill '+(o.tier>=3?'gold':o.tier>=2?'info':'')+'">Tier '+(o.tier+1)+'</span></div>'+
+      '<div class="flav">'+o.flav+'</div>'+
+      '<div class="terms"><div class="t"><span>Signing bonus</span><b>+'+o.base+'◈</b></div><div class="t"><span>Weekly</span><b>+'+o.weekly.toFixed(1)+'◈</b></div>'+
+      (o.clause?'<div class="t"><span>Clause</span><b>'+o.clause+'</b></div>':'')+
+      (o.ob?'<div class="t"><span>Obligation</span><b>'+o.ob+'</b></div>':'')+'</div>';
+    const b=el('button','btn primary');b.style.marginTop='auto';b.textContent='Sign deal (+'+o.base+'◈)';b.onclick=()=>acceptSponsor(o.id);
+    c.appendChild(b);og.appendChild(c);
+  });
+  offCol.appendChild(og);g2.appendChild(offCol);
+
+  // active
+  const actCol=el('div');
+  actCol.innerHTML='<div class="section-label">Active deals · +'+G.sponsors.active.reduce((s,a)=>s+a.weekly,0).toFixed(1)+'◈ / week</div>';
+  if(!G.sponsors.active.length)actCol.insertAdjacentHTML('beforeend','<div class="card"><div class="empty-note">No active sponsors yet.</div></div>');
+  G.sponsors.active.forEach(a=>{const c=el('div','card sponsor');c.style.marginBottom='12px';
+    c.innerHTML='<div class="snm">'+a.nm+'</div><div class="terms"><div class="t"><span>Weekly income</span><b>+'+a.weekly.toFixed(1)+'◈</b></div>'+(a.clause?'<div class="t"><span>Clause</span><b>'+a.clause+'</b></div>':'')+'</div>';
+    actCol.appendChild(c);});
+  g2.appendChild(actCol);
+  main.appendChild(g2);
+}
+
+/* ---------- small helpers ---------- */
+function logList(){const l=el('div','log');G.inbox.slice(0,10).forEach(m=>{const d=el('div','li');d.innerHTML='<span class="wk">wk '+m.week+'</span><span class="tx">'+m.text+'</span>';l.appendChild(d);});if(!G.inbox.length)l.innerHTML='<div class="empty-note">Nothing yet.</div>';return l;}
+function gemBadge(tier,big){return '<span class="gem" style="'+(big?'font-size:13px':'')+'"><i style="background:'+TIER_HUE[tier]+'"></i>'+TIER_NAME[tier]+'</span>';}
+function chemBand(v){if(v<30)return{label:'Toxic',color:'var(--toxic)'};if(v<50)return{label:'Cold',color:'#8794a4'};if(v<70)return{label:'Warming',color:'var(--gold)'};if(v<85)return{label:'Solid',color:'#78c9a0'};return{label:'Locked-in',color:'var(--gel)'};}
+function cohesionLabel(c){if(c<30)return{text:'Fractured',color:'var(--toxic)'};if(c<45)return{text:'Loose',color:'#b0836a'};if(c<60)return{text:'Functional',color:'var(--gold)'};if(c<75)return{text:'Cohesive',color:'#78c9a0'};return{text:'Unbreakable',color:'var(--gel)'};}
+function ovColor(o){if(o<50)return'var(--muted)';if(o<65)return'var(--ink)';if(o<78)return'var(--gold)';return'var(--gel)';}
+function ratingColor(r){if(r<4)return'var(--toxic)';if(r<6)return'var(--muted)';if(r<8)return'var(--ink)';return'var(--gold)';}
+function toRoman(n){return['','I','II','III','IV'][n]||n;}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+/* ---------- wiring ---------- */
+document.querySelectorAll('.nav[data-screen]').forEach(n=>n.onclick=()=>{G.ui.screen=n.dataset.screen;render();});
+$('#newGameBtn').onclick=()=>{if(confirm('Start a fresh career? Current progress is lost.'))newGame();};
+$('#themeBtn').onclick=()=>{
+  const root=document.documentElement;const cur=root.getAttribute('data-theme');
+  const next=cur==='dark'?'light':cur==='light'?'dark':(matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');
+  root.setAttribute('data-theme',next);
+};
+newGame();
+</script>

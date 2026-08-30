@@ -27,7 +27,11 @@ A pure, deterministic simulation engine (no DOM, no I/O), test-first:
 - **Ranked ladder** — `soloAbility` (distinct from pro ability) driving an MMR model where rank is a noisy proxy for truth: smurfs, boosted accounts, and hidden gems are all real, findable-through-scouting archetypes.
 - **Foundation** — seeded named-stream RNG, a week-based calendar, deterministic IDs.
 
-The worked examples in the design docs are reproduced exactly by unit tests. The playable prototype UI ships as a self-contained Artifact while the React app (`apps/web`) is built out.
+The worked examples in the design docs are reproduced exactly by unit tests.
+
+### Play it
+
+A self-contained, interactive **[prototype](prototype/)** (`prototype/index.html`) is the playable face while the React app (`apps/web`) is built out. Scout a fogged ranked ladder and sign players, watch team chemistry gel on the Chemistry Web, and compete up the pyramid from Local Opens to Worlds. Its engine is a faithful JS port of `packages/core` — the same algorithms and the same golden numbers.
 
 ## The pitch in one paragraph
 
