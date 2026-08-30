@@ -33,6 +33,15 @@ Provisional: v1 you own the org (one failure state: bankruptcy; board = investor
 - **Promotion is sporting (gauntlet) at first; franchising arrives later as a career storyline.** (GDD §12)
 - **Determinism everywhere + balance harness built early.** (Tech plan §4, §8)
 
+### New decisions (from the systems deep-dives, `05-systems/`)
+
+- **Attribute model: 72 attributes across visible / fogged / hidden layers.** Hidden "chemistry drivers" are the only inputs meshing may read (the interface guarantee). ([players-and-attributes.md](05-systems/players-and-attributes.md))
+- **Meshing spine = pairwise chemistry matrix** (chosen over playstyle-identity and wavelength models by a judged design panel), with lane-duo weighting and a time-based ramp. Grafts from the runners-up (signed/negative ceilings for true implosions; draft↔meta↔identity coupling) are roadmapped. ([meshing.md](05-systems/meshing.md))
+- **The ranked ladder is a first-class talent pipeline.** It reads a distinct `soloAbility`, not pro ability, so rank is a *legible-but-wrong-in-known-ways* proxy — smurfs, boosted accounts, one-tricks, and hidden gems are all mechanical archetypes revealed through scouting. ([ranked-ladder.md](05-systems/ranked-ladder.md))
+- **The climb is gated by two currencies — sporting AND financial.** Top-league entry is either the promotion gauntlet or a franchise auction; a mid-career franchise-conversion event is the marquee storyline. ([competition-pyramid.md](05-systems/competition-pyramid.md))
+- **Sponsor deals = base + performance clauses + obligations** (media/content time is a real fatigue/morale cost), with offers generated from reputation, brand, results, and roster star-power. ([sponsorships-and-economy.md](05-systems/sponsorships-and-economy.md))
+- **Calendar: an idealized 52-week / 364-day year** (clean, boundary-free scheduling) rather than the Gregorian calendar. (`core/src/world/clock.ts`)
+
 ## Parking lot (ideas noted, deliberately not planned)
 
 Academy/second roster management · playing as other regions' minor leagues · in-game "solo queue ladder" browser with generated drama · co-streaming/media minigames · multiplayer online leagues · other esports titles under one org umbrella · real-data import tooling (community-side only).

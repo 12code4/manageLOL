@@ -1,6 +1,8 @@
 # manageLOL — Game Design Document
 
-*Status: initial planning draft. Everything here is a starting position, not a contract. Numbers are placeholders marked as tunable.*
+*Status: high-level design. This document is the map; the territory — exact attributes, formulas, and data shapes — lives in the [`05-systems/`](05-systems/) deep-dives, several of which are now implemented and tested in `packages/core`.*
+
+**Deep-dive specs:** [players & attributes](05-systems/players-and-attributes.md) · [team meshing](05-systems/meshing.md) · [ranked ladder](05-systems/ranked-ladder.md) · [competition pyramid & franchising](05-systems/competition-pyramid.md) · [sponsorships & economy](05-systems/sponsorships-and-economy.md)
 
 ---
 

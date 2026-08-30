@@ -8,14 +8,26 @@ Think *Football Manager*, but for LoL esports: short brutal careers, a meta that
 
 ## Status
 
-**Planning phase.** No code yet. The design and technical direction live in `docs/`:
+**Design locked on the core systems; the simulation engine is underway.** The design lives in `docs/`; a deterministic TypeScript sim core lives in `packages/`.
 
 | Doc | Contents |
 | --- | --- |
 | [`docs/01-game-design.md`](docs/01-game-design.md) | Game design document: pillars, core loop, all gameplay systems |
-| [`docs/02-technical-plan.md`](docs/02-technical-plan.md) | Proposed stack, architecture, data model, simulation design |
+| [`docs/02-technical-plan.md`](docs/02-technical-plan.md) | Stack, architecture, data model, simulation design |
 | [`docs/03-roadmap.md`](docs/03-roadmap.md) | Phased build plan with exit criteria per phase |
-| [`docs/04-open-questions.md`](docs/04-open-questions.md) | Decisions made provisionally + questions to settle before building |
+| [`docs/04-open-questions.md`](docs/04-open-questions.md) | Decisions made + questions to settle |
+| [`docs/05-systems/`](docs/05-systems/) | **Deep-dive specs** for players & attributes, team meshing, the ranked ladder, the competition pyramid & franchising, and sponsorships — each with formulas and worked examples |
+
+### What's built (`packages/core`)
+
+A pure, deterministic simulation engine (no DOM, no I/O), test-first:
+
+- **Players** — a 72-attribute model (visible / fogged / hidden), current ability, off-role penalty, champion proficiency, region-flavored procedural generation, and the scouting fog transform.
+- **Meshing** — the signature system: a pairwise chemistry matrix with lane-duo weighting that ramps over time and breaks on roster changes, collapsing to one team multiplier.
+- **Ranked ladder** — `soloAbility` (distinct from pro ability) driving an MMR model where rank is a noisy proxy for truth: smurfs, boosted accounts, and hidden gems are all real, findable-through-scouting archetypes.
+- **Foundation** — seeded named-stream RNG, a week-based calendar, deterministic IDs.
+
+The worked examples in the design docs are reproduced exactly by unit tests. The playable prototype UI ships as a self-contained Artifact while the React app (`apps/web`) is built out.
 
 ## The pitch in one paragraph
 
