@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+  <style>
+    body { margin: 0; font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    a { color: #e3b24d; } a:hover { color: #f0cd7a; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; background: #0d1016; color: #e7eaf1; display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- scoreboard -->
+  <div style="height: 64px; display: flex; align-items: center; gap: 22px; padding: 0 22px; border-bottom: 1px solid #2a3340; background: #151a22">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <span style="font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 24px; color: #e3b24d">YOUR ORG</span>
+      <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 30px">14 – 9</span>
+      <span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 24px; color: #93a0b4">ASHFALL</span>
+    </div>
+    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4bc08d">gold +2.1k</div>
+    <div style="display: flex; gap: 16px; margin-left: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #93a0b4">
+      <span style="display: inline-flex; align-items: center; gap: 6px">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#65a1e6" stroke-width="1.8"><path d="M12 3l7 4v6c0 4-3 6.5-7 8-4-1.5-7-4-7-8V7z"></path></svg>
+        Wardens 2–1
+      </span>
+      <span style="display: inline-flex; align-items: center; gap: 6px">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#8a6fd0" stroke-width="1.8"><path d="M12 2l3 5 5 1-3.5 4 .5 6-5-2-5 2 .5-6L4 8l5-1z"></path></svg>
+        Colossus 0–0
+      </span>
+    </div>
+    <div style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 22px">28:41</div>
+  </div>
+
+  <!-- main row -->
+  <div style="flex: 1; display: flex; min-height: 0">
+    <div style="flex: 1; display: flex; flex-direction: column; padding: 16px 18px; gap: 14px; min-width: 0">
+
+      <!-- win probability -->
+      <div style="border-radius: 8px; background: #151a22; border: 1px solid #2a3340; padding: 14px 16px">
+        <div style="display: flex; align-items: baseline; margin-bottom: 8px">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.13em; color: #606d7e">WIN PROBABILITY</div>
+          <div style="margin-left: auto; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; color: #4bc08d">67%</div>
+        </div>
+        <svg viewBox="0 0 640 120" width="100%" height="120" role="img" aria-label="Win probability over the game: even early, a dip at 20 minutes, climbing after the Colossus fight">
+          <line x1="0" y1="60" x2="640" y2="60" stroke="#2a3340" stroke-width="1" stroke-dasharray="3 4"></line>
+          <text x="4" y="14" font-family="IBM Plex Mono" font-size="9" fill="#606d7e">100</text>
+          <text x="4" y="64" font-family="IBM Plex Mono" font-size="9" fill="#606d7e">50</text>
+          <text x="4" y="114" font-family="IBM Plex Mono" font-size="9" fill="#606d7e">0</text>
+          <polyline points="30,62 80,58 130,64 180,55 230,68 280,80 330,74 380,84 420,70 460,64 500,52 540,44 580,38 620,40" fill="none" stroke="#e3b24d" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+          <circle cx="620" cy="40" r="4" fill="#e3b24d"></circle>
+        </svg>
+      </div>
+
+      <!-- timeline -->
+      <div style="flex: 1; border-radius: 8px; background: #151a22; border: 1px solid #2a3340; padding: 14px 16px; min-height: 0">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.13em; color: #606d7e; margin-bottom: 10px">TIMELINE</div>
+        <div style="display: flex; flex-direction: column; gap: 0">
+          <div style="display: flex; gap: 12px; padding: 8px 0; border-left: 2px solid #e3b24d; padding-left: 14px; position: relative">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #e3b24d; width: 44px; flex: none">28:12</span>
+            <span style="font-size: 12.5px">Teamfight at the Colossus — <b>you win it 4-for-1</b>. Yoito triple.</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 8px 0; border-left: 2px solid #2a3340; padding-left: 14px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #606d7e; width: 44px; flex: none">26:40</span>
+            <span style="font-size: 12.5px; color: #93a0b4">Seraphel caught crossing the river — Yorrel collects the toll.</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 8px 0; border-left: 2px solid #2a3340; padding-left: 14px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #606d7e; width: 44px; flex: none">24:03</span>
+            <span style="font-size: 12.5px; color: #93a0b4">Battering Shade slams mid — the bastion falls.</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 8px 0; border-left: 2px solid #2a3340; padding-left: 14px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #606d7e; width: 44px; flex: none">19:55</span>
+            <span style="font-size: 12.5px; color: #93a0b4">Second Warden secured — your scaling is online.</span>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 8px 0; border-left: 2px solid #2a3340; padding-left: 14px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #606d7e; width: 44px; flex: none">14:22</span>
+            <span style="font-size: 12.5px; color: #93a0b4">Ashfall dive bot — first blood against you.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- crowd rail -->
+    <div style="width: 320px; border-left: 1px solid #2a3340; background: #12161e; display: flex; flex-direction: column; padding: 14px 16px">
+      <div style="display: flex; align-items: center; margin-bottom: 10px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: #606d7e">THE CROWD</div>
+        <div style="margin-left: auto; display: flex; gap: 6px; align-items: center">
+          <div style="width: 42px; height: 5px; border-radius: 3px; background: #222a35; overflow: hidden"><div style="width: 80%; height: 100%; background: #e0665a"></div></div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #606d7e">HYPE</span>
+        </div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; font-size: 11.5px; line-height: 1.45; overflow: hidden">
+        <div><span style="color: #65a1e6; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">ashfall_ultra:</span> <span style="color: #93a0b4">COLOSSUS AT 28?? GRIEF GRIEF</span></div>
+        <div><span style="color: #e3b24d; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">xXFenwickMainXx:</span> <span style="color: #93a0b4">it's over</span></div>
+        <div><span style="color: #e3b24d; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">xXFenwickMainXx:</span> <span style="color: #93a0b4">WE'RE SO BACK CLAP CLAP CLAP</span></div>
+        <div><span style="color: #4bc08d; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">hesper_invoice:</span> <span style="color: #93a0b4">the audit arrives at minute 35, as foretold</span></div>
+        <div><span style="color: #93a0b4; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">wardDog_enjoyer:</span> <span style="color: #93a0b4">jungle diff btw</span></div>
+        <div><span style="color: #606d7e; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">automod:</span> <span style="color: #606d7e; font-style: italic">[message removed by AutoMod]</span></div>
+        <div><span style="color: #e0a94a; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">voltcurrent_official:</span> <span style="color: #93a0b4">this comeback is CAFFEINATED ⚡</span></div>
+        <div><span style="color: #93a0b4; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px">quiet_quill_fan:</span> <span style="color: #93a0b4">chat is this real</span></div>
+      </div>
+      <div style="margin-top: 10px; border-top: 1px solid #1f2530; padding-top: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #606d7e">12,408 watching · slow mode off</div>
+    </div>
+  </div>
+
+  <!-- box score -->
+  <div style="height: 96px; border-top: 1px solid #2a3340; background: #151a22; display: flex; align-items: center; gap: 10px; padding: 0 18px">
+    <div style="flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px">
+      <div style="border-radius: 6px; background: #1b212b; border: 1px solid #2a3340; padding: 8px 12px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; color: #e3b24d">TOP</div>
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 16px">Ryyan</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #93a0b4">2/1/6 · <span style="color: #e7eaf1">6.8</span></div>
+      </div>
+      <div style="border-radius: 6px; background: #1b212b; border: 1px solid #2a3340; padding: 8px 12px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; color: #e3b24d">JUNGLE</div>
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 16px">Zeaysh</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #93a0b4">3/2/9 · <span style="color: #e7eaf1">7.4</span></div>
+      </div>
+      <div style="border-radius: 6px; background: #1b212b; border: 1px solid #6d5a2c; padding: 8px 12px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; color: #e3b24d">MID ★ MVP PACE</div>
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 16px">Yoito</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #93a0b4">6/1/5 · <span style="color: #e3b24d">9.1</span></div>
+      </div>
+      <div style="border-radius: 6px; background: #1b212b; border: 1px solid #2a3340; padding: 8px 12px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; color: #e3b24d">BOT</div>
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 16px">Maaz</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #93a0b4">3/3/7 · <span style="color: #e7eaf1">6.1</span></div>
+      </div>
+      <div style="border-radius: 6px; background: #1b212b; border: 1px solid #2a3340; padding: 8px 12px">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; color: #e3b24d">SUPPORT</div>
+        <div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 16px">Feauser</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #93a0b4">0/2/14 · <span style="color: #e7eaf1">7.0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

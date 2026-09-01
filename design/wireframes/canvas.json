@@ -1,0 +1,10 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Draft Board" },
+    { "file": "MatchDay.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 900, "title": "Match Day — Live" }
+  ],
+  "annotations": [
+    { "id": "format-note", "x": 0, "y": -190, "w": 460, "text": "Format A — the editable-canvas version of the wireframes.\nCompare with Format B: the sketches inside docs/06-ui-architecture.md.\nSame two screens, drawn in the prototype's design system (ink + gold, Barlow Condensed / IBM Plex). Click into an artboard to move or restyle anything." }
+  ],
+  "launch": { "view": "canvas" }
+}

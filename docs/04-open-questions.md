@@ -42,6 +42,13 @@ Provisional: v1 you own the org (one failure state: bankruptcy; board = investor
 - **Sponsor deals = base + performance clauses + obligations** (media/content time is a real fatigue/morale cost), with offers generated from reputation, brand, results, and roster star-power. ([sponsorships-and-economy.md](05-systems/sponsorships-and-economy.md))
 - **Calendar: an idealized 52-week / 364-day year** (clean, boundary-free scheduling) rather than the Gregorian calendar. (`core/src/world/clock.ts`)
 
+### Decisions from the draft round (user-confirmed)
+
+- **Draft ships first** (before contracts/salaries), with the **full tournament ban/pick sequence** — no compressed variant; delegation is the speed valve. ([draft-and-champions.md](05-systems/draft-and-champions.md))
+- **48 champions at launch**, shipped as a validated content pack with per-champion flavor and crowd lines. (`packages/data/src/champions.ts`)
+- **Humor is a design pillar-adjacent layer:** the sim stays deadpan; comedy lives in flavor fields and **The Crowd** — a scrolling, context-reactive chat rail on the draft board and match view. ([the-crowd.md](05-systems/the-crowd.md))
+- **Wireframe formats:** both piloted (in-doc sketches in [`06-ui-architecture.md`](06-ui-architecture.md) + an editable design canvas); user to pick the standard.
+
 ## Parking lot (ideas noted, deliberately not planned)
 
 Academy/second roster management · playing as other regions' minor leagues · in-game "solo queue ladder" browser with generated drama · co-streaming/media minigames · multiplayer online leagues · other esports titles under one org umbrella · real-data import tooling (community-side only).
