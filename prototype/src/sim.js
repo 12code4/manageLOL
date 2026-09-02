@@ -557,3 +557,158 @@
   };
   S.EMOTES = EMOTES;
 })(typeof window !== 'undefined' ? window : globalThis);
+
+/* ===================== ticks · auto-draft skill · team comms (port of @managelol/core + prototype voice) ===================== */
+(function (root) {
+  'use strict';
+  const S = root.LOLSim;
+  const clamp = S.clamp, round = S.round, ROLES = S.ROLES;
+  const mean = (xs) => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
+
+  // ---------- auto-draft skill (team quality → less noise) ----------
+  S.draftSkill = function (team) {
+    const sense = mean(ROLES.map((r) => { const k = team.lineup[r].attributes.gameKnowledge; return (k.shotcalling + k.adaptability + k.mapAwareness) / 3; }));
+    const coh = team.cohesion !== undefined ? team.cohesion : 50;
+    return clamp(0.35 * (team.coachQuality || 50) + 0.3 * coh + 0.35 * sense, 0, 100);
+  };
+  S.draftNoiseSigma = (team) => 1.6 * (1 - 0.7 * (S.draftSkill(team) / 100)) * (1 - 0.3 * ((team.patchFamiliarity || 50) / 100));
+  S.aiChoose = function (s, side, team, opp, patch, rng) {
+    const scored = S.scoreActions(s, side, team, opp, patch), sigma = S.draftNoiseSigma(team);
+    let best = scored[0], bestV = -Infinity;
+    scored.forEach((a) => { const v = a.value + rng.normal() * sigma; if (v > bestV) { bestV = v; best = a; } });
+    return best.champId;
+  };
+
+  // ---------- game ticks (30s steps) ----------
+  S.TICK_SECONDS = 30;
+  const smooth = (x) => { const c = clamp(x, 0, 1); return c * c * (3 - 2 * c); };
+  function pickW(rng, items, w) { return rng.weighted ? rng.weighted(items, items.map((x) => w(x) + 0.5)) : items[0]; }
+  // Rng port lacks weighted(); add it (same semantics as core)
+  if (!S.Rng.prototype.weighted) S.Rng.prototype.weighted = function (items, weights) { let total = 0; weights.forEach((w) => (total += Math.max(0, w))); let roll = this.next() * total; for (let i = 0; i < items.length; i++) { roll -= Math.max(0, weights[i]); if (roll < 0) return items[i]; } return items[items.length - 1]; };
+  const KILL_VERBS = ['takes down', 'picks off', 'finds', 'punishes', 'deletes', 'catches out'];
+  const clockOf = (t) => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  S.generateTicks = function (g, aName, bName, rng) {
+    const N = Math.max(20, Math.round(g.lengthMin * 2)), T = N * 30, aWins = g.winner === 'a';
+    const name = (s) => (s === 'a' ? aName : bName), lines = (s) => (s === 'a' ? g.linesA : g.linesB);
+    const killGap = Math.abs(g.killsA - g.killsB);
+    const finalGold = clamp(6 + 0.45 * killGap + rng.range(0, 3), 5, 18) * (aWins ? 1 : -1);
+    const kw = (t) => (t < 150 ? 0 : t < 600 ? 0.6 : t < 1500 ? 1 : 0.8);
+    const idx = []; for (let i = 1; i <= N; i++) idx.push(i);
+    const sched = (n) => { const out = []; for (let k = 0; k < n; k++) out.push(pickW(rng, idx, (i) => kw(i * 30))); return out; };
+    const killsAt = { a: sched(g.killsA), b: sched(g.killsB) };
+    const wardenTimes = []; for (let t = 300; t < T - 90; t += 300 + rng.int(-30, 60)) wardenTimes.push(Math.round(t / 30) * 30);
+    const shadeTime = T > 600 ? rng.int(16, Math.min(28, N - 2)) * 30 : -1;
+    const colTimes = []; if (T > 1260) colTimes.push(rng.int(40, Math.min(48, N - 2)) * 30); if (T > 1900 && colTimes.length) colTimes.push(colTimes[0] + rng.int(10, 13) * 30);
+    const ticks = []; let killsA = 0, killsB = 0, noise = 0, fb = false;
+    const wardens = [0, 0], colossus = [0, 0], bastions = [0, 0]; let nextBastion = 600 + rng.int(0, 4) * 30;
+    for (let i = 1; i <= N; i++) {
+      const t = i * 30, progress = i / N, events = [];
+      noise = noise * 0.85 + rng.gaussian(0, 0.35);
+      const base = finalGold * smooth((t - 180) / Math.max(1, T - 180));
+      let gold = i === N ? finalGold : base + noise * (1 - progress * 0.6);
+      const leader = gold >= 0 ? 'a' : 'b';
+      const ka = killsAt.a.filter((x) => x === i).length, kb = killsAt.b.filter((x) => x === i).length;
+      const addKill = (side) => {
+        const killer = pickW(rng, lines(side), (l) => l.kills), victim = pickW(rng, lines(side === 'a' ? 'b' : 'a'), (l) => l.deaths);
+        if (side === 'a') killsA++; else killsB++;
+        if (!fb) { fb = true; events.push({ type: 'firstBlood', side: side, text: killer.name + ' ' + rng.pick(KILL_VERBS) + ' ' + victim.name + ' — first blood to ' + name(side) + '.', player: killer.name, victim: victim.name }); }
+        else events.push({ type: 'kill', side: side, text: killer.name + ' ' + rng.pick(KILL_VERBS) + ' ' + victim.name + '.', player: killer.name, victim: victim.name });
+        gold += side === 'a' ? 0.3 : -0.3;
+      };
+      for (let k = 0; k < ka; k++) addKill('a'); for (let k = 0; k < kb; k++) addKill('b');
+      if (ka + kb >= 3) { const fw = ka > kb ? 'a' : kb > ka ? 'b' : leader; events.push({ type: 'fight', side: fw, text: 'A teamfight breaks out — ' + name(fw) + ' come out ahead ' + Math.max(ka, kb) + '-for-' + Math.min(ka, kb) + '.' }); }
+      if (wardenTimes.indexOf(t) >= 0) { const o = rng.chance(0.7) ? leader : (leader === 'a' ? 'b' : 'a'); wardens[o === 'a' ? 0 : 1]++; const n = wardens[o === 'a' ? 0 : 1]; events.push({ type: 'warden', side: o, text: n >= 2 ? name(o) + ' secure their ' + (n === 2 ? 'second' : n === 3 ? 'third' : 'fourth') + ' Warden — the scaling is online.' : name(o) + ' take the first Warden.' }); gold += o === 'a' ? 0.2 : -0.2; }
+      if (t === shadeTime) { const o = rng.chance(0.75) ? leader : (leader === 'a' ? 'b' : 'a'); events.push({ type: 'shade', side: o, text: 'The Battering Shade slams a bastion for ' + name(o) + '.' }); bastions[o === 'a' ? 0 : 1]++; gold += o === 'a' ? 0.4 : -0.4; }
+      if (colTimes.indexOf(t) >= 0) { const stolen = !rng.chance(0.8); const o = stolen ? (leader === 'a' ? 'b' : 'a') : leader; colossus[o === 'a' ? 0 : 1]++; events.push({ type: 'colossus', side: o, text: stolen ? 'COLOSSUS STOLEN — ' + name(o) + ' snatch it from under ' + name(leader) + '!' : name(o) + ' slay the Colossus.' }); gold += o === 'a' ? 1.2 : -1.2; }
+      if (t >= nextBastion && i < N) { const o = rng.chance(0.8) ? leader : (leader === 'a' ? 'b' : 'a'); bastions[o === 'a' ? 0 : 1]++; events.push({ type: 'bastion', side: o, text: name(o) + ' knock down a bastion.' }); nextBastion = t + (180 + rng.int(0, 6) * 30); }
+      if (i === N) { const w = aWins ? 'a' : 'b'; bastions[aWins ? 0 : 1] += 2; events.push({ type: 'end', side: w, text: name(w) + ' break the Keep — victory at ' + clockOf(t) + '.' }); }
+      const pGold = 1 / (1 + Math.pow(10, -gold / 6)), w = clamp((progress - 0.85) / 0.15, 0, 1);
+      const wp = i === N ? (aWins ? 1 : 0) : pGold * (1 - w) + (aWins ? 1 : 0) * w;
+      ticks.push({ i: i, t: t, goldDiff: round(gold, 2), killsA: killsA, killsB: killsB, wardens: wardens.slice(), colossus: colossus.slice(), bastions: bastions.slice(), winProbA: round(wp, 3), events: events });
+    }
+    return ticks;
+  };
+  S.clockOf = clockOf;
+
+  // ---------- team comms (your players + coach; tone follows cohesion) ----------
+  const D = {
+    banTight: ['Coach: {enemy} lives on {champ}. Ban it.', '{p1}: ban {champ}, I do not want to lane into that', '{p2}: agreed, kill it'],
+    banOk: ['Coach: thoughts on banning {champ}?', '{p1}: yeah {champ} is annoying', '{p2}: or {alt}? either works'],
+    banFrayed: ['{p1}: ban {champ}', '{p2}: why?? ban {alt}', 'Coach: …we are banning {champ}.'],
+    pickTight: ['{rp}: I have {champ} or {alt} here', 'Coach: {champ} fits the plan', '{other}: go {champ}, I will play around you'],
+    pickOk: ['{rp}: {champ}? or {alt}?', '{other}: we still need {need}', 'Coach: {champ}. lock it'],
+    pickFrayed: ['{rp}: give me {champ}', '{other}: we have no {need} and you want {champ}?', '{rp}: I am not playing {alt}', 'Coach: {champ}. moving on.'],
+    lockTight: ['{rp}: locked. trust.', '{other}: nice', 'Coach: good'],
+    lockOk: ['{rp}: ok locked', 'Coach: fine'],
+    lockFrayed: ['{rp}: locked.', '{other}: …sure.', '{rp}: what'],
+    waitTight: ['Coach: they will want {pred}', '{p1}: if they take {pred} we go {alt}', '{p2}: watch the flex pick'],
+    waitOk: ['{p1}: what do we think they take?', 'Coach: probably {pred}', '{p2}: fine either way'],
+    waitFrayed: ['{p1}: they are taking {pred} obviously', '{p2}: you said that last game', 'Coach: focus.'],
+  };
+  const GM = {
+    fbUs: ['{killer}: got him', '{other}: FIRST BLOOD lets go', 'Coach: good — keep the tempo'],
+    fbThemTight: ['{victim}: my bad, bad flash', '{other}: it is fine, reset', '{sc}: we play for Warden'],
+    fbThemOk: ['{victim}: died, no flash', '{sc}: ok, careful now'],
+    fbThemFrayed: ['{victim}: no follow??', '{other}: why were you even there', '{sc}: stop. play.'],
+    killUs: ['{killer}: ez', '{killer}: one down', '{sc}: push the wave, then reset', '{other}: clean'],
+    killThemTight: ['{victim}: died, my fault', '{sc}: fine, we scale'],
+    killThemOk: ['{victim}: died', '{sc}: careful, they have numbers'],
+    killThemFrayed: ['{victim}: nobody said anything', '{other}: I pinged three times', '{sc}: …'],
+    wardenUs: ['{sup}: Warden secured, reset', '{sc}: good, group mid', '{jg}: they gave it for free'],
+    wardenThem: ['{sc}: we take the top bastion for it', '{jg}: nobody came for Warden', '{sup}: no vision there, sorry'],
+    shadeUs: ['{jg}: Shade is ours, mid bastion now', '{sc}: push it push it'],
+    shadeThem: ['{sc}: hold, do not fight for it', '{top}: I can hold the wave'],
+    colUs: ['{sc}: COLOSSUS NOW', '{jg}: go go go', '{sup}: we have it, fall back'],
+    colThem: ['{sc}: fall back, do not chase', '{other}: who is calling??', '{sup}: reset and defend'],
+    fightWin: ['{sc}: WE WIN THE FIGHT', '{other}: so clean', 'Coach: that is the team'],
+    fightLoss: ['{sc}: ok that one is on me', '{other}: that was so bad', '{sup}: reset, we are still fine'],
+    bastionUs: ['{other}: bastion down', '{sc}: good, rotate'],
+    bastionThem: ['{sc}: fine, we trade top'],
+    endWin: ['{sc}: GG', '{other}: LETS GOOO', 'Coach: proud of you lot'],
+    endLossTight: ['{sc}: gg. we review tomorrow.', 'Coach: heads up. next one.'],
+    endLossFrayed: ['{other}: …', '{sc}: gg', 'Coach: we will talk.'],
+    idle: ['{other}: wave state is good', '{sup}: ward here', '{sc}: Warden in 60', '{other}: no flash bot', '{jg}: pathing top side', 'Coach: breathe.'],
+  };
+  const moodOf = (coh) => (coh >= 68 ? 'Tight' : coh >= 48 ? 'Ok' : 'Frayed');
+  function fillC(t, ctx) { return t.replace(/\{(\w+)\}/g, (m, k) => (ctx[k] !== undefined ? ctx[k] : m)); }
+  function speakerSplit(line) { const i = line.indexOf(': '); return i > 0 ? { who: line.slice(0, i), text: line.slice(i + 2) } : { who: 'Comms', text: line }; }
+  S.moodOf = moodOf;
+  /** Draft deliberation lines for our team. kind: 'ban'|'pick'|'lock'|'wait' */
+  S.commsDraft = function (kind, ctx, rng) {
+    const mood = moodOf(ctx.cohesion || 50);
+    const pool = D[kind + mood] || D[kind + 'Ok'];
+    const names = ROLES.map((r) => ctx.lineup[r].name);
+    const rp = ctx.rolePlayer || rng.pick(names);
+    const others = names.filter((n) => n !== rp);
+    const c = Object.assign({ p1: rng.pick(others), p2: rng.pick(others), rp: rp, other: rng.pick(others), champ: ctx.champ || 'that', alt: ctx.alt || 'the other one', enemy: ctx.enemy || 'their carry', pred: ctx.pred || 'a comfort pick', need: ctx.need || 'engage' }, {});
+    if (c.p2 === c.p1 && others.length > 1) c.p2 = others.find((n) => n !== c.p1);
+    const n = kind === 'lock' ? 1 + (rng.chance(0.5) ? 1 : 0) : 2;
+    const chosen = pool.slice(0, n); // keep the scripted beat order
+    return chosen.map((l) => Object.assign(speakerSplit(fillC(l, c)), { mood: mood }));
+  };
+  /** In-game comms for a tick event; `ours` = event side is our team. */
+  S.commsGame = function (ev, ctx, rng) {
+    const mood = moodOf(ctx.cohesion || 50);
+    const lu = ctx.lineup, names = ROLES.map((r) => lu[r].name);
+    const sc = ROLES.map((r) => lu[r]).sort((a, b) => b.attributes.gameKnowledge.shotcalling - a.attributes.gameKnowledge.shotcalling)[0].name;
+    const c = { sc: sc, sup: lu.support.name, jg: lu.jungle.name, top: lu.top.name, killer: ev && ev.player || sc, victim: ev && ev.victim || sc, other: rng.pick(names.filter((n) => n !== sc)) };
+    let pool;
+    if (!ev) pool = GM.idle;
+    else if (ev.type === 'firstBlood') pool = ctx.ours ? GM.fbUs : GM['fbThem' + mood];
+    else if (ev.type === 'kill') pool = ctx.ours ? GM.killUs : GM['killThem' + mood];
+    else if (ev.type === 'warden') pool = ctx.ours ? GM.wardenUs : GM.wardenThem;
+    else if (ev.type === 'shade') pool = ctx.ours ? GM.shadeUs : GM.shadeThem;
+    else if (ev.type === 'colossus') pool = ctx.ours ? GM.colUs : GM.colThem;
+    else if (ev.type === 'fight') pool = ctx.ours ? GM.fightWin : GM.fightLoss;
+    else if (ev.type === 'bastion') pool = ctx.ours ? GM.bastionUs : GM.bastionThem;
+    else if (ev.type === 'end') pool = ctx.ours ? GM.endWin : (mood === 'Frayed' ? GM.endLossFrayed : GM.endLossTight);
+    else pool = GM.idle;
+    // for events where the victim/killer is on the OTHER team, swap names to ours sensibly
+    if (ev && !ctx.ours && ev.victim) c.victim = names.indexOf(ev.victim) >= 0 ? ev.victim : rng.pick(names);
+    if (ev && ctx.ours && ev.player) c.killer = names.indexOf(ev.player) >= 0 ? ev.player : rng.pick(names);
+    const n = pool === GM.idle ? 1 : Math.min(pool.length, 1 + (rng.chance(0.55) ? 1 : 0));
+    const out = []; const used = {};
+    for (let i = 0; i < n; i++) { let l = pool[i]; if (used[l]) continue; used[l] = 1; out.push(Object.assign(speakerSplit(fillC(l, c)), { mood: mood })); }
+    return out;
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

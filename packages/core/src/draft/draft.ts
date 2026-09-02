@@ -44,6 +44,8 @@ export interface DraftTeam {
   chem: RosterChemistry;
   coachQuality: number; // 0..100
   patchFamiliarity: number; // 0..100
+  /** Team cohesion 0..100 (from meshing); drives auto-draft quality. */
+  cohesion?: number;
 }
 export interface DraftContext {
   champions: readonly Champion[];
@@ -231,9 +233,26 @@ export function evaluateSide(s: DraftState, side: Side, team: DraftTeam, ctx: Dr
 
 // ---------------------------------------------------------------- the AI
 
-function noiseSigma(team: DraftTeam): number {
-  return 1.3 * (1 - 0.5 * (team.coachQuality / 100)) * (1 - 0.4 * (team.patchFamiliarity / 100));
+/**
+ * How well a team drafts for itself, 0..100 (design: auto-draft quality).
+ * Coach quality, team cohesion, and the players' own game sense (shotcalling,
+ * adaptability, map awareness). A cohesive, smart roster drafts with little
+ * noise even with a weak coach; a fractured one drafts erratically.
+ */
+export function draftSkill(team: DraftTeam): number {
+  const sense = mean(ROLES.map((r) => {
+    const k = team.lineup[r].attributes.gameKnowledge;
+    return (k.shotcalling + k.adaptability + k.mapAwareness) / 3;
+  }));
+  const cohesion = team.cohesion ?? 50;
+  return clamp(0.35 * team.coachQuality + 0.3 * cohesion + 0.35 * sense, 0, 100);
 }
+
+/** Evaluation noise for a team's draft decisions — the "inbuilt randomness" skilled rosters shrink. */
+export function draftNoiseSigma(team: DraftTeam): number {
+  return 1.6 * (1 - 0.7 * (draftSkill(team) / 100)) * (1 - 0.3 * (team.patchFamiliarity / 100));
+}
+const noiseSigma = draftNoiseSigma;
 
 /** Score every legal action for `side`; the AI and the coach share this. */
 export function scoreActions(

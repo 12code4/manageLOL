@@ -86,6 +86,15 @@ action       = argmax over candidates, evaluated with noise σ
 
 A weak coach doesn't make *random* moves — it makes plausible-but-stale ones (over-values last patch's tier list, under-values your chemistry gates). That's legible in the post-draft review, which is how the player learns to out-draft.
 
+**Auto-draft (default ON):** the team drafts for itself, in real time (3–6s per action) with Team Comms deliberating. Its quality is the roster's, not the manager's:
+
+```
+draftSkill = 0.35*coachQuality + 0.30*teamCohesion + 0.35*mean(shotcalling, adaptability, mapAwareness)
+σ_noise    = 1.6 * (1 − 0.7*draftSkill/100) * (1 − 0.3*patchFamiliarity/100)
+```
+
+A cohesive, smart roster drafts with little noise even under a weak coach; a fractured one drafts erratically — the "inbuilt randomness that skilled teammates mitigate." The same engine and the same σ serve the AI opponents. Manual drafting stays available behind the toggle (`core/src/draft/draft.ts`: `draftSkill`, `draftNoiseSigma`).
+
 **Delegation levels** (pillar 1's speed valve):
 1. **Manual** — you take all 10 actions; coach suggestions shown ranked with reasons.
 2. **Priorities** — you pre-set a target comp, protected picks, and priority bans; the coach executes and only interrupts on a broken plan ("They banned both your engage supports — pivot to Pick or force it?").

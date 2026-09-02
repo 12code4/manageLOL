@@ -47,6 +47,9 @@ Provisional: v1 you own the org (one failure state: bankruptcy; board = investor
 - **Draft ships first** (before contracts/salaries), with the **full tournament ban/pick sequence** — no compressed variant; delegation is the speed valve. ([draft-and-champions.md](05-systems/draft-and-champions.md))
 - **48 champions at launch**, shipped as a validated content pack with per-champion flavor and crowd lines. (`packages/data/src/champions.ts`)
 - **Humor is a design pillar-adjacent layer:** the sim stays deadpan; comedy lives in flavor fields and **The Crowd** — a scrolling, context-reactive chat rail on the draft board and match view. ([the-crowd.md](05-systems/the-crowd.md))
+- **Auto-draft is the default** (toggle to manual). Both sides draft in real time, 3–6s per action, with Team Comms deliberating; quality = coach + cohesion + players' game sense with randomness that skilled rosters shrink. ([draft-and-champions.md](05-systems/draft-and-champions.md) §5, [the-crowd.md](05-systems/the-crowd.md) §7)
+- **Games play back in 30-second steps at ~2s each** with fast/skip controls; the outcome is resolved first and expanded into a consistent tick log. (`core/src/match/ticks.ts`)
+- **Champion images are deferred**; cards/feeds are built to take them. Art brief (48 descriptions + exact sizes) is a later deliverable.
 - **Wireframe formats:** both piloted (in-doc sketches in [`06-ui-architecture.md`](06-ui-architecture.md) + an editable design canvas); user to pick the standard.
 
 ## Parking lot (ideas noted, deliberately not planned)

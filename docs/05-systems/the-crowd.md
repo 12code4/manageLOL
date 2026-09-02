@@ -2,7 +2,7 @@
 
 *Systems deep-dive (`docs/05-systems/`). A scrolling, Twitch-chat-style crowd that reacts to drafts and matches in real time — the game's main humor engine, and a stealth readability tool: chat freaks out about the things that actually matter, which teaches the player what mattered.*
 
-> Status: designed here, not yet in the prototype — the prototype's Compete screen currently shows only the timeline. The Crowd's home is a right-hand rail on the **Draft Board** and the **Match Day live view** (see `docs/06-ui-architecture.md`). Champion-specific lines already live in the champion pack (`chatLines` per champion).
+> Status: **live in the prototype** — a right-hand rail on the **Draft Board** and the **Match Day live view**, alongside **Team Comms** (§7). Champion-specific lines live in the champion pack (`chatLines` per champion).
 
 ---
 
@@ -75,3 +75,25 @@ The rule: **the sim is deadpan, the world is funny.** Humor never obscures infor
 ## 6. Determinism & tests
 
 `chat` stream only; zero sim writes. Tests: template schema validation (all slots resolvable, cooldowns > 0); a fixed match produces a byte-identical transcript; rate caps hold at max hype; the `throw`→`comeback` pairing always resolves in order.
+
+---
+
+## 7. Team Comms — the inside voice
+
+The Crowd is the outside; **Team Comms** is the inside: a second feed of your five players and your coach talking during the draft and the game. It is the readability surface for cohesion and the second comedy channel — and it is what makes an *automatic* draft watchable rather than a loading bar.
+
+**Tone follows cohesion** (from the meshing matrix): `Tight` (≥68) rosters are crisp and generous ("locked. trust." / "it's fine, reset"); `Ok` (48–67) are functional; `Frayed` (<48) bicker ("why were you even there" / "I pinged three times" / "…sure."). The manager hears the chemistry problem before they can measure it.
+
+**Draft beats** (auto-draft, 3–6s per action): while your team deliberates, two lines land — the picking player naming their two options ("I have {champ} or {alt} here"), a teammate naming what the comp still needs ("we still need a frontline"), the coach settling it — then the lock line. On the opponent's turn your comms predict ("they will want {pred}; if so we go {alt}"). Suggestions come from the same scoring the AI uses, so the room is *actually* weighing the real options.
+
+**Game beats** (per 30-second tick): keyed to tick events — first blood, kills (your killer's "ez", your victim's "my bad"/"no follow??" by mood), Wardens ("Warden secured, reset"), the Battering Shade, the Colossus ("COLOSSUS NOW"), teamfights, bastions, the end ("GG" / "gg. we review tomorrow." / Frayed: "…"). Quiet ticks occasionally get idle comms ("Warden in 60", "ward here"). Speakers are resolved from the roster: the shotcaller is the highest-`shotcalling` player, support/jungle/top by seat.
+
+Data model mirrors chat templates (`{slot}`-filled lines with a mood suffix); deterministic on the `comms` stream; pure flavor.
+
+## 8. Live pacing
+
+A game plays back in **30-second steps at ~2 seconds each** by default (a 30-minute game ≈ 2 minutes of watching), with **fast** (0.5s) and **skip** controls. Each step updates the clock, kills, gold lead, objectives, and win probability; events post to the timeline; Comms and the Crowd react. The result was decided by the match engine before playback — the tick log is a consistent expansion of it (`core/src/match/ticks.ts`), so nothing the viewer does changes the outcome; they are watching, not playing.
+
+## 9. Champion imagery (deferred)
+
+Cards and the live feed are designed to take champion art (a portrait crop on cards, a small icon in timeline/comms lines). The art brief — 48 descriptions plus exact export sizes and crops — is a separate deliverable; until then, the tier chip + curve sparkline + epithet carry identity.
