@@ -63,9 +63,9 @@ function scheduleAction(){
 function needOf(){
   const m=G.match; const picks=m.draft.picks[m.yourSide].map(p=>S.CHAMP_BY_ID[p.champId]);
   const has=(t)=>picks.some(c=>c.comboTags.indexOf(t)>=0||(c.styleTags[t]||0)>=0.5);
-  if(!has('tankEngage')&&!has('frontToBack'))return 'a frontline';
-  if(!has('scalingCarry')&&!picks.some(c=>c.curve.late>=0.4))return 'damage that scales';
-  if(!picks.some(c=>c.roles[0]==='support'))return 'a support who can peel';
+  if(!has('tankEngage')&&!has('frontToBack'))return 'frontline';
+  if(!has('scalingCarry')&&!picks.some(c=>c.curve.late>=0.4))return 'scaling damage';
+  if(!picks.some(c=>c.roles[0]==='support'))return 'peel';
   return 'engage';
 }
 function enemyComfortName(sug,them){ if(sug&&sug.reason){ const mt=/denies (.+?)'s comfort/.exec(sug.reason); if(mt)return mt[1]; } return them.lineup.mid.name; }
@@ -150,7 +150,7 @@ function applyTick(quiet){
     }
     m.hype=Math.min(100,m.hype+(ev.type==='colossus'||ev.type==='fight'?14:ev.type==='kill'?5:ev.type==='end'?20:3));
   });
-  if(!tk.events.length){ m.hype=Math.max(20,m.hype-3); if(!quiet&&m.commsRng.chance(0.16))S.commsGame(null,{lineup:you.lineup,cohesion:you.cohesion,ours:true},m.commsRng).forEach(commsPush); if(!quiet&&m.chatRng.chance(0.12))crowdPush(tk.t>1200?'stall':'ambient',{team:'Your Org',opp:m.opp.name},1); }
+  if(!tk.events.length){ m.hype=Math.max(20,m.hype-3); if(!quiet&&m.commsRng.chance(0.09))S.commsGame(null,{lineup:you.lineup,cohesion:you.cohesion,ours:true},m.commsRng).forEach(commsPush); if(!quiet&&m.chatRng.chance(0.12))crowdPush(tk.t>1200?'stall':'ambient',{team:'Your Org',opp:m.opp.name},1); }
   if(m.tickIdx>=g.ticks.length){ finishLive(); return; }
   if(!quiet)render();
 }

@@ -617,7 +617,7 @@
       };
       for (let k = 0; k < ka; k++) addKill('a'); for (let k = 0; k < kb; k++) addKill('b');
       if (ka + kb >= 3) { const fw = ka > kb ? 'a' : kb > ka ? 'b' : leader; events.push({ type: 'fight', side: fw, text: 'A teamfight breaks out — ' + name(fw) + ' come out ahead ' + Math.max(ka, kb) + '-for-' + Math.min(ka, kb) + '.' }); }
-      if (wardenTimes.indexOf(t) >= 0) { const o = rng.chance(0.7) ? leader : (leader === 'a' ? 'b' : 'a'); wardens[o === 'a' ? 0 : 1]++; const n = wardens[o === 'a' ? 0 : 1]; events.push({ type: 'warden', side: o, text: n >= 2 ? name(o) + ' secure their ' + (n === 2 ? 'second' : n === 3 ? 'third' : 'fourth') + ' Warden — the scaling is online.' : name(o) + ' take the first Warden.' }); gold += o === 'a' ? 0.2 : -0.2; }
+      if (wardenTimes.indexOf(t) >= 0) { const o = rng.chance(0.7) ? leader : (leader === 'a' ? 'b' : 'a'); wardens[o === 'a' ? 0 : 1]++; const n = wardens[o === 'a' ? 0 : 1]; events.push({ type: 'warden', side: o, text: n >= 2 ? name(o) + ' secure their ' + (n === 2 ? 'second' : n === 3 ? 'third' : n === 4 ? 'fourth' : n + 'th') + ' Warden — the scaling is online.' : name(o) + ' take the first Warden.' }); gold += o === 'a' ? 0.2 : -0.2; }
       if (t === shadeTime) { const o = rng.chance(0.75) ? leader : (leader === 'a' ? 'b' : 'a'); events.push({ type: 'shade', side: o, text: 'The Battering Shade slams a bastion for ' + name(o) + '.' }); bastions[o === 'a' ? 0 : 1]++; gold += o === 'a' ? 0.4 : -0.4; }
       if (colTimes.indexOf(t) >= 0) { const stolen = !rng.chance(0.8); const o = stolen ? (leader === 'a' ? 'b' : 'a') : leader; colossus[o === 'a' ? 0 : 1]++; events.push({ type: 'colossus', side: o, text: stolen ? 'COLOSSUS STOLEN — ' + name(o) + ' snatch it from under ' + name(leader) + '!' : name(o) + ' slay the Colossus.' }); gold += o === 'a' ? 1.2 : -1.2; }
       if (t >= nextBastion && i < N) { const o = rng.chance(0.8) ? leader : (leader === 'a' ? 'b' : 'a'); bastions[o === 'a' ? 0 : 1]++; events.push({ type: 'bastion', side: o, text: name(o) + ' knock down a bastion.' }); nextBastion = t + (180 + rng.int(0, 6) * 30); }
@@ -636,7 +636,7 @@
     banOk: ['Coach: thoughts on banning {champ}?', '{p1}: yeah {champ} is annoying', '{p2}: or {alt}? either works'],
     banFrayed: ['{p1}: ban {champ}', '{p2}: why?? ban {alt}', 'Coach: …we are banning {champ}.'],
     pickTight: ['{rp}: I have {champ} or {alt} here', 'Coach: {champ} fits the plan', '{other}: go {champ}, I will play around you'],
-    pickOk: ['{rp}: {champ}? or {alt}?', '{other}: we still need {need}', 'Coach: {champ}. lock it'],
+    pickOk: ['{rp}: {champ}? or {alt}?', '{other}: we still need some {need}', 'Coach: {champ}. lock it'],
     pickFrayed: ['{rp}: give me {champ}', '{other}: we have no {need} and you want {champ}?', '{rp}: I am not playing {alt}', 'Coach: {champ}. moving on.'],
     lockTight: ['{rp}: locked. trust.', '{other}: nice', 'Coach: good'],
     lockOk: ['{rp}: ok locked', 'Coach: fine'],
@@ -706,7 +706,8 @@
     // for events where the victim/killer is on the OTHER team, swap names to ours sensibly
     if (ev && !ctx.ours && ev.victim) c.victim = names.indexOf(ev.victim) >= 0 ? ev.victim : rng.pick(names);
     if (ev && ctx.ours && ev.player) c.killer = names.indexOf(ev.player) >= 0 ? ev.player : rng.pick(names);
-    const n = pool === GM.idle ? 1 : Math.min(pool.length, 1 + (rng.chance(0.55) ? 1 : 0));
+    if (pool === GM.idle) return [Object.assign(speakerSplit(fillC(rng.pick(pool), c)), { mood: mood })];
+    const n = Math.min(pool.length, 1 + (rng.chance(0.55) ? 1 : 0));
     const out = []; const used = {};
     for (let i = 0; i < n; i++) { let l = pool[i]; if (used[l]) continue; used[l] = 1; out.push(Object.assign(speakerSplit(fillC(l, c)), { mood: mood })); }
     return out;

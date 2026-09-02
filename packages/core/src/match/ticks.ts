@@ -118,7 +118,7 @@ export function generateTicks(g: GameResult, aName: string, bName: string, rng: 
       const owner: 'a' | 'b' = rng.chance(0.7) ? leader : (leader === 'a' ? 'b' : 'a');
       wardens[owner === 'a' ? 0 : 1]++;
       const n = wardens[owner === 'a' ? 0 : 1];
-      events.push({ type: 'warden', side: owner, text: n >= 2 ? `${name(owner)} secure their ${n === 2 ? 'second' : n === 3 ? 'third' : 'fourth'} Warden — the scaling is online.` : `${name(owner)} take the first Warden.` });
+      events.push({ type: 'warden', side: owner, text: n >= 2 ? `${name(owner)} secure their ${n === 2 ? 'second' : n === 3 ? 'third' : n === 4 ? 'fourth' : `${n}th`} Warden — the scaling is online.` : `${name(owner)} take the first Warden.` });
       goldDiff += owner === 'a' ? 0.2 : -0.2;
     }
     if (t === shadeTime) {
