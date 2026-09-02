@@ -9,9 +9,9 @@ These docs expand the high-level `docs/01-game-design.md` into implementable spe
 | [`ranked-ladder.md`](ranked-ladder.md) | The solo-queue ladder & talent discovery: `soloAbility` vs pro CA, MMR model, smurf/boosted/hidden-gem archetypes, scouting pipeline | `core/src/ladder/ladder.ts` | **Implemented + tested** |
 | [`competition-pyramid.md`](competition-pyramid.md) | Local → regional → national → top league (promotion gauntlet OR franchise auction) → Worlds; academy leagues; the two-currency climb | `core/src/competition` | Spec complete; core in progress |
 | [`sponsorships-and-economy.md`](sponsorships-and-economy.md) | Sponsor tiers & archetypes, deal structure with clauses & obligations, the offer pipeline, cash-flow integration | `core/src/economy` | Spec complete; core in progress |
-| [`draft-and-champions.md`](draft-and-champions.md) | The full tournament pick/ban sequence, champion model, draft scoring (comfort/meta/counters/combos/curve coherence), ban AI, delegation | `core/src/draft` | Spec complete; **48-champion pack shipped** (`data/src/champions.ts`, validated) |
-| [`meta-and-patches.md`](meta-and-patches.md) | 4-week patch cadence, seeded archetype shifts + champion outliers, tier lists, patch-familiarity prep | `core/src/meta` | Spec complete |
-| [`the-crowd.md`](the-crowd.md) | The scrolling live chat on draft/match screens — the humor engine and a stealth readability tool; plus the game-wide humor map | UI layer + `data` templates | Spec complete; prototype integration next |
+| [`draft-and-champions.md`](draft-and-champions.md) | The full tournament pick/ban sequence, champion model, draft scoring (comfort/meta/counters/combos/curve coherence), ban AI, delegation | `core/src/draft/draft.ts` | **Implemented + tested**; 48-champion pack shipped (`data/src/champions.ts`); **live in the prototype** |
+| [`meta-and-patches.md`](meta-and-patches.md) | 4-week patch cadence, seeded archetype shifts + champion outliers, tier lists, patch-familiarity prep | `core/src/meta/patches.ts` | **Implemented + tested** (generator, strength, tiers) |
+| [`the-crowd.md`](the-crowd.md) | The scrolling live chat on draft/match screens — the humor engine and a stealth readability tool; plus the game-wide humor map | `prototype/src/sim.js` (crowd engine) | **Live in the prototype** — draft board + match day rails |
 
 ## How these were produced
 

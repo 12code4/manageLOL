@@ -26,3 +26,6 @@ export * from './players/meshing.js';
 // systems
 export * from './ladder/ladder.js';
 export * from './match/resolve.js';
+export * from './players/pool.js';
+export * from './meta/patches.js';
+export * from './draft/draft.js';

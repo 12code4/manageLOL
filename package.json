@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b",
-    "sim": "tsx packages/devtools/src/simulate.ts"
+    "sim": "tsx packages/devtools/src/simulate.ts",
+    "proto:build": "tsx prototype/build.mjs"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

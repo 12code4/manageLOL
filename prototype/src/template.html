@@ -226,6 +226,64 @@ select,input[type=text]{font-family:inherit;font-size:12.5px;background:var(--su
 .terms .t{display:flex;justify-content:space-between;color:var(--muted)}
 .terms .t b{font-family:"IBM Plex Mono";color:var(--ink);font-weight:600}
 
+/* ============================ draft board ============================ */
+.draft{display:grid;grid-template-columns:232px 1fr 300px;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--bg)}
+.dhead{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface);grid-column:1/4}
+.phase-chips{display:flex;gap:6px}
+.pchip{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.1em;padding:3px 9px;border-radius:4px;color:var(--faint);border:1px solid var(--line-soft)}
+.pchip.on{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,transparent);background:var(--gold-ghost)}
+.dtimer{font-family:"IBM Plex Mono";font-weight:600;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.dcol{padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface);min-height:560px}
+.dcol.you{border-right:1px solid var(--line)} .dcol.them{border-left:1px solid var(--line)}
+.dcenter{padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.slot{height:34px;border-radius:5px;border:1px dashed var(--line);display:flex;align-items:center;padding:0 10px;font-family:"Barlow Condensed";font-weight:600;font-size:14px;gap:8px;color:var(--ink)}
+.slot.filled{border-style:solid;background:var(--surface-2)}
+.slot.ban{text-decoration:line-through;color:var(--muted)}
+.slot.now{border-color:var(--gold);background:var(--gold-ghost);color:var(--gold);font-family:"IBM Plex Mono";font-size:10px;font-weight:500;letter-spacing:.1em}
+.slot .pf{margin-left:auto;font-family:"IBM Plex Mono";font-size:10px;font-weight:500}
+.slot .rt{font-family:"IBM Plex Mono";font-size:9px;color:var(--faint);letter-spacing:.06em}
+.bans-row{display:flex;gap:5px} .bans-row .slot{flex:1;height:28px;padding:0 4px;justify-content:center;font-size:11px}
+.champ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:7px;max-height:340px;overflow:auto;padding-right:2px}
+.ccard{border-radius:6px;background:var(--surface-2);border:1px solid var(--line);padding:8px 9px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:left;font-family:inherit;color:inherit}
+.ccard:hover{border-color:var(--gold)} .ccard.taken{opacity:.28;cursor:default} .ccard.taken:hover{border-color:var(--line)}
+.ccard.top{border-color:color-mix(in srgb,var(--gold) 55%,var(--line))}
+.ccard .cn{display:flex;justify-content:space-between;align-items:baseline;font-family:"Barlow Condensed";font-weight:600;font-size:14.5px;gap:6px}
+.ccard .ep{font-size:9px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tierchip{font-family:"IBM Plex Mono";font-size:9px;font-weight:600;flex:none}
+.tier-S{color:var(--gold)} .tier-A{color:var(--ink)} .tier-B{color:var(--muted)} .tier-C{color:var(--faint)}
+.curve{display:flex;gap:2px;align-items:flex-end;height:12px}
+.curve i{display:block;width:9px;border-radius:1px;background:var(--line)} .curve i.hi{background:var(--gold)}
+.ccard .pilot{font-family:"IBM Plex Mono";font-size:9px;color:var(--gel)} .ccard .pilot.warn{color:var(--toxic)} .ccard .pilot.off{color:var(--warn)} .ccard .pilot.dim{color:var(--faint)}
+.coachbox{border-radius:6px;background:var(--surface);border:1px solid var(--line);padding:10px 12px}
+.coachbox .row{display:flex;gap:10px;font-size:12.5px;padding:4px 0;cursor:pointer;border-radius:4px} .coachbox .row:hover{background:var(--surface-2)}
+.coachbox .row .v{margin-left:auto;font-family:"IBM Plex Mono";color:var(--gel)}
+.compread{border-radius:6px;background:var(--surface-2);border:1px solid var(--line);padding:10px 12px;margin-top:auto}
+.compread .lbl{font-family:"Barlow Condensed";font-weight:700;font-size:18px;color:var(--gold);line-height:1.1}
+.compread .lbl.them{color:var(--info)}
+.clarity{height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-top:6px}
+.clarity i{display:block;height:100%;background:var(--gold)} .clarity i.them{background:var(--info)}
+.crowd{display:flex;flex-direction:column;min-height:0;flex:1}
+.crowd .ch{display:flex;align-items:center;margin-bottom:6px;gap:8px}
+.crowd .list{display:flex;flex-direction:column;gap:6px;font-size:11.5px;line-height:1.45;overflow:hidden;flex:1;justify-content:flex-end}
+.crowd .u{font-family:"IBM Plex Mono";font-size:10.5px} .crowd .t{color:var(--muted)}
+.crowd .m{opacity:0;animation:reveal .3s forwards}
+.hype{width:42px;height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.hype i{display:block;height:100%;background:var(--toxic)}
+.dfoot{grid-column:1/4;display:flex;gap:16px;align-items:center;padding:8px 16px;border-top:1px solid var(--line);background:var(--surface);font-size:12px;color:var(--muted);min-height:36px;flex-wrap:wrap}
+.verdict{border-radius:var(--r-lg);border:1px solid var(--line);background:var(--surface);padding:16px 18px;margin-top:14px}
+.verdict .big{font-family:"Barlow Condensed";font-weight:700;font-size:28px;line-height:1}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+.vgrid .k{font-size:12.5px;color:var(--muted);display:flex;gap:8px;padding:3px 0}
+.vgrid .k b{margin-left:auto;font-family:"IBM Plex Mono";font-weight:600;color:var(--ink)}
+.live{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+@media(max-width:1080px){.live{grid-template-columns:1fr}.draft{grid-template-columns:200px 1fr 260px}}
+.scoreb{display:flex;align-items:center;gap:18px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);margin-bottom:12px;flex-wrap:wrap}
+.scoreb .tn{font-family:"Barlow Condensed";font-weight:700;font-size:22px} .scoreb .sc{font-family:"Barlow Condensed";font-weight:700;font-size:30px;font-variant-numeric:tabular-nums}
+.wp-card,.tl-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:12px 14px;margin-bottom:12px}
+.crowd-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:12px 14px;min-height:440px;display:flex;flex-direction:column}
+.banner{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:var(--r-lg);border:1px solid var(--line);background:var(--surface);margin-bottom:12px}
+.banner .big{font-family:"Barlow Condensed";font-weight:700;font-size:26px}
+
 /* inbox / log */
 .log{display:flex;flex-direction:column;gap:0;max-height:230px;overflow:auto}
 .log .li{padding:8px 2px;border-top:1px solid var(--line-soft);font-size:12px;display:flex;gap:9px;align-items:baseline}
@@ -346,8 +404,9 @@ function newGame(seed){
     stageIndex:0, stageWins:0,
     ladder:ladder, roster:{top:null,jungle:null,mid:null,bot:null,support:null}, chem:null,
     sponsors:{active:[],offers:[]}, inbox:[], ui:{screen:'scout',selLad:ladder[0]?.id||null,match:null},
-    orgName:'Your Org', matchOpp:null,
+    orgName:'Your Org', matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
   };
+  G.patch=S.genPatch(new S.Rng(seed,'meta:0'),0);
   refreshSponsorOffers();
   pushLog('Career started. You take over a broke amateur org — fill five seats and earn a Regional invite.','info');
   render();
@@ -408,6 +467,7 @@ function doSign(id,role){
   if(G.cash<fee){toast('Not enough credits ('+fee+'◈ needed).','bad');return;}
   G.cash-=fee; e.signed=true;
   const p=e.hidden.player; p.ladder=e; p.signedRole=role;
+  if(!p.championPool||!Object.keys(p.championPool).length)S.seedPool(p,new S.Rng(G.seed,'pool:'+p.id));
   G.roster[role]=p; recomputeChem();
   pushLog('Signed <b>'+e.handle+'</b> ('+ROLE_LABEL[role]+', '+TIER_NAME[e.tier]+') for '+fee+'◈.','good');
   toast('Signed <b>'+e.handle+'</b> as your '+ROLE_LABEL[role]+'.','good');
@@ -448,39 +508,7 @@ function makeOpponent(){
   let ch=S.initChem(lu);const wk=Math.round(rng.range(6,26));for(let i=0;i<wk;i++)S.rampWeek(ch,lu,1);
   return {name:nm,lineup:lu,chem:ch};
 }
-function playMatch(){
-  if(rosterCount()<5){toast('You need all five roles filled to compete.','bad');return;}
-  const you={name:'Your Org',lineup:lineup(),chem:G.chem};
-  const opp=G.matchOpp||makeOpponent();G.matchOpp=opp;
-  const series=S.simulateSeries(you,opp,3,new S.Rng(G.seed,'series:'+G.week+':'+G.stageWins));
-  const won=series.winner==='a';
-  const st=stage();
-  G.ui.match={series:series,opp:opp,won:won};
-  if(won){
-    G.cash+=st.prize;G.reputation=Math.min(100,G.reputation+st.rep);G.stageWins++;
-    // sponsor clause bonuses (playoffs/title flavor): small rep-driven
-    pushLog('Won the series vs <b>'+opp.name+'</b> '+series.scoreA+'-'+series.scoreB+' (+'+st.prize+'◈, +'+st.rep+' rep).','good');
-    toast('Series won vs '+opp.name+' — '+series.scoreA+'-'+series.scoreB+'!','good');
-    G.matchOpp=null;
-    if(G.stageWins>=st.wins){
-      if(G.stageIndex<STAGES.length-1){
-        G.stageIndex++;G.stageWins=0;G.matchOpp=null;
-        const ns=stage();
-        pushLog('★ Promoted to <b>'+ns.name+'</b>!','good');
-        toast('★ You\'ve reached '+ns.name+'!','good');
-        refreshSponsorOffers();
-      } else {
-        pushLog('★★ You are WORLD CHAMPIONS. The garage org made it all the way.','good');
-        toast('★★ WORLDS CHAMPIONS. You did it.','good');
-      }
-    }
-  } else {
-    pushLog('Lost the series vs '+opp.name+' '+series.scoreB+'-'+series.scoreA+'. Regroup and try again.','bad');
-    toast('Series lost vs '+opp.name+'. Back to the drawing board.','bad');
-  }
-  advanceWeekQuiet();
-  render();
-}
+/* playMatch → matchday.js (startSeries / concludeSeries) */
 function advanceWeekQuiet(){ // a match consumes a week without the separate log line
   G.week++;if(G.chem)S.rampWeek(G.chem,lineup(),1.0);
   ROLE_ORDER.forEach(r=>{const p=G.roster[r];if(p){p.state.fatigue=S.clamp(p.state.fatigue+5,0,100);}});
@@ -728,65 +756,8 @@ function analystRead(co){
   return s;
 }
 
-/* ---------- compete ---------- */
-function renderCompete(main){
-  const st=stage();
-  const head=el('div','screen-head');
-  head.innerHTML='<p class="eyebrow">'+st.name+'</p><h1 class="title cond">Compete</h1><p class="sub">'+st.blurb+' <b style="color:var(--ink)">'+G.stageWins+' / '+st.wins+'</b> series won at this tier.</p>';
-  main.appendChild(head);
-
-  if(rosterCount()<5){
-    const c=el('div','card');c.innerHTML='<div class="empty-note">You need all five roles filled before you can enter a match.<br>Head to <b>Scout the Ladder</b> and sign a full starting five.</div>';
-    main.appendChild(c);return;
-  }
-  const you={name:'Your Org',lineup:lineup(),chem:G.chem};
-  const opp=G.matchOpp||(G.matchOpp=makeOpponent());
-  const byou=S.teamBreakdown(you),bopp=S.teamBreakdown(opp);
-  const pA=1/(1+Math.pow(10,-(byou.strength-bopp.strength)/15));
-
-  const vs=el('div','vs');
-  vs.innerHTML=
-    '<div class="card teamcard you"><div class="role-tag" style="color:var(--gold)">You</div><div class="tn">'+you.name+'</div><div class="ts">'+byou.strength.toFixed(1)+'<small>TEAM STRENGTH</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+byou.base.toFixed(1)+' × mesh '+byou.meshMult.toFixed(3)+'</div></div>'+
-    '<div class="mid">VS</div>'+
-    '<div class="card teamcard"><div class="role-tag">'+st.name+'</div><div class="tn">'+opp.name+'</div><div class="ts">'+bopp.strength.toFixed(1)+'<small>TEAM STRENGTH</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+bopp.base.toFixed(1)+' × mesh '+bopp.meshMult.toFixed(3)+'</div></div>';
-  main.appendChild(vs);
-
-  const wp=el('div','wpbar');
-  wp.innerHTML='<div class="you" style="width:'+(pA*100)+'%">'+Math.round(pA*100)+'% '+you.name+'</div><div class="opp" style="width:'+((1-pA)*100)+'%">'+opp.name+' '+Math.round((1-pA)*100)+'%</div>';
-  main.appendChild(wp);
-
-  const controls=el('div');controls.style.cssText='display:flex;gap:10px;margin-bottom:18px';
-  const play=el('button','btn primary');play.innerHTML='Play Bo3 series';play.onclick=()=>{playMatch();};
-  const wk=el('button','btn');wk.textContent='Advance a week (scrim & gel)';wk.onclick=()=>advanceWeek();
-  controls.appendChild(play);controls.appendChild(wk);main.appendChild(controls);
-
-  if(G.ui.match){
-    const m=G.ui.match;const st2=el('div','card');st2.style.padding='16px';
-    const g=m.series.games[m.series.games.length-1];
-    let pips='';m.series.games.forEach((gm,i)=>{const w=gm.winner==='a';pips+='<div class="gpip '+(w?'win':'loss')+'">Game '+(i+1)+'<div style="font-family:Barlow Condensed;font-weight:700;font-size:18px">'+(w?'W':'L')+'</div><div class="mono" style="font-size:10px">'+gm.killsA+'–'+gm.killsB+' · '+gm.lengthMin+'m</div></div>';});
-    st2.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><div class="section-label" style="margin:0">Series result</div>'+
-      '<div class="cond" style="font-weight:700;font-size:22px;color:'+(m.won?'var(--gel)':'var(--toxic)')+'">'+(m.won?'VICTORY':'DEFEAT')+' '+m.series.scoreA+'–'+m.series.scoreB+'</div></div>'+
-      '<div class="games">'+pips+'</div>';
-    // last game timeline + statline
-    const tl=el('ul','timeline');g.timeline.forEach((t,i)=>{const li=el('li',null,t);li.style.animationDelay=(i*0.12)+'s';tl.appendChild(li);});
-    st2.insertAdjacentHTML('beforeend','<div class="section-label" style="margin:14px 0 6px">Deciding game — '+g.lengthMin+' min · MVP <span class="mvp">'+g.mvp.name+'</span></div>');
-    st2.appendChild(tl);
-    // your statline
-    const yourLines=(g.winner==='a')?g.linesA:g.linesB;const isYouA=true;
-    const sl=el('table','statline');
-    sl.innerHTML='<thead><tr><th>Your player</th><th>K</th><th>D</th><th>A</th><th>DMG%</th><th>Rating</th></tr></thead>';
-    const tb=el('tbody');
-    ROLE_ORDER.forEach(r=>{const line=g.linesA.find(l=>l.role===r);if(!line)return;
-      const tr=el('tr');const mv=(g.mvp.side==='a'&&g.mvp.name===line.name);
-      tr.innerHTML='<td>'+(mv?'<span class="mvp">★ </span>':'')+ROLE_LABEL[r]+' · '+line.name+'</td><td>'+line.kills+'</td><td>'+line.deaths+'</td><td>'+line.assists+'</td><td>'+Math.round(line.dmgShare*100)+'</td><td style="color:'+ratingColor(line.rating)+'">'+line.rating.toFixed(1)+'</td>';
-      tb.appendChild(tr);});
-    sl.appendChild(tb);st2.insertAdjacentHTML('beforeend','<div class="section-label" style="margin:16px 0 4px">Your box score</div>');st2.appendChild(sl);
-    main.appendChild(st2);
-  }
-  // log
-  const logc=el('div','card');logc.style.cssText='padding:14px 16px;margin-top:18px';
-  logc.innerHTML='<div class="section-label">Inbox</div>';logc.appendChild(logList());main.appendChild(logc);
-}
+/* ---------- compete / match day: injected from src/matchday.js ---------- */
+/*__MATCHDAY__*/
 
 /* ---------- sponsors ---------- */
 function renderSponsors(main){

@@ -226,6 +226,64 @@ select,input[type=text]{font-family:inherit;font-size:12.5px;background:var(--su
 .terms .t{display:flex;justify-content:space-between;color:var(--muted)}
 .terms .t b{font-family:"IBM Plex Mono";color:var(--ink);font-weight:600}
 
+/* ============================ draft board ============================ */
+.draft{display:grid;grid-template-columns:232px 1fr 300px;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--bg)}
+.dhead{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface);grid-column:1/4}
+.phase-chips{display:flex;gap:6px}
+.pchip{font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.1em;padding:3px 9px;border-radius:4px;color:var(--faint);border:1px solid var(--line-soft)}
+.pchip.on{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,transparent);background:var(--gold-ghost)}
+.dtimer{font-family:"IBM Plex Mono";font-weight:600;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.dcol{padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface);min-height:560px}
+.dcol.you{border-right:1px solid var(--line)} .dcol.them{border-left:1px solid var(--line)}
+.dcenter{padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.slot{height:34px;border-radius:5px;border:1px dashed var(--line);display:flex;align-items:center;padding:0 10px;font-family:"Barlow Condensed";font-weight:600;font-size:14px;gap:8px;color:var(--ink)}
+.slot.filled{border-style:solid;background:var(--surface-2)}
+.slot.ban{text-decoration:line-through;color:var(--muted)}
+.slot.now{border-color:var(--gold);background:var(--gold-ghost);color:var(--gold);font-family:"IBM Plex Mono";font-size:10px;font-weight:500;letter-spacing:.1em}
+.slot .pf{margin-left:auto;font-family:"IBM Plex Mono";font-size:10px;font-weight:500}
+.slot .rt{font-family:"IBM Plex Mono";font-size:9px;color:var(--faint);letter-spacing:.06em}
+.bans-row{display:flex;gap:5px} .bans-row .slot{flex:1;height:28px;padding:0 4px;justify-content:center;font-size:11px}
+.champ-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:7px;max-height:340px;overflow:auto;padding-right:2px}
+.ccard{border-radius:6px;background:var(--surface-2);border:1px solid var(--line);padding:8px 9px;display:flex;flex-direction:column;gap:4px;cursor:pointer;text-align:left;font-family:inherit;color:inherit}
+.ccard:hover{border-color:var(--gold)} .ccard.taken{opacity:.28;cursor:default} .ccard.taken:hover{border-color:var(--line)}
+.ccard.top{border-color:color-mix(in srgb,var(--gold) 55%,var(--line))}
+.ccard .cn{display:flex;justify-content:space-between;align-items:baseline;font-family:"Barlow Condensed";font-weight:600;font-size:14.5px;gap:6px}
+.ccard .ep{font-size:9px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tierchip{font-family:"IBM Plex Mono";font-size:9px;font-weight:600;flex:none}
+.tier-S{color:var(--gold)} .tier-A{color:var(--ink)} .tier-B{color:var(--muted)} .tier-C{color:var(--faint)}
+.curve{display:flex;gap:2px;align-items:flex-end;height:12px}
+.curve i{display:block;width:9px;border-radius:1px;background:var(--line)} .curve i.hi{background:var(--gold)}
+.ccard .pilot{font-family:"IBM Plex Mono";font-size:9px;color:var(--gel)} .ccard .pilot.warn{color:var(--toxic)} .ccard .pilot.off{color:var(--warn)} .ccard .pilot.dim{color:var(--faint)}
+.coachbox{border-radius:6px;background:var(--surface);border:1px solid var(--line);padding:10px 12px}
+.coachbox .row{display:flex;gap:10px;font-size:12.5px;padding:4px 0;cursor:pointer;border-radius:4px} .coachbox .row:hover{background:var(--surface-2)}
+.coachbox .row .v{margin-left:auto;font-family:"IBM Plex Mono";color:var(--gel)}
+.compread{border-radius:6px;background:var(--surface-2);border:1px solid var(--line);padding:10px 12px;margin-top:auto}
+.compread .lbl{font-family:"Barlow Condensed";font-weight:700;font-size:18px;color:var(--gold);line-height:1.1}
+.compread .lbl.them{color:var(--info)}
+.clarity{height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-top:6px}
+.clarity i{display:block;height:100%;background:var(--gold)} .clarity i.them{background:var(--info)}
+.crowd{display:flex;flex-direction:column;min-height:0;flex:1}
+.crowd .ch{display:flex;align-items:center;margin-bottom:6px;gap:8px}
+.crowd .list{display:flex;flex-direction:column;gap:6px;font-size:11.5px;line-height:1.45;overflow:hidden;flex:1;justify-content:flex-end}
+.crowd .u{font-family:"IBM Plex Mono";font-size:10.5px} .crowd .t{color:var(--muted)}
+.crowd .m{opacity:0;animation:reveal .3s forwards}
+.hype{width:42px;height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.hype i{display:block;height:100%;background:var(--toxic)}
+.dfoot{grid-column:1/4;display:flex;gap:16px;align-items:center;padding:8px 16px;border-top:1px solid var(--line);background:var(--surface);font-size:12px;color:var(--muted);min-height:36px;flex-wrap:wrap}
+.verdict{border-radius:var(--r-lg);border:1px solid var(--line);background:var(--surface);padding:16px 18px;margin-top:14px}
+.verdict .big{font-family:"Barlow Condensed";font-weight:700;font-size:28px;line-height:1}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+.vgrid .k{font-size:12.5px;color:var(--muted);display:flex;gap:8px;padding:3px 0}
+.vgrid .k b{margin-left:auto;font-family:"IBM Plex Mono";font-weight:600;color:var(--ink)}
+.live{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+@media(max-width:1080px){.live{grid-template-columns:1fr}.draft{grid-template-columns:200px 1fr 260px}}
+.scoreb{display:flex;align-items:center;gap:18px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);margin-bottom:12px;flex-wrap:wrap}
+.scoreb .tn{font-family:"Barlow Condensed";font-weight:700;font-size:22px} .scoreb .sc{font-family:"Barlow Condensed";font-weight:700;font-size:30px;font-variant-numeric:tabular-nums}
+.wp-card,.tl-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:12px 14px;margin-bottom:12px}
+.crowd-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:12px 14px;min-height:440px;display:flex;flex-direction:column}
+.banner{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:var(--r-lg);border:1px solid var(--line);background:var(--surface);margin-bottom:12px}
+.banner .big{font-family:"Barlow Condensed";font-weight:700;font-size:26px}
+
 /* inbox / log */
 .log{display:flex;flex-direction:column;gap:0;max-height:230px;overflow:auto}
 .log .li{padding:8px 2px;border-top:1px solid var(--line-soft);font-size:12px;display:flex;gap:9px;align-items:baseline}
@@ -637,6 +695,210 @@ select,input[type=text]{font-family:inherit;font-size:12.5px;background:var(--su
   };
 })(typeof window !== 'undefined' ? window : globalThis);
 
+/* ===================== meta · pool · draft · crowd (port of @managelol/core) ===================== */
+(function (root) {
+  'use strict';
+  const S = root.LOLSim;
+  const clamp = S.clamp, round = S.round, ROLES = S.ROLES, ARCHES = S.ARCHES;
+  const mean = (xs) => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
+
+  // champions are injected at build time from packages/data (single source of truth)
+  S.CHAMPIONS = [{"id":"grombak","name":"Grombak","epithet":"the Landslide","roles":["top"],"styleTags":{"tankEngage":0.8,"skirmisher":0.2},"curve":{"early":0.2,"mid":0.4,"late":0.4},"comboTags":["frontToBack"],"counters":["thackery"],"basePower":52,"flavor":"A hillside that got up one day and decided it had opinions.","chatLines":["GROMBAK SMASH","the hill is walking again CLAP"]},{"id":"serelith","name":"Serelith","epithet":"Blade of the Hollow","roles":["top"],"styleTags":{"skirmisher":0.6,"splitPush":0.4},"curve":{"early":0.3,"mid":0.45,"late":0.25},"comboTags":["split131"],"counters":["bruna"],"basePower":51,"flavor":"Duels anything that steps into the side lane. Anything.","chatLines":["serelith top = free sidelane","1v1 me at bastion two"]},{"id":"vann","name":"Vann","epithet":"the Last Door","roles":["top"],"styleTags":{"tankEngage":0.9,"skirmisher":0.1},"curve":{"early":0.15,"mid":0.35,"late":0.5},"comboTags":["frontToBack"],"counters":["serelith"],"basePower":49,"flavor":"When Vann closes, nothing else opens.","chatLines":["the door is LOCKED","good luck diving THAT"]},{"id":"okkra","name":"Okkra","epithet":"Warden of Thorns","roles":["top","support"],"styleTags":{"tankEngage":0.5,"controlMage":0.5},"curve":{"early":0.3,"mid":0.4,"late":0.3},"comboTags":["frontToBack","pick"],"counters":["jorun"],"basePower":50,"flavor":"Grows a hedge. The hedge grows grudges.","chatLines":["OKKRA FLEX PICK?? coach is cooking","hedge diff"]},{"id":"pyrelle","name":"Pyrelle","epithet":"the Cinder Duelist","roles":["top"],"styleTags":{"skirmisher":0.7,"laneBully":0.3},"curve":{"early":0.45,"mid":0.35,"late":0.2},"comboTags":["dive"],"counters":["vann"],"basePower":52,"flavor":"Fights with two swords because one kept going out.","chatLines":["pyrelle lane kingdom incoming","she is NOT here to farm"]},{"id":"jorun","name":"Jorun","epithet":"Halfwall","roles":["top"],"styleTags":{"splitPush":0.8,"skirmisher":0.2},"curve":{"early":0.2,"mid":0.3,"late":0.5},"comboTags":["split131"],"counters":["grombak"],"basePower":48,"flavor":"Built half a wall once. Has been knocking down bastions ever since.","chatLines":["jorun still farming top btw","he has not joined a single fight LUL wait we won?"]},{"id":"maelis","name":"Maelis","epithet":"the Tidebound","roles":["top","mid"],"styleTags":{"controlMage":0.7,"poke":0.3},"curve":{"early":0.25,"mid":0.45,"late":0.3},"comboTags":["pokeSiege"],"counters":["pyrelle"],"basePower":49,"flavor":"The tide comes in on her schedule, not the moon’s.","chatLines":["mage top? in this economy?","the wave respects HER wave management"]},{"id":"thackery","name":"Thackery","epithet":"Doom","roles":["top"],"styleTags":{"skirmisher":0.75,"tankEngage":0.25},"curve":{"early":0.35,"mid":0.45,"late":0.2},"comboTags":["dive"],"counters":["sylquin"],"basePower":50,"flavor":"A very cheerful knight with a deeply unfortunate family name.","chatLines":["THE DOOM ARRIVES (he waved at chat)","nicest man in the league, 0 mercy"]},{"id":"bruna","name":"Bruna","epithet":"the Doorframe","roles":["top"],"styleTags":{"tankEngage":0.85,"skirmisher":0.15},"curve":{"early":0.2,"mid":0.35,"late":0.45},"comboTags":["frontToBack"],"counters":["maelis"],"basePower":50,"flavor":"Vann is the last door. Bruna is what the door hangs on.","chatLines":["BRUNA HOLDS","they picked the load-bearing woman CLAP"]},{"id":"sylquin","name":"Sylquin","epithet":"of the Green","roles":["top","jungle"],"styleTags":{"splitPush":0.5,"skirmisher":0.3,"earlyJungle":0.2},"curve":{"early":0.3,"mid":0.4,"late":0.3},"comboTags":["split131","earlyInvade"],"counters":["okkra"],"basePower":48,"flavor":"Half ranger, half rumor. The trees file reports for her.","chatLines":["sylquin flex WardDog","she’s in your jungle. she’s in your walls"]},{"id":"fenwick","name":"Fenwick","epithet":"the Underbrush","roles":["jungle"],"styleTags":{"earlyJungle":0.8,"catcher":0.2},"curve":{"early":0.55,"mid":0.3,"late":0.15},"comboTags":["earlyInvade","dive"],"counters":["mossback"],"basePower":53,"flavor":"You don’t see Fenwick. You see the bush. The bush is lying.","chatLines":["FENWICK IN THE BUSH. HE’S ALWAYS IN THE BUSH","gank at 2:40 calling it now"]},{"id":"korrigan","name":"Korrigan","epithet":"Nine-Lives","roles":["jungle"],"styleTags":{"assassin":0.7,"skirmisher":0.3},"curve":{"early":0.35,"mid":0.45,"late":0.2},"comboTags":["dive"],"counters":["wisp"],"basePower":51,"flavor":"On life seven. Spending them like he found them.","chatLines":["korrigan int speedrun any%","he’s got lives to spare and he KNOWS it"]},{"id":"umbra","name":"Umbra","epithet":"Shade of the Path","roles":["jungle"],"styleTags":{"assassin":0.5,"catcher":0.5},"curve":{"early":0.3,"mid":0.5,"late":0.2},"comboTags":["pick","dive"],"counters":["ryx"],"basePower":49,"flavor":"The shortest path between two points is through Umbra. Unfortunately.","chatLines":["caught by the SHADE","don’t walk there. don’t ever walk there"]},{"id":"mossback","name":"Mossback","epithet":"the Elder Snail","roles":["jungle"],"styleTags":{"tankEngage":0.85,"catcher":0.15},"curve":{"early":0.1,"mid":0.35,"late":0.55},"comboTags":["frontToBack"],"counters":["korrigan"],"basePower":47,"flavor":"Nature’s answer to the question: what if patience had a shell?","chatLines":["PogSnail PogSnail PogSnail","MOSSBACK ROLLING IN (slowly) (inevitably)"]},{"id":"ryx","name":"Ryx","epithet":"the Red Harvest","roles":["jungle"],"styleTags":{"earlyJungle":0.7,"assassin":0.3},"curve":{"early":0.5,"mid":0.35,"late":0.15},"comboTags":["earlyInvade","dive"],"counters":["golgotha"],"basePower":52,"flavor":"Harvest season is whenever Ryx says it is.","chatLines":["level 2 invade INCOMING","ryx pick = someone’s jungle is getting repossessed"]},{"id":"tinder","name":"Tinder","epithet":"the Spark That Took","roles":["jungle"],"styleTags":{"earlyJungle":0.55,"skirmisher":0.45},"curve":{"early":0.45,"mid":0.4,"late":0.15},"comboTags":["earlyInvade","dive"],"counters":["umbra"],"basePower":50,"flavor":"Started one small fire. It’s still going. So is she.","chatLines":["tinder gank bot pls she always ganks bot","the spark is SPARKING"]},{"id":"golgotha","name":"Golgotha","epithet":"the Grave Bloom","roles":["jungle","top"],"styleTags":{"tankEngage":0.6,"catcher":0.4},"curve":{"early":0.2,"mid":0.4,"late":0.4},"comboTags":["frontToBack","pick"],"counters":["fenwick"],"basePower":48,"flavor":"Where Golgotha walks, flowers grow. Nobody asks what they grow from.","chatLines":["the flowers are BLOOMING (run)","golgotha top flex?? GRIEF for their toplaner"]},{"id":"wisp","name":"Wisp","epithet":"the Lantern Thief","roles":["jungle","support"],"styleTags":{"catcher":0.7,"earlyJungle":0.3},"curve":{"early":0.4,"mid":0.4,"late":0.2},"comboTags":["pick","earlyInvade"],"counters":["tinder"],"basePower":49,"flavor":"Steals your light, your buffs, and — witnesses insist — your sense of direction.","chatLines":["WISP TOOK THE LANTERN AGAIN","their whole map is dark rn LUL"]},{"id":"skarnfell","name":"Skarnfell","epithet":"the Avalanche’s Son","roles":["jungle"],"styleTags":{"skirmisher":0.65,"tankEngage":0.35},"curve":{"early":0.3,"mid":0.45,"late":0.25},"comboTags":["dive","frontToBack"],"counters":["wisp"],"basePower":49,"flavor":"His mother was an avalanche. Family reunions are brief.","chatLines":["SKARNFELL DROPS IN","scrap with the avalanche kid, see what happens"]},{"id":"vexalia","name":"Vexalia","epithet":"the Hollow Blade","roles":["mid"],"styleTags":{"assassin":0.85,"skirmisher":0.15},"curve":{"early":0.3,"mid":0.55,"late":0.15},"comboTags":["dive"],"counters":["quill"],"basePower":53,"flavor":"The blade is hollow so it can hold what it takes.","chatLines":["VEXALIA PICKED. mid is now a 1v9 role","their backline is about to have a bad month"]},{"id":"cindra","name":"Cindra","epithet":"Mistress of the Nine Suns","roles":["mid"],"styleTags":{"controlMage":0.6,"scalingCarry":0.4},"curve":{"early":0.15,"mid":0.4,"late":0.45},"comboTags":["frontToBack","pokeSiege"],"counters":["marrow"],"basePower":54,"flavor":"Owns nine suns. Rents out the light. Collects.","chatLines":["NINE SUNS?? in THIS meta??","cindra just needs 3 items and a dream"]},{"id":"bellwether","name":"Bellwether","epithet":"the Patient Storm","roles":["mid"],"styleTags":{"scalingCarry":0.7,"controlMage":0.3},"curve":{"early":0.1,"mid":0.3,"late":0.6},"comboTags":["frontToBack","protectTheCarry"],"counters":["oleander"],"basePower":51,"flavor":"The storm arrives exactly when it said it would. Check the forecast. It’s you.","chatLines":["bellwether pick = FF timers off, we’re going 45 minutes","the forecast says GRIEF for you specifically"]},{"id":"quill","name":"Quill","epithet":"the Ink-Fingered","roles":["mid"],"styleTags":{"poke":0.8,"controlMage":0.2},"curve":{"early":0.35,"mid":0.45,"late":0.2},"comboTags":["pokeSiege"],"counters":["tolliver"],"basePower":49,"flavor":"Writes your obituary from 900 units away. Excellent penmanship.","chatLines":["poked to death by STATIONERY","quill mains type in cursive"]},{"id":"marrow","name":"Marrow","epithet":"the Borrowed King","roles":["mid"],"styleTags":{"assassin":0.55,"laneBully":0.45},"curve":{"early":0.45,"mid":0.4,"late":0.15},"comboTags":["dive"],"counters":["hesper"],"basePower":51,"flavor":"Borrowed the crown. And the sword. And, technically, the kingdom.","chatLines":["the king has ARRIVED (illegally)","marrow lane = their mid is renting now"]},{"id":"oleander","name":"Oleander","epithet":"the Kind Poison","roles":["mid"],"styleTags":{"controlMage":0.8,"enchanter":0.2},"curve":{"early":0.25,"mid":0.45,"late":0.3},"comboTags":["frontToBack"],"counters":["vexalia"],"basePower":50,"flavor":"Genuinely wants you to feel comfortable. For as long as that lasts.","chatLines":["so polite. so toxic. oleander CLAP","assassins can’t even touch this man"]},{"id":"zaffre","name":"Zaffre","epithet":"the Cobalt Comet","roles":["mid","bot"],"styleTags":{"poke":0.6,"laneBully":0.4},"curve":{"early":0.4,"mid":0.4,"late":0.2},"comboTags":["pokeSiege"],"counters":["bellwether"],"basePower":50,"flavor":"Seen once every game, screaming, at your health bar.","chatLines":["COMET SIGHTED","zaffre flex — is it mid is it bot NOBODY KNOWS"]},{"id":"hesper","name":"Hesper","epithet":"Dawn’s Accountant","roles":["mid"],"styleTags":{"scalingCarry":0.85,"controlMage":0.15},"curve":{"early":0.1,"mid":0.25,"late":0.65},"comboTags":["protectTheCarry","frontToBack"],"counters":["cindra"],"basePower":50,"flavor":"Every minion, every coin, itemized. The invoice arrives at minute 35.","chatLines":["hesper_invoice: your 20 min lead has been AUDITED","she’s just farming. she’ll bill you later"]},{"id":"nix","name":"Nix","epithet":"Vane","roles":["mid"],"styleTags":{"assassin":0.6,"laneBully":0.4},"curve":{"early":0.4,"mid":0.45,"late":0.15},"comboTags":["dive"],"counters":["zaffre"],"basePower":49,"flavor":"Turns with the wind. The wind has terrible intentions.","chatLines":["nix vane one trick spotted (it’s always a one trick)","which way is the wind blowing? at YOUR carry"]},{"id":"tolliver","name":"Tolliver","epithet":"the Unlicensed Wizard","roles":["mid"],"styleTags":{"controlMage":0.7,"poke":0.3},"curve":{"early":0.3,"mid":0.45,"late":0.25},"comboTags":["pokeSiege","frontToBack"],"counters":["nix"],"basePower":48,"flavor":"Regulatory status: pending. Fireballs: fully operational.","chatLines":["is he even allowed to cast that","TOLLIVER: not certified, not sorry"]},{"id":"seraphel","name":"Seraphel","epithet":"the Longshot","roles":["bot"],"styleTags":{"scalingCarry":0.85,"poke":0.15},"curve":{"early":0.1,"mid":0.3,"late":0.6},"comboTags":["protectTheCarry","frontToBack"],"counters":["whistler"],"basePower":53,"flavor":"Nobody believed in her at 15 minutes. Nobody was still alive at 40 to apologize.","chatLines":["seraphel 3 items = gg CLAP","protect the longshot at ALL costs"]},{"id":"brindle","name":"Brindle","epithet":"the Powder Fox","roles":["bot"],"styleTags":{"laneBully":0.8,"skirmisher":0.2},"curve":{"early":0.55,"mid":0.3,"late":0.15},"comboTags":["dive","earlyInvade"],"counters":["seraphel"],"basePower":52,"flavor":"A fox found a musket. Evolution is still processing this.","chatLines":["FOX WITH A GUN FOX WITH A GUN","lane over by 6 minutes calling it"]},{"id":"rooke","name":"Rooke","epithet":"the Calamity","roles":["bot"],"styleTags":{"laneBully":0.55,"poke":0.45},"curve":{"early":0.45,"mid":0.4,"late":0.15},"comboTags":["pokeSiege"],"counters":["pip"],"basePower":50,"flavor":"Insurance companies have a clause named after her.","chatLines":["ROOKE CLAUSE ACTIVATED","their bot lane’s premiums just went UP"]},{"id":"whistler","name":"Whistler","epithet":"the Quiet Round","roles":["bot"],"styleTags":{"poke":0.75,"scalingCarry":0.25},"curve":{"early":0.3,"mid":0.45,"late":0.25},"comboTags":["pokeSiege","pick"],"counters":["ferrous"],"basePower":49,"flavor":"You hear the whistle. That means it missed. You never hear the one that doesn’t.","chatLines":["*whistling stops* uh oh","sniped from ACTUAL narnia"]},{"id":"ferrous","name":"Ferrous","epithet":"the Iron Songbird","roles":["bot"],"styleTags":{"scalingCarry":0.75,"laneBully":0.25},"curve":{"early":0.2,"mid":0.35,"late":0.45},"comboTags":["protectTheCarry","frontToBack"],"counters":["brindle"],"basePower":51,"flavor":"Sings one note. It’s the note bastions fall on.","chatLines":["the songbird is WARMING UP","iron bird go brrr (metallic)"]},{"id":"duskrow","name":"Duskrow","epithet":"the Carrion Prince","roles":["bot","mid"],"styleTags":{"scalingCarry":0.5,"assassin":0.5},"curve":{"early":0.2,"mid":0.4,"late":0.4},"comboTags":["dive","split131"],"counters":["halcyra"],"basePower":50,"flavor":"Royalty among crows. The inheritance is whatever you drop.","chatLines":["DUSKROW FLEX — draft cooking detected","the crows are circling your gold"]},{"id":"pip","name":"Pip","epithet":"the Smallest Cannon","roles":["bot"],"styleTags":{"scalingCarry":0.8,"poke":0.2},"curve":{"early":0.15,"mid":0.3,"late":0.55},"comboTags":["protectTheCarry"],"counters":["mordell"],"basePower":49,"flavor":"Legally a siege weapon. Emotionally a golden retriever.","chatLines":["PIP PogSnail wait wrong emote. PIP CLAP","smallest champ, largest damage numbers, no notes"]},{"id":"halcyra","name":"Halcyra","epithet":"Wings of the Ninth","roles":["bot"],"styleTags":{"poke":0.55,"scalingCarry":0.45},"curve":{"early":0.25,"mid":0.4,"late":0.35},"comboTags":["pokeSiege","protectTheCarry"],"counters":["rooke"],"basePower":49,"flavor":"Eight squadrons fell. The ninth learned to stay out of range.","chatLines":["death from above, taxes from nowhere","halcyra siege comp = bastions crying rn"]},{"id":"mordell","name":"Mordell","epithet":"the Debt Collector","roles":["bot"],"styleTags":{"laneBully":0.7,"skirmisher":0.3},"curve":{"early":0.5,"mid":0.35,"late":0.15},"comboTags":["dive","earlyInvade"],"counters":["duskrow"],"basePower":50,"flavor":"Every trade in lane is a loan. Mordell charges interest.","chatLines":["MORDELL COLLECTING EARLY","their ADC owes him money and his lane"]},{"id":"lumen","name":"Lumen","epithet":"the Second Sunrise","roles":["support"],"styleTags":{"enchanter":0.85,"controlMage":0.15},"curve":{"early":0.25,"mid":0.35,"late":0.4},"comboTags":["protectTheCarry","frontToBack"],"counters":["grapnel"],"basePower":51,"flavor":"If the first sunrise didn’t fix it, Lumen brings another.","chatLines":["LUMEN HEALS THROUGH THE GRIEF","their carry is literally unkillable rn"]},{"id":"thistle","name":"Thistle","epithet":"the Overbearing Gardener","roles":["support"],"styleTags":{"enchanter":0.7,"catcher":0.3},"curve":{"early":0.35,"mid":0.4,"late":0.25},"comboTags":["protectTheCarry"],"counters":["yorrel"],"basePower":49,"flavor":"You WILL be watered. You WILL grow. This is not a negotiation.","chatLines":["thistle said GROW and the adc GREW","aggressively nurtured CLAP"]},{"id":"grapnel","name":"Grapnel","epithet":"the Harbor Ghost","roles":["support"],"styleTags":{"catcher":0.9,"tankEngage":0.1},"curve":{"early":0.4,"mid":0.4,"late":0.2},"comboTags":["pick"],"counters":["miriel"],"basePower":52,"flavor":"Something in the harbor throws hooks. The harbormaster stopped asking.","chatLines":["HOOK CITY POPULATION: YOU","grapnel landed ONE hook and chat lost its mind"]},{"id":"vharn","name":"Auntie Vharn","epithet":"the Unmoved","roles":["support"],"styleTags":{"enchanter":0.55,"tankEngage":0.45},"curve":{"early":0.25,"mid":0.4,"late":0.35},"comboTags":["protectTheCarry","frontToBack"],"counters":["kraywn"],"basePower":48,"flavor":"Everyone’s aunt. Nobody’s pushover. Brings snacks to teamfights.","chatLines":["AUNTIE IS HERE. everyone behave","she peeled that with a HANDBAG"]},{"id":"basalt","name":"Basalt","epithet":"the Patient Wall","roles":["support"],"styleTags":{"tankEngage":0.9,"catcher":0.1},"curve":{"early":0.2,"mid":0.4,"late":0.4},"comboTags":["frontToBack"],"counters":["grapnel"],"basePower":49,"flavor":"Walls fall. Basalt waits. Then Basalt falls — forward, on purpose, on you.","chatLines":["THE WALL ENGAGES","basalt front line = free real estate behind him"]},{"id":"yorrel","name":"Yorrel","epithet":"Keeper of the Toll","roles":["support"],"styleTags":{"catcher":0.75,"tankEngage":0.25},"curve":{"early":0.35,"mid":0.45,"late":0.2},"comboTags":["pick"],"counters":["sable"],"basePower":49,"flavor":"Crossing the river is free. Crossing Yorrel’s river costs exactly one positioning error.","chatLines":["TOLL PAID (it was their midlaner)","yorrel just taxed the whole botlane"]},{"id":"sable","name":"Sable","epithet":"the Last Candle","roles":["support"],"styleTags":{"enchanter":0.8,"poke":0.2},"curve":{"early":0.2,"mid":0.35,"late":0.45},"comboTags":["protectTheCarry"],"counters":["basalt"],"basePower":48,"flavor":"When every other light goes out, Sable is still burning. Quietly. Stubbornly.","chatLines":["sable keeping this team alive EMOTIONALLY and literally","the candle STAYS lit"]},{"id":"kraywn","name":"Kraywn","epithet":"the Undertow","roles":["support"],"styleTags":{"catcher":0.55,"tankEngage":0.45},"curve":{"early":0.35,"mid":0.45,"late":0.2},"comboTags":["pick","dive"],"counters":["lumen"],"basePower":50,"flavor":"The current that pulls you exactly where you swore you wouldn’t go.","chatLines":["UNDERTOW GOT HIM","kraywn engage = swim lessons cancelled"]},{"id":"miriel","name":"Miriel","epithet":"Chorus of One","roles":["support","mid"],"styleTags":{"enchanter":0.5,"poke":0.5},"curve":{"early":0.3,"mid":0.4,"late":0.3},"comboTags":["pokeSiege","protectTheCarry"],"counters":["thistle"],"basePower":48,"flavor":"Sings every part herself. The harmony hits like a volley.","chatLines":["one woman CHOIR","miriel mid?? the flex tech is real"]},{"id":"ogden","name":"Ogden","epithet":"the Round Table","roles":["support"],"styleTags":{"tankEngage":0.85,"enchanter":0.15},"curve":{"early":0.2,"mid":0.4,"late":0.4},"comboTags":["frontToBack"],"counters":["korrigan"],"basePower":49,"flavor":"The knights sat around him for years before anyone realized.","chatLines":["OGDEN IS THE TABLE. HE WAS ALWAYS THE TABLE","flip the table CLAP wait he flipped THEM"]}];
+  S.CHAMP_BY_ID = {}; S.CHAMPIONS.forEach((c) => (S.CHAMP_BY_ID[c.id] = c));
+
+  // ---------- meta ----------
+  S.genPatch = function (rng, index, prev) {
+    const archDelta = {};
+    ARCHES.forEach((a) => { const p = prev ? prev.archDelta[a] || 0 : 0; archDelta[a] = clamp(0.6 * p + rng.gaussian(0, 4), -10, 10); });
+    const outliers = {}; const ids = S.CHAMPIONS.map((c) => c.id).sort(); const n = rng.int(3, 5);
+    for (let i = 0; i < n; i++) { const id = rng.pick(ids); outliers[id] = clamp(Math.round(rng.gaussian(0, 7)), -10, 10); }
+    return { index: index, archDelta: archDelta, outliers: outliers };
+  };
+  S.champStrength = function (c, patch) {
+    let s = c.basePower;
+    for (const a in c.styleTags) s += (patch.archDelta[a] || 0) * c.styleTags[a];
+    s += patch.outliers[c.id] || 0;
+    return clamp(s, 20, 90);
+  };
+  S.tierOf = (s) => (s >= 62 ? 'S' : s >= 55 ? 'A' : s >= 47 ? 'B' : 'C');
+
+  // ---------- champion pool ----------
+  function profCeiling(apt, tags) { let m = 0; for (const a in tags) m += (apt[a] || 0) * tags[a]; return clamp(100 * (0.4 + 0.6 * m / 100), 0, 100); }
+  S.seedPool = function (player, rng) {
+    const ra = player.attributes.roleAptitude, learning = player.attributes.growth.learningRate / 100, pref = player.attributes.chemistry.preferredArchetype;
+    player.championPool = {};
+    S.CHAMPIONS.forEach((c) => {
+      const ceiling = profCeiling(player.attributes.championAptitude, c.styleTags);
+      let frac;
+      if (c.roles.indexOf(ra.primaryRole) >= 0) frac = 0.45 + 0.5 * rng.float() * (0.6 + 0.4 * learning);
+      else if (c.roles.indexOf(ra.secondaryRole) >= 0) frac = 0.3 + 0.3 * rng.float();
+      else frac = 0.15 + 0.2 * rng.float();
+      if ((c.styleTags[pref] || 0) >= 0.5) frac = Math.min(1, frac + 0.15);
+      player.championPool[c.id] = round(clamp(ceiling * frac, 0, 100), 0);
+    });
+  };
+  S.prof = (player, id) => (player.championPool && player.championPool[id] !== undefined ? player.championPool[id] : 20);
+
+  // ---------- draft ----------
+  const B = 'blue', R = 'red';
+  S.DRAFT_SEQUENCE = [
+    { side: B, type: 'ban' }, { side: R, type: 'ban' }, { side: B, type: 'ban' }, { side: R, type: 'ban' }, { side: B, type: 'ban' }, { side: R, type: 'ban' },
+    { side: B, type: 'pick' }, { side: R, type: 'pick' }, { side: R, type: 'pick' }, { side: B, type: 'pick' }, { side: B, type: 'pick' }, { side: R, type: 'pick' },
+    { side: R, type: 'ban' }, { side: B, type: 'ban' }, { side: R, type: 'ban' }, { side: B, type: 'ban' },
+    { side: R, type: 'pick' }, { side: B, type: 'pick' }, { side: B, type: 'pick' }, { side: R, type: 'pick' },
+  ];
+  S.newDraft = () => ({ step: 0, bans: { blue: [], red: [] }, picks: { blue: [], red: [] } });
+  S.currentStep = (s) => S.DRAFT_SEQUENCE[s.step] || null;
+  S.isComplete = (s) => s.step >= S.DRAFT_SEQUENCE.length;
+  S.takenIds = function (s) { const t = {}; [B, R].forEach((side) => { s.bans[side].forEach((id) => (t[id] = 1)); s.picks[side].forEach((p) => (t[p.champId] = 1)); }); return t; };
+  S.openRoles = function (s, side) { const f = {}; s.picks[side].forEach((p) => (f[p.role] = 1)); return ROLES.filter((r) => !f[r]); };
+  S.assignRole = function (c, open) { for (const r of c.roles) if (open.indexOf(r) >= 0) return { role: r, offRole: false }; return open.length ? { role: open[0], offRole: true } : null; };
+  S.legalActions = function (s) { const t = S.takenIds(s); return S.CHAMPIONS.map((c) => c.id).filter((id) => !t[id]).sort(); };
+  S.applyAction = function (s, champId, team) {
+    const step = S.currentStep(s); if (!step) throw new Error('draft complete');
+    if (S.takenIds(s)[champId]) throw new Error('taken');
+    const c = S.CHAMP_BY_ID[champId];
+    const next = { step: s.step + 1, bans: { blue: s.bans.blue.slice(), red: s.bans.red.slice() }, picks: { blue: s.picks.blue.slice(), red: s.picks.red.slice() } };
+    if (step.type === 'ban') next.bans[step.side].push(champId);
+    else { const a = S.assignRole(c, S.openRoles(s, step.side)); next.picks[step.side].push({ champId: champId, role: a.role, playerId: team.lineup[a.role].id, offRole: a.offRole }); }
+    return next;
+  };
+  const COMBO_ANCHORS = { dive: ['jungle', 'mid'], pick: ['bot', 'support'], protectTheCarry: ['bot', 'support'], split131: ['jungle', 'top'], pokeSiege: ['mid', 'support'], earlyInvade: ['jungle', 'top'], frontToBack: ['top', 'support'] };
+  const comfortTerm = (p) => 2.0 * ((p - 50) / 50), metaTerm = (s) => 1.5 * ((s - 50) / 50);
+  S.pickValue = function (c, role, offRole, team, oppPicks, patch) {
+    const player = team.lineup[role];
+    const comfort = comfortTerm(S.prof(player, c.id)), meta = metaTerm(S.champStrength(c, patch));
+    let counter = 0;
+    oppPicks.forEach((op) => { if (c.counters.indexOf(op.champId) >= 0) counter += 1.2; const oc = S.CHAMP_BY_ID[op.champId]; if (oc && oc.counters.indexOf(c.id) >= 0) counter -= 1.2; });
+    const off = offRole ? -1.5 : 0;
+    return { champId: c.id, role: role, comfort: comfort, meta: meta, counter: counter, offRole: off, total: comfort + meta + counter + off };
+  };
+  S.winCondition = function (picks) {
+    const ch = picks.map((p) => S.CHAMP_BY_ID[p.champId]).filter(Boolean);
+    if (!ch.length) return { label: '—', curve: { early: 0.33, mid: 0.34, late: 0.33 } };
+    const curve = { early: mean(ch.map((c) => c.curve.early)), mid: mean(ch.map((c) => c.curve.mid)), late: mean(ch.map((c) => c.curve.late)) };
+    const tc = (t) => ch.filter((c) => c.comboTags.indexOf(t) >= 0).length;
+    let label = 'Teamfight';
+    if (curve.early >= 0.42) label = 'Early Snowball';
+    else if (tc('protectTheCarry') >= 2 && curve.late >= 0.38) label = 'Protect the Star';
+    else if (tc('pick') >= 2) label = 'Pick & Punish';
+    else if (tc('pokeSiege') >= 2) label = 'Siege';
+    else if (tc('split131') >= 2) label = '1-3-1';
+    else if (curve.late >= 0.42) label = 'Scaling';
+    return { label: label, curve: curve };
+  };
+  S.evaluateSide = function (s, side, team, patch) {
+    const opp = side === B ? R : B, picks = s.picks[side];
+    const pickEvals = picks.map((p) => { const v = S.pickValue(S.CHAMP_BY_ID[p.champId], p.role, p.offRole, team, s.picks[opp], patch); v.playerId = p.playerId; v.total = round(v.total, 2); return v; });
+    const combos = []; const byRole = {}; picks.forEach((p) => (byRole[p.role] = p));
+    for (const tag in COMBO_ANCHORS) {
+      const carriers = picks.filter((p) => S.CHAMP_BY_ID[p.champId].comboTags.indexOf(tag) >= 0); if (carriers.length < 2) continue;
+      const ra = COMBO_ANCHORS[tag][0], rb = COMBO_ANCHORS[tag][1], pa = byRole[ra], pb = byRole[rb]; if (!pa || !pb) continue;
+      const plA = team.lineup[ra], plB = team.lineup[rb];
+      const aptGate = mean([S.prof(plA, pa.champId), S.prof(plB, pb.champId)]) / 100;
+      const key = plA.id < plB.id ? plA.id + '|' + plB.id : plB.id + '|' + plA.id;
+      const pc = team.chem && team.chem.pairs[key];
+      const chemGate = 0.5 + 0.5 * ((pc ? pc.current : 30) / 100);
+      combos.push({ tag: tag, aptGate: round(aptGate, 3), chemGate: round(chemGate, 3), payoff: round(2.5 * aptGate * chemGate, 2) });
+    }
+    const wc = S.winCondition(picks); let curveFit = 0;
+    if (picks.length === 5) {
+      const commit = Math.max(wc.curve.early, wc.curve.late); curveFit = commit >= 0.45 ? 2.0 : commit >= 0.4 ? 1.0 : 0;
+      const ch = picks.map((p) => S.CHAMP_BY_ID[p.champId]); const ftb = ch.some((c) => c.comboTags.indexOf('frontToBack') >= 0);
+      if (wc.curve.early >= 0.42 && ch.some((c) => c.curve.late >= 0.5) && !ftb) curveFit -= 2.0;
+    }
+    const teamTempo = mean(ROLES.map((r) => team.lineup[r].attributes.chemistry.playstyleTempo));
+    const compTempo = 50 + 50 * (wc.curve.early - wc.curve.late);
+    const identity = round(1.05 - 0.1 * (Math.abs(teamTempo - compTempo) / 100), 3);
+    const raw = (pickEvals.reduce((a, p) => a + p.total, 0) + combos.reduce((a, c) => a + c.payoff, 0) + curveFit) * identity;
+    return { side: side, score: round(clamp(raw, -8, 8), 2), picks: pickEvals, combos: combos, curveFit: curveFit, identity: identity, label: wc.label, curve: wc.curve };
+  };
+  const noiseSigma = (t) => 1.3 * (1 - 0.5 * ((t.coachQuality || 50) / 100)) * (1 - 0.4 * ((t.patchFamiliarity || 50) / 100));
+  S.scoreActions = function (s, side, team, opp, patch) {
+    const step = S.currentStep(s); if (!step) return [];
+    const oppSide = side === B ? R : B, legal = S.legalActions(s), out = [];
+    if (step.type === 'ban') {
+      const oppOpen = S.openRoles(s, oppSide);
+      legal.forEach((id) => {
+        const c = S.CHAMP_BY_ID[id]; let best = -Infinity, who = '';
+        oppOpen.forEach((r) => { const p = opp.lineup[r]; const inRole = c.roles.indexOf(r) >= 0 ? 1 : 0.4; const v = (comfortTerm(S.prof(p, id)) + metaTerm(S.champStrength(c, patch))) * inRole; if (v > best) { best = v; who = p.name; } });
+        if (best === -Infinity) best = metaTerm(S.champStrength(c, patch));
+        const flexTax = c.roles.length > 1 ? 0.5 : 0;
+        const protect = s.picks[side].some((p) => c.counters.indexOf(p.champId) >= 0) ? 1.0 : 0;
+        out.push({ champId: id, value: best + flexTax + protect, reason: protect ? 'protects your plan' : 'denies ' + who + "'s comfort" });
+      });
+    } else {
+      const open = S.openRoles(s, side);
+      legal.forEach((id) => {
+        const c = S.CHAMP_BY_ID[id], a = S.assignRole(c, open); if (!a) return;
+        const v = S.pickValue(c, a.role, a.offRole, team, s.picks[oppSide], patch), option = c.roles.length > 1 ? 0.3 : 0;
+        const reason = v.counter > 0 ? 'counters their lock' : v.comfort > 1 ? 'comfort pick' : v.meta > 0.6 ? 'meta power' : a.offRole ? 'off-role gamble' : 'fills the plan';
+        out.push({ champId: id, value: v.total + option, reason: reason, role: a.role, offRole: a.offRole });
+      });
+    }
+    return out.sort((x, y) => y.value - x.value || (x.champId < y.champId ? -1 : 1));
+  };
+  S.aiChoose = function (s, side, team, opp, patch, rng) {
+    const scored = S.scoreActions(s, side, team, opp, patch), sigma = noiseSigma(team);
+    let best = scored[0], bestV = -Infinity;
+    scored.forEach((a) => { const v = a.value + rng.normal() * sigma; if (v > bestV) { bestV = v; best = a; } });
+    return best.champId;
+  };
+  S.coachSuggestions = (s, side, team, opp, patch, n) => S.scoreActions(s, side, team, opp, patch).slice(0, n || 3).map((a) => ({ champId: a.champId, value: round(a.value, 1), reason: a.reason, role: a.role, offRole: a.offRole }));
+
+  // ---------- the crowd ----------
+  const EMOTES = ['CLAP', 'GRIEF', 'Throwge', 'WardDog', 'PogSnail', 'Copeium', 'FFCELLO', 'BONKED'];
+  const SUFFIX = ['_fan88', 'Main', '_enjoyer', '_truther', 'xX', '_lol', '99', '_invoice', 'TTV', '_gaming'];
+  const T = {
+    ban: ['they banned {champ} LOL scared of {champ} mains', '{champ} ban? tactical {emote}', 'no {champ}?? in this economy', 'respect ban on {champ} {emote}', '{champ} gone. {opp} exhale'],
+    pickGeneric: ['{champ} {emote}', '{champ} pick — {team} is cooking', '{champ}?? bold', 'ok {champ} enjoyers eating good tonight'],
+    pilotWarning: ['{player} has NEVER played {champ} chat', '{player} on {champ}?? coach diff incoming', 'first time {champ}? {emote}', 'this is either genius or a disaster. no in between'],
+    comp: {
+      'Early Snowball': ['early snowball comp — win by 25 or FF', 'tempo comp {emote} someone is getting invaded', 'if this game hits 30 min {team} is cooked'],
+      'Protect the Star': ['protect-the-carry comp = 40 minute game incoming', '{team} said protect the carry at ALL costs', 'four bodyguards and a hypercarry, classic'],
+      'Pick & Punish': ["pick comp. don't facecheck chat", 'HOOK CITY POPULATION: {opp}', 'one misstep and its over {emote}'],
+      Siege: ['siege comp, bastions crying already', 'poke poke poke {emote}', 'they are going to make {opp} play from behind'],
+      '1-3-1': ['1-3-1 the map, ignore the game', 'sidelane enjoyers rise up', "{team}'s top laner will not join a single fight and win"],
+      Scaling: ['scaling comp — FF timers OFF', '{team} needs 3 items and a dream', 'gripping 15 minutes of farming incoming'],
+      Teamfight: ['5v5 comp, just fight them 4head', 'teamfight comp {emote} lets see it', 'no gimmicks, just violence'],
+    },
+    firstBlood: ['FIRST BLOOD {team} {emote}', '{player} with the first blood CLAP', 'early lead lets gooo', 'ok THAT was clean'],
+    objective: ['WARDEN SECURED {emote}', '{team} takes the Warden, scaling online', 'COLOSSUS?? {emote} {emote}', 'the Battering Shade goes in and the bastion is GONE'],
+    throw: ['its over', 'THROWGE {emote}', '{team} throwing?? GRIEF', 'why would you fight there. why.'],
+    comeback: ["WE'RE SO BACK {emote} {emote}", 'never doubted (i doubted)', '{team} comeback {emote}', 'chat i am unwell'],
+    stall: ['both teams respectfully farming. gripping stuff', 'chat is this real', '30 minutes and nobody has died. love esports', 'stall game {emote} wake me up at the Colossus'],
+    win: ['GG {team} {emote}', '{player} diff', 'ez clap {emote}', '{opp} gg go next', 'it was the draft. it was always the draft'],
+    loss: ['ff15 next time', '{opp} diff', 'it was the draft. it was always the draft', 'gg go next', 'coach diff btw', '{team} fans in shambles'],
+    ambient: ['chat is this real', '[message removed by AutoMod]', "anyone else's stream lagging", 'W chat', 'L take above me', 'first time watching, is this good?'],
+    sponsor: ['this pause brought to you by {sponsor}. CAFFEINATE RESPONSIBLY', '{sponsor} thanks you for your energy', 'the {sponsor} logo is doing a lot of work on that jersey'],
+    patchDay: ['{champ} mains in shambles', 'my whole pool is C tier FFCELLO', 'new patch who dis'],
+  };
+  function fill(t, p, rng) {
+    return t.replace(/\{emote\}/g, () => rng.pick(EMOTES)).replace(/\{champ\}/g, p.champ || 'that champ').replace(/\{team\}/g, p.team || 'they').replace(/\{opp\}/g, p.opp || 'the enemy').replace(/\{player\}/g, p.player || 'he').replace(/\{sponsor\}/g, p.sponsor || 'our sponsor');
+  }
+  function username(rng, p) {
+    const base = p && p.champ && rng.chance(0.35) ? p.champ.toLowerCase().replace(/[^a-z]/g, '') : rng.pick(['fenwick', 'wardDog', 'hesper', 'grapnel', 'quill', 'mossback', 'brindle', 'vexalia', 'pip', 'ogden', 'cindra', 'jorun']);
+    const suf = rng.pick(SUFFIX);
+    return suf === 'xX' ? 'xX' + base + 'Xx' : base + suf;
+  }
+  /** React to a trigger; returns messages {user, text, mood}. */
+  S.crowdReact = function (trigger, payload, rng, count) {
+    const p = payload || {}; const out = []; const n = count || 2;
+    let pool;
+    if (trigger === 'pick') { const c = p.champObj; pool = (c && c.chatLines ? c.chatLines : []).concat(T.pickGeneric); }
+    else if (trigger === 'compLock') pool = (T.comp[p.label] || T.comp.Teamfight).concat(T.ambient.slice(0, 1));
+    else if (trigger === 'result') pool = p.won ? T.win : T.loss;
+    else pool = T[trigger] || T.ambient;
+    for (let i = 0; i < n; i++) {
+      const raw = rng.pick(pool);
+      out.push({ user: username(rng, p), text: fill(raw, p, rng), mood: trigger });
+      if (rng.chance(0.18)) out.push({ user: username(rng, p), text: fill(rng.pick(T.ambient), p, rng), mood: 'ambient' });
+    }
+    return out;
+  };
+  S.EMOTES = EMOTES;
+})(typeof window !== 'undefined' ? window : globalThis);
+
 </script>
 <script>
 /* ============================================================= game layer ============================================================= */
@@ -703,8 +965,9 @@ function newGame(seed){
     stageIndex:0, stageWins:0,
     ladder:ladder, roster:{top:null,jungle:null,mid:null,bot:null,support:null}, chem:null,
     sponsors:{active:[],offers:[]}, inbox:[], ui:{screen:'scout',selLad:ladder[0]?.id||null,match:null},
-    orgName:'Your Org', matchOpp:null,
+    orgName:'Your Org', matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
   };
+  G.patch=S.genPatch(new S.Rng(seed,'meta:0'),0);
   refreshSponsorOffers();
   pushLog('Career started. You take over a broke amateur org — fill five seats and earn a Regional invite.','info');
   render();
@@ -765,6 +1028,7 @@ function doSign(id,role){
   if(G.cash<fee){toast('Not enough credits ('+fee+'◈ needed).','bad');return;}
   G.cash-=fee; e.signed=true;
   const p=e.hidden.player; p.ladder=e; p.signedRole=role;
+  if(!p.championPool||!Object.keys(p.championPool).length)S.seedPool(p,new S.Rng(G.seed,'pool:'+p.id));
   G.roster[role]=p; recomputeChem();
   pushLog('Signed <b>'+e.handle+'</b> ('+ROLE_LABEL[role]+', '+TIER_NAME[e.tier]+') for '+fee+'◈.','good');
   toast('Signed <b>'+e.handle+'</b> as your '+ROLE_LABEL[role]+'.','good');
@@ -805,39 +1069,7 @@ function makeOpponent(){
   let ch=S.initChem(lu);const wk=Math.round(rng.range(6,26));for(let i=0;i<wk;i++)S.rampWeek(ch,lu,1);
   return {name:nm,lineup:lu,chem:ch};
 }
-function playMatch(){
-  if(rosterCount()<5){toast('You need all five roles filled to compete.','bad');return;}
-  const you={name:'Your Org',lineup:lineup(),chem:G.chem};
-  const opp=G.matchOpp||makeOpponent();G.matchOpp=opp;
-  const series=S.simulateSeries(you,opp,3,new S.Rng(G.seed,'series:'+G.week+':'+G.stageWins));
-  const won=series.winner==='a';
-  const st=stage();
-  G.ui.match={series:series,opp:opp,won:won};
-  if(won){
-    G.cash+=st.prize;G.reputation=Math.min(100,G.reputation+st.rep);G.stageWins++;
-    // sponsor clause bonuses (playoffs/title flavor): small rep-driven
-    pushLog('Won the series vs <b>'+opp.name+'</b> '+series.scoreA+'-'+series.scoreB+' (+'+st.prize+'◈, +'+st.rep+' rep).','good');
-    toast('Series won vs '+opp.name+' — '+series.scoreA+'-'+series.scoreB+'!','good');
-    G.matchOpp=null;
-    if(G.stageWins>=st.wins){
-      if(G.stageIndex<STAGES.length-1){
-        G.stageIndex++;G.stageWins=0;G.matchOpp=null;
-        const ns=stage();
-        pushLog('★ Promoted to <b>'+ns.name+'</b>!','good');
-        toast('★ You\'ve reached '+ns.name+'!','good');
-        refreshSponsorOffers();
-      } else {
-        pushLog('★★ You are WORLD CHAMPIONS. The garage org made it all the way.','good');
-        toast('★★ WORLDS CHAMPIONS. You did it.','good');
-      }
-    }
-  } else {
-    pushLog('Lost the series vs '+opp.name+' '+series.scoreB+'-'+series.scoreA+'. Regroup and try again.','bad');
-    toast('Series lost vs '+opp.name+'. Back to the drawing board.','bad');
-  }
-  advanceWeekQuiet();
-  render();
-}
+/* playMatch → matchday.js (startSeries / concludeSeries) */
 function advanceWeekQuiet(){ // a match consumes a week without the separate log line
   G.week++;if(G.chem)S.rampWeek(G.chem,lineup(),1.0);
   ROLE_ORDER.forEach(r=>{const p=G.roster[r];if(p){p.state.fatigue=S.clamp(p.state.fatigue+5,0,100);}});
@@ -1085,65 +1317,397 @@ function analystRead(co){
   return s;
 }
 
-/* ---------- compete ---------- */
+/* ---------- compete / match day: injected from src/matchday.js ---------- */
+
+/* ============================================================= match day: draft · live · crowd =============================================================
+   Injected into template.html at build. Uses the game layer's globals (G, S, el, $, render, toast, pushLog, …). */
+
+function yourTeam(){ return {name:'Your Org', lineup:lineup(), chem:G.chem, coachQuality:G.coachQuality, patchFamiliarity:G.patchFamiliarity}; }
+function oppTeam(opp){ return Object.assign({coachQuality:55, patchFamiliarity:65}, opp); }
+function ensurePools(){
+  ROLE_ORDER.forEach(r=>{const p=G.roster[r]; if(p&&(!p.championPool||!Object.keys(p.championPool).length))S.seedPool(p,new S.Rng(G.seed,'pool:'+p.id));});
+}
+function ensureOppPools(opp){
+  ROLE_ORDER.forEach(r=>{const p=opp.lineup[r]; if(!p.championPool||!Object.keys(p.championPool).length)S.seedPool(p,new S.Rng(G.seed,'opp-pool:'+opp.name+':'+r));});
+}
+function otherSide(side){ return side==='blue'?'red':'blue'; }
+function sideTeam(side){ const m=G.match; return side===m.yourSide? yourTeam(): oppTeam(m.opp); }
+function sideName(side){ return side===G.match.yourSide?'Your Org':G.match.opp.name; }
+
+/* -------- series lifecycle -------- */
+function startSeries(){
+  if(rosterCount()<5){toast('You need all five roles filled to compete.','bad');return;}
+  ensurePools();
+  const opp=G.matchOpp||(G.matchOpp=makeOpponent()); ensureOppPools(opp);
+  G.match={opp:opp, gameIndex:0, games:[], phase:'draft', crowd:[], hype:30, timer:30, chatRng:new S.Rng(G.seed,'chat:'+G.week+':'+G.stageWins)};
+  beginDraft();
+}
+function beginDraft(){
+  const m=G.match; clearTimers();
+  m.yourSide = m.gameIndex%2===0?'blue':'red';
+  m.draft=S.newDraft(); m.verdict=null; m.phase='draft'; m.lastWarning=null; m.hype=30;
+  m.draftRng=new S.Rng(G.seed,'draft:'+G.week+':'+G.stageWins+':'+m.gameIndex);
+  crowdPush('ambient',{team:'Your Org',opp:m.opp.name},2);
+  render(); scheduleAi();
+}
+function clearTimers(){ const m=G.match; if(!m)return; clearTimeout(m.aiT); clearInterval(m.timerI); clearTimeout(m.liveT); }
+function scheduleAi(){
+  const m=G.match; if(!m||m.phase!=='draft')return;
+  const step=S.currentStep(m.draft); if(!step){finishDraft();return;}
+  if(step.side!==m.yourSide){
+    clearTimeout(m.aiT);
+    m.aiT=setTimeout(()=>{
+      const mm=G.match; if(!mm||mm.phase!=='draft')return;
+      const st=S.currentStep(mm.draft); if(!st||st.side===mm.yourSide)return;
+      const id=S.aiChoose(mm.draft,st.side,sideTeam(st.side),sideTeam(mm.yourSide),G.patch,mm.draftRng);
+      doDraftAction(id);
+    },700);
+  } else startTimer();
+}
+function startTimer(){
+  const m=G.match; m.timer=30; clearInterval(m.timerI);
+  m.timerI=setInterval(()=>{
+    const mm=G.match; if(!mm||mm.phase!=='draft'){clearInterval(m.timerI);return;}
+    mm.timer--; const e=$('#draftTimer'); if(e)e.textContent='0:'+String(Math.max(0,mm.timer)).padStart(2,'0');
+    if(mm.timer<=0){ clearInterval(m.timerI); const st=S.currentStep(mm.draft);
+      if(st&&st.side===mm.yourSide){ const sug=S.coachSuggestions(mm.draft,mm.yourSide,yourTeam(),oppTeam(mm.opp),G.patch,1)[0]; if(sug){toast('Timer expired — coach locked '+S.CHAMP_BY_ID[sug.champId].name+'.');doDraftAction(sug.champId);} } }
+  },1000);
+}
+function doDraftAction(champId){
+  const m=G.match; if(!m||m.phase!=='draft')return;
+  const s=m.draft, st=S.currentStep(s); if(!st)return;
+  if(S.takenIds(s)[champId])return;
+  clearInterval(m.timerI); clearTimeout(m.aiT);
+  const team=sideTeam(st.side), c=S.CHAMP_BY_ID[champId];
+  m.draft=S.applyAction(s,champId,team);
+  const tn=sideName(st.side), on=sideName(otherSide(st.side));
+  if(st.type==='ban'){ crowdPush('ban',{champ:c.name,team:tn,opp:on},1); m.hype=Math.min(100,m.hype+4); }
+  else {
+    const pk=m.draft.picks[st.side][m.draft.picks[st.side].length-1]; const pl=team.lineup[pk.role];
+    crowdPush('pick',{champ:c.name,champObj:c,team:tn,opp:on,player:pl.name},1);
+    const pf=S.prof(pl,champId);
+    if(pf<45||pk.offRole){ crowdPush('pilotWarning',{champ:c.name,player:pl.name,team:tn},1); m.lastWarning=(pk.offRole?'OFF-ROLE — ':'PILOT — ')+c.name+' → '+pl.name+': '+pf+' proficiency'+(pk.offRole?' (playing out of position)':''); }
+    m.hype=Math.min(100,m.hype+7);
+  }
+  render();
+  if(S.isComplete(m.draft))finishDraft(); else scheduleAi();
+}
+function delegateDraft(){
+  const m=G.match; if(!m||m.phase!=='draft')return; clearTimers();
+  while(!S.isComplete(m.draft)){ const st=S.currentStep(m.draft); const id=S.aiChoose(m.draft,st.side,sideTeam(st.side),sideTeam(otherSide(st.side)),G.patch,m.draftRng); m.draft=S.applyAction(m.draft,id,sideTeam(st.side)); }
+  crowdPush('ambient',{team:'Your Org'},1); pushLog('You let the coach run the rest of the game '+(m.gameIndex+1)+' draft.','info');
+  finishDraft();
+}
+function finishDraft(){
+  const m=G.match; clearTimers();
+  const you=S.evaluateSide(m.draft,m.yourSide,yourTeam(),G.patch);
+  const them=S.evaluateSide(m.draft,otherSide(m.yourSide),oppTeam(m.opp),G.patch);
+  m.verdict={you:you,them:them}; m.phase='verdict'; m.hype=Math.min(100,m.hype+10);
+  crowdPush('compLock',{label:you.label,team:'Your Org',opp:m.opp.name,player:G.roster.mid?G.roster.mid.name:'mid'},2);
+  render();
+}
+function playGame(){
+  const m=G.match; if(!m||m.phase!=='verdict')return;
+  const you=yourTeam(); you.draftScore=m.verdict.you.score;
+  const opp=oppTeam(m.opp); opp.draftScore=m.verdict.them.score;
+  const g=S.simulateGame(you,opp,new S.Rng(G.seed,'game:'+G.week+':'+G.stageWins+':'+m.gameIndex));
+  g.verdict=m.verdict; g.yourSide=m.yourSide;
+  // deterministic synthetic win-prob path for the live graph
+  const wr=new S.Rng(G.seed,'wp:'+G.week+':'+G.stageWins+':'+m.gameIndex);
+  const end=g.winner==='a'?90:10; const pts=[50]; for(let i=1;i<14;i++){ const t=i/13; const target=50+(end-50)*Math.pow(t,1.6); pts.push(S.clamp(target+wr.gaussian(0,9)*(1-t*0.6),4,96)); } pts.push(end);
+  g.wpPath=pts;
+  m.games.push(g); m.phase='live'; m.liveStep=0; m.hype=45;
+  render(); runLive();
+}
+function runLive(){
+  const m=G.match; const g=m.games[m.games.length-1]; const steps=g.timeline.length; const won=g.winner==='a';
+  const tick=()=>{
+    const mm=G.match; if(!mm||mm.phase!=='live')return;
+    mm.liveStep++; const i=mm.liveStep-1; const tn=won?'Your Org':mm.opp.name; const on=won?mm.opp.name:'Your Org';
+    if(i===1)crowdPush('firstBlood',{team:tn,player:g.mvp.name,opp:on},2);
+    else if(i===2)crowdPush('objective',{team:tn,opp:on},2);
+    else if(i===3)crowdPush(g.lengthMin>30?'stall':'objective',{team:tn,opp:on},1);
+    else if(i>=4&&i<steps-1)crowdPush(won?'comeback':'throw',{team:won?'Your Org':mm.opp.name,opp:on},1);
+    else if(i===steps-1)crowdPush('result',{won:won,team:'Your Org',opp:mm.opp.name,player:g.mvp.name},3);
+    mm.hype=Math.min(100,45+i*11);
+    render();
+    if(mm.liveStep<steps) mm.liveT=setTimeout(tick,850); else { mm.phase='postgame'; setTimeout(()=>{ if(G.match)render(); },200); }
+  };
+  m.liveT=setTimeout(tick,600);
+}
+function nextGame(){
+  const m=G.match; const yw=m.games.filter(g=>g.winner==='a').length, ow=m.games.length-yw;
+  if(yw>=2||ow>=2){ concludeSeries(yw,ow); return; }
+  m.gameIndex++; beginDraft();
+}
+function concludeSeries(yw,ow){
+  const m=G.match; clearTimers(); const won=yw>ow; const st=stage(); const opp=m.opp;
+  G.ui.match={series:{scoreA:yw,scoreB:ow,games:m.games,winner:won?'a':'b',bestOf:3},opp:opp,won:won};
+  if(won){
+    G.cash+=st.prize; G.reputation=Math.min(100,G.reputation+st.rep); G.stageWins++; G.matchOpp=null;
+    pushLog('Won the series vs <b>'+opp.name+'</b> '+yw+'-'+ow+' (+'+st.prize+'◈, +'+st.rep+' rep).','good');
+    toast('Series won vs '+opp.name+' — '+yw+'-'+ow+'!','good');
+    if(G.stageWins>=st.wins){
+      if(G.stageIndex<STAGES.length-1){ G.stageIndex++; G.stageWins=0; const ns=stage(); pushLog('★ Promoted to <b>'+ns.name+'</b>!','good'); toast('★ You\'ve reached '+ns.name+'!','good'); refreshSponsorOffers(); }
+      else { pushLog('★★ You are WORLD CHAMPIONS. The garage org made it all the way.','good'); toast('★★ WORLDS CHAMPIONS. You did it.','good'); }
+    }
+  } else {
+    pushLog('Lost the series vs '+opp.name+' '+ow+'-'+yw+'. Regroup and try again.','bad');
+    toast('Series lost vs '+opp.name+'. Back to the drawing board.','bad');
+  }
+  m.phase='series'; G.patchFamiliarity=Math.min(100,G.patchFamiliarity+6);
+  advanceWeekQuiet(); render();
+}
+function endSeriesView(){ clearTimers(); G.match=null; render(); }
+function crowdPush(trigger,payload,count){
+  const m=G.match; if(!m)return;
+  const msgs=S.crowdReact(trigger,payload,m.chatRng,count);
+  m.crowd=m.crowd.concat(msgs).slice(-40);
+}
+
+/* -------- rendering -------- */
 function renderCompete(main){
+  const m=G.match;
+  if(!m) return renderPrep(main);
+  if(m.phase==='draft'||m.phase==='verdict') return renderDraft(main);
+  if(m.phase==='live'||m.phase==='postgame') return renderLive(main);
+  if(m.phase==='series') return renderSeries(main);
+}
+function renderPrep(main){
   const st=stage();
   const head=el('div','screen-head');
   head.innerHTML='<p class="eyebrow">'+st.name+'</p><h1 class="title cond">Compete</h1><p class="sub">'+st.blurb+' <b style="color:var(--ink)">'+G.stageWins+' / '+st.wins+'</b> series won at this tier.</p>';
   main.appendChild(head);
-
-  if(rosterCount()<5){
-    const c=el('div','card');c.innerHTML='<div class="empty-note">You need all five roles filled before you can enter a match.<br>Head to <b>Scout the Ladder</b> and sign a full starting five.</div>';
-    main.appendChild(c);return;
-  }
-  const you={name:'Your Org',lineup:lineup(),chem:G.chem};
-  const opp=G.matchOpp||(G.matchOpp=makeOpponent());
-  const byou=S.teamBreakdown(you),bopp=S.teamBreakdown(opp);
+  if(rosterCount()<5){ const c=el('div','card'); c.innerHTML='<div class="empty-note">You need all five roles filled before you can enter a match.<br>Head to <b>Scout the Ladder</b> and sign a full starting five.</div>'; main.appendChild(c); return; }
+  ensurePools();
+  const you=yourTeam(); const opp=G.matchOpp||(G.matchOpp=makeOpponent()); ensureOppPools(opp);
+  const byou=S.teamBreakdown(you), bopp=S.teamBreakdown(opp);
   const pA=1/(1+Math.pow(10,-(byou.strength-bopp.strength)/15));
-
   const vs=el('div','vs');
-  vs.innerHTML=
-    '<div class="card teamcard you"><div class="role-tag" style="color:var(--gold)">You</div><div class="tn">'+you.name+'</div><div class="ts">'+byou.strength.toFixed(1)+'<small>TEAM STRENGTH</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+byou.base.toFixed(1)+' × mesh '+byou.meshMult.toFixed(3)+'</div></div>'+
+  vs.innerHTML='<div class="card teamcard you"><div class="role-tag" style="color:var(--gold)">You</div><div class="tn">'+you.name+'</div><div class="ts">'+byou.strength.toFixed(1)+'<small>TEAM STRENGTH · PRE-DRAFT</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+byou.base.toFixed(1)+' × mesh '+byou.meshMult.toFixed(3)+'</div></div>'+
     '<div class="mid">VS</div>'+
-    '<div class="card teamcard"><div class="role-tag">'+st.name+'</div><div class="tn">'+opp.name+'</div><div class="ts">'+bopp.strength.toFixed(1)+'<small>TEAM STRENGTH</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+bopp.base.toFixed(1)+' × mesh '+bopp.meshMult.toFixed(3)+'</div></div>';
+    '<div class="card teamcard"><div class="role-tag">'+st.name+'</div><div class="tn">'+opp.name+'</div><div class="ts">'+bopp.strength.toFixed(1)+'<small>TEAM STRENGTH · PRE-DRAFT</small></div><div class="mono" style="color:var(--muted);font-size:11px;margin-top:6px">base '+bopp.base.toFixed(1)+' × mesh '+bopp.meshMult.toFixed(3)+'</div></div>';
   main.appendChild(vs);
-
-  const wp=el('div','wpbar');
-  wp.innerHTML='<div class="you" style="width:'+(pA*100)+'%">'+Math.round(pA*100)+'% '+you.name+'</div><div class="opp" style="width:'+((1-pA)*100)+'%">'+opp.name+' '+Math.round((1-pA)*100)+'%</div>';
-  main.appendChild(wp);
-
-  const controls=el('div');controls.style.cssText='display:flex;gap:10px;margin-bottom:18px';
-  const play=el('button','btn primary');play.innerHTML='Play Bo3 series';play.onclick=()=>{playMatch();};
-  const wk=el('button','btn');wk.textContent='Advance a week (scrim & gel)';wk.onclick=()=>advanceWeek();
-  controls.appendChild(play);controls.appendChild(wk);main.appendChild(controls);
-
-  if(G.ui.match){
-    const m=G.ui.match;const st2=el('div','card');st2.style.padding='16px';
-    const g=m.series.games[m.series.games.length-1];
-    let pips='';m.series.games.forEach((gm,i)=>{const w=gm.winner==='a';pips+='<div class="gpip '+(w?'win':'loss')+'">Game '+(i+1)+'<div style="font-family:Barlow Condensed;font-weight:700;font-size:18px">'+(w?'W':'L')+'</div><div class="mono" style="font-size:10px">'+gm.killsA+'–'+gm.killsB+' · '+gm.lengthMin+'m</div></div>';});
-    st2.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><div class="section-label" style="margin:0">Series result</div>'+
-      '<div class="cond" style="font-weight:700;font-size:22px;color:'+(m.won?'var(--gel)':'var(--toxic)')+'">'+(m.won?'VICTORY':'DEFEAT')+' '+m.series.scoreA+'–'+m.series.scoreB+'</div></div>'+
-      '<div class="games">'+pips+'</div>';
-    // last game timeline + statline
-    const tl=el('ul','timeline');g.timeline.forEach((t,i)=>{const li=el('li',null,t);li.style.animationDelay=(i*0.12)+'s';tl.appendChild(li);});
-    st2.insertAdjacentHTML('beforeend','<div class="section-label" style="margin:14px 0 6px">Deciding game — '+g.lengthMin+' min · MVP <span class="mvp">'+g.mvp.name+'</span></div>');
-    st2.appendChild(tl);
-    // your statline
-    const yourLines=(g.winner==='a')?g.linesA:g.linesB;const isYouA=true;
-    const sl=el('table','statline');
-    sl.innerHTML='<thead><tr><th>Your player</th><th>K</th><th>D</th><th>A</th><th>DMG%</th><th>Rating</th></tr></thead>';
-    const tb=el('tbody');
-    ROLE_ORDER.forEach(r=>{const line=g.linesA.find(l=>l.role===r);if(!line)return;
-      const tr=el('tr');const mv=(g.mvp.side==='a'&&g.mvp.name===line.name);
-      tr.innerHTML='<td>'+(mv?'<span class="mvp">★ </span>':'')+ROLE_LABEL[r]+' · '+line.name+'</td><td>'+line.kills+'</td><td>'+line.deaths+'</td><td>'+line.assists+'</td><td>'+Math.round(line.dmgShare*100)+'</td><td style="color:'+ratingColor(line.rating)+'">'+line.rating.toFixed(1)+'</td>';
-      tb.appendChild(tr);});
-    sl.appendChild(tb);st2.insertAdjacentHTML('beforeend','<div class="section-label" style="margin:16px 0 4px">Your box score</div>');st2.appendChild(sl);
-    main.appendChild(st2);
-  }
-  // log
-  const logc=el('div','card');logc.style.cssText='padding:14px 16px;margin-top:18px';
-  logc.innerHTML='<div class="section-label">Inbox</div>';logc.appendChild(logList());main.appendChild(logc);
+  const wp=el('div','wpbar'); wp.innerHTML='<div class="you" style="width:'+(pA*100)+'%">'+Math.round(pA*100)+'% '+you.name+'</div><div class="opp" style="width:'+((1-pA)*100)+'%">'+opp.name+' '+Math.round((1-pA)*100)+'%</div>'; main.appendChild(wp);
+  const info=el('div','role-tag'); info.style.cssText='margin:-6px 0 14px;color:var(--muted)'; info.innerHTML='Patch '+(G.patch.index+1)+' · your patch familiarity <b style="color:var(--ink)">'+G.patchFamiliarity+'%</b> · head coach: <b style="color:var(--ink)">interim (your cousin, rating '+G.coachQuality+')</b> — draft edge is bounded to ±8 strength; win the draft and a weaker roster can steal a series.'; main.appendChild(info);
+  const controls=el('div'); controls.style.cssText='display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap';
+  const play=el('button','btn primary'); play.textContent='Start Bo3 series — draft game 1'; play.onclick=startSeries;
+  const wk=el('button','btn'); wk.textContent='Advance a week (scrim & gel)'; wk.onclick=advanceWeek;
+  controls.appendChild(play); controls.appendChild(wk); main.appendChild(controls);
+  if(G.ui.match) main.appendChild(seriesSummaryCard(G.ui.match));
+  const logc=el('div','card'); logc.style.cssText='padding:14px 16px;margin-top:18px'; logc.innerHTML='<div class="section-label">Inbox</div>'; logc.appendChild(logList()); main.appendChild(logc);
 }
+
+function tierChip(c){ const s=S.champStrength(c,G.patch); const t=S.tierOf(s); const o=G.patch.outliers[c.id]||0; return '<span class="tierchip tier-'+t+'">'+t+(o>0?' ↑':o<0?' ↓':'')+'</span>'; }
+function curveBars(c){ const v=[c.curve.early,c.curve.mid,c.curve.late]; const mx=Math.max.apply(null,v); return '<div class="curve">'+v.map(x=>'<i class="'+(x===mx?'hi':'')+'" style="height:'+Math.max(2,Math.round(x*24))+'px"></i>').join('')+'</div>'; }
+
+function renderDraft(main){
+  const m=G.match, s=m.draft, step=S.currentStep(s);
+  const yourTurn=!!step&&step.side===m.yourSide;
+  const you=yourTeam(), them=oppTeam(m.opp);
+  const head=el('div','screen-head');
+  head.innerHTML='<p class="eyebrow">'+stage().name+' · vs '+m.opp.name+'</p><h1 class="title cond">Draft — Game '+(m.gameIndex+1)+'</h1><p class="sub">Blue buys first pick; Red buys the counter-pick window. Deny their comfort, protect your plan, and mind who is piloting what.</p>';
+  main.appendChild(head);
+
+  const board=el('div','draft');
+  const phaseIdx=s.step<6?0:s.step<12?1:s.step<16?2:3;
+  const dh=el('div','dhead');
+  dh.innerHTML='<div class="cond" style="font-weight:700;font-size:20px">DRAFT <span style="color:var(--faint)">· GAME '+(m.gameIndex+1)+' OF 3</span></div>'+
+    '<div class="phase-chips">'+['BAN 1','PICK 1','BAN 2','PICK 2'].map((p,i)=>'<span class="pchip '+(i===phaseIdx&&step?'on':'')+'">'+p+'</span>').join('')+'</div>'+
+    '<div style="margin-left:auto;display:flex;align-items:center;gap:14px"><span class="dtimer" id="draftTimer">'+(yourTurn?'0:'+String(m.timer).padStart(2,'0'):'—')+'</span>'+
+    '<span class="pill '+(yourTurn?'gold':'')+'">'+(step?(yourTurn?'YOUR '+step.type.toUpperCase()+' · '+m.yourSide.toUpperCase()+' SIDE':m.opp.name.toUpperCase()+' IS '+(step.type==='ban'?'BANNING…':'PICKING…')):'DRAFT COMPLETE')+'</span></div>';
+  board.appendChild(dh);
+
+  board.appendChild(sideColumn(m.yourSide,you,'you',step));
+  board.appendChild(centerColumn(step,yourTurn,you,them));
+  const right=sideColumn(otherSide(m.yourSide),them,'them',step);
+  right.appendChild(crowdBlock());
+  board.appendChild(right);
+
+  const foot=el('div','dfoot');
+  const top=Object.entries(G.patch.archDelta).sort((a,b)=>b[1]-a[1])[0];
+  foot.innerHTML=(m.lastWarning?'<span style="color:var(--warn)">'+m.lastWarning+'</span><span style="color:var(--faint)">·</span>':'')+
+    '<span>META — '+ARCH_LABEL[top[0]]+' '+(top[1]>=0?'+':'')+top[1].toFixed(0)+' this patch · familiarity '+G.patchFamiliarity+'%</span>'+
+    '<span style="color:var(--faint)">·</span><span>Coach (interim, '+G.coachQuality+') suggestions are decent but stale on new patches.</span>';
+  board.appendChild(foot);
+  main.appendChild(board);
+
+  if(m.phase==='verdict') main.appendChild(verdictPanel());
+}
+function sideColumn(side,team,cls,step){
+  const m=G.match, s=m.draft; const col=el('div','dcol '+cls);
+  const isYou=cls==='you'; const label=isYou?'YOUR SIDE · '+side.toUpperCase():m.opp.name.toUpperCase()+' · '+side.toUpperCase();
+  col.innerHTML='<div class="role-tag" style="color:'+(isYou?'var(--gold)':'var(--info)')+';letter-spacing:.14em">'+label+'</div>';
+  // bans
+  const bans=s.bans[side]; const banRow=el('div'); banRow.innerHTML='<div class="role-tag" style="margin-bottom:5px;font-size:9px">BANS</div>';
+  const br=el('div','bans-row');
+  for(let i=0;i<5;i++){ const b=bans[i]; const d=el('div','slot'+(b?' filled ban':'')); d.textContent=b?S.CHAMP_BY_ID[b].name:''; if(!b&&step&&step.type==='ban'&&step.side===side&&i===bans.length){d.className='slot now';d.textContent='…';} br.appendChild(d); }
+  banRow.appendChild(br); col.appendChild(banRow);
+  // picks
+  const picks=s.picks[side]; const pr=el('div'); pr.innerHTML='<div class="role-tag" style="margin-bottom:5px;font-size:9px">PICKS</div>';
+  const list=el('div'); list.style.cssText='display:flex;flex-direction:column;gap:5px';
+  for(let i=0;i<5;i++){
+    const p=picks[i]; const d=el('div','slot'+(p?' filled':''));
+    if(p){ const c=S.CHAMP_BY_ID[p.champId]; const pl=team.lineup[p.role]; const pf=S.prof(pl,p.champId);
+      d.innerHTML='<span>'+c.name+'</span><span class="rt">'+p.role.toUpperCase()+(p.offRole?' ⟲':'')+'</span>'+(isYou?'<span class="pf" style="color:'+(pf>=65?'var(--gel)':pf>=45?'var(--ink)':'var(--toxic)')+'">'+pf+'p</span>':'<span class="pf" style="color:var(--faint)">'+pl.name+'</span>'); }
+    else if(step&&step.type==='pick'&&step.side===side&&i===picks.length){ d.className='slot now'; d.textContent=(side===m.yourSide?'PICKING NOW…':'THINKING…'); }
+    list.appendChild(d);
+  }
+  pr.appendChild(list); col.appendChild(pr);
+  // comp read
+  const wc=S.winCondition(picks); const clarity=picks.length?Math.round(Math.min(1,Math.max(wc.curve.early,wc.curve.late)/0.5)*100*(picks.length/5)):0;
+  const cr=el('div','compread');
+  cr.innerHTML='<div class="role-tag" style="font-size:9px">COMP READ</div><div class="lbl '+(isYou?'':'them')+'">'+(picks.length?wc.label.toUpperCase():'—')+'</div><div class="clarity"><i class="'+(isYou?'':'them')+'" style="width:'+clarity+'%"></i></div>'+
+    (isYou&&picks.length>=2?'<div style="font-size:11px;color:var(--muted);margin-top:6px">'+comboHint(side,team)+'</div>':'');
+  if(!isYou) cr.style.marginTop='0';
+  col.appendChild(cr);
+  return col;
+}
+function comboHint(side,team){
+  const ev=S.evaluateSide(G.match.draft,side,team,G.patch);
+  if(!ev.combos.length) return 'No combo online yet — two picks sharing a plan light one up.';
+  const c=ev.combos.sort((a,b)=>b.payoff-a.payoff)[0];
+  return cap(c.tag.replace(/([A-Z])/g,' $1').toLowerCase())+' payoff at <b style="color:var(--ink)">'+Math.round(c.chemGate*100)+'%</b> chemistry gate'+(c.chemGate<0.8?' — anchor pair still gelling':'');
+}
+function centerColumn(step,yourTurn,you,them){
+  const m=G.match, s=m.draft; const col=el('div','dcenter');
+  const taken=S.takenIds(s);
+  const bar=el('div','toolbar'); bar.style.marginBottom='0';
+  const roleSel=el('select'); roleSel.innerHTML='<option value="">All roles</option>'+ROLE_ORDER.map(r=>'<option value="'+r+'">'+ROLE_LABEL[r]+'</option>').join(''); roleSel.value=G.ui.draftRole||''; roleSel.onchange=()=>{G.ui.draftRole=roleSel.value;render();};
+  const lbl=el('span','section-label'); lbl.style.margin='0'; lbl.textContent=yourTurn?(step.type==='ban'?'Choose a champion to ban':'Choose your pick'):(step?'Waiting on '+m.opp.name:'Draft locked');
+  const sp=el('span'); sp.style.flex='1'; bar.appendChild(lbl); bar.appendChild(sp); bar.appendChild(roleSel); col.appendChild(bar);
+
+  // coach scores (for ordering + suggestions)
+  let scored=null, topIds={};
+  if(yourTurn){ scored=S.scoreActions(s,m.yourSide,you,them,G.patch); scored.slice(0,3).forEach(a=>topIds[a.champId]=1); }
+  const scoreOf={}; if(scored)scored.forEach(a=>scoreOf[a.champId]=a);
+  let champs=S.CHAMPIONS.slice();
+  if(G.ui.draftRole) champs=champs.filter(c=>c.roles.indexOf(G.ui.draftRole)>=0);
+  champs.sort((a,b)=>{ const ta=taken[a.id]?1:0, tb=taken[b.id]?1:0; if(ta!==tb)return ta-tb; if(scored){ const va=scoreOf[a.id]?scoreOf[a.id].value:-99, vb=scoreOf[b.id]?scoreOf[b.id].value:-99; if(vb!==va)return vb-va; } return a.name<b.name?-1:1; });
+
+  const grid=el('div','champ-grid');
+  const open=step&&step.type==='pick'?S.openRoles(s,m.yourSide):null;
+  champs.forEach(c=>{
+    const isTaken=!!taken[c.id];
+    const card=el('button','ccard'+(isTaken?' taken':'')+(topIds[c.id]?' top':''));
+    let pilot='';
+    if(yourTurn&&step.type==='pick'&&!isTaken&&open){ const a=S.assignRole(c,open); if(a){ const pl=you.lineup[a.role]; const pf=S.prof(pl,c.id); pilot='<div class="pilot '+(a.offRole?'off':pf<45?'warn':'')+'">'+ROLE_LABEL[a.role]+' · '+pl.name+' · '+pf+'p'+(a.offRole?' ⟲ off-role':'')+'</div>'; } }
+    else pilot='<div class="pilot dim">'+c.roles.map(r=>ROLE_LABEL[r]).join(' / ')+'</div>';
+    card.innerHTML='<div class="cn"><span>'+c.name+'</span>'+tierChip(c)+'</div><div class="ep">'+c.epithet+'</div>'+curveBars(c)+pilot;
+    card.title=c.flavor;
+    if(yourTurn&&!isTaken) card.onclick=()=>doDraftAction(c.id); else card.disabled=true;
+    grid.appendChild(card);
+  });
+  col.appendChild(grid);
+
+  if(yourTurn&&scored){
+    const box=el('div','coachbox'); box.innerHTML='<div class="role-tag" style="font-size:9px;margin-bottom:4px">COACH SUGGESTS</div>';
+    scored.slice(0,3).forEach((a,i)=>{ const c=S.CHAMP_BY_ID[a.champId]; const row=el('div','row'); row.innerHTML='<span class="mono" style="color:'+(i===0?'var(--gold)':'var(--muted)')+'">'+(i+1)+'.</span><span><b>'+c.name+'</b> — '+a.reason+'</span><span class="v">'+(a.value>=0?'+':'')+a.value.toFixed(1)+'</span>'; row.onclick=()=>doDraftAction(a.champId); box.appendChild(row); });
+    col.appendChild(box);
+  }
+  const actions=el('div'); actions.style.cssText='display:flex;gap:10px;margin-top:auto;justify-content:center;flex-wrap:wrap';
+  if(step){ const del=el('button','btn'); del.textContent='Let the coach draft the rest'; del.onclick=delegateDraft; actions.appendChild(del); }
+  col.appendChild(actions);
+  return col;
+}
+function crowdBlock(){
+  const m=G.match; const wrap=el('div','crowd'); wrap.style.marginTop='10px'; wrap.style.minHeight='220px';
+  wrap.innerHTML='<div class="ch"><span class="role-tag" style="font-size:9px;letter-spacing:.14em">THE CROWD</span><span style="margin-left:auto"></span><span class="hype"><i style="width:'+m.hype+'%"></i></span><span class="role-tag" style="font-size:8.5px">HYPE</span></div>';
+  const list=el('div','list'); list.id='crowdList';
+  m.crowd.slice(-14).forEach((msg,i,arr)=>{ const d=el('div','m'); d.style.animationDelay=(i>=arr.length-3?((i-(arr.length-3))*0.12):0)+'s'; d.innerHTML='<span class="u" style="color:'+userColor(msg.user)+'">'+esc(msg.user)+':</span> <span class="t">'+esc(msg.text)+'</span>'; list.appendChild(d); });
+  if(!m.crowd.length) list.innerHTML='<div class="empty-note" style="padding:10px">chat is quiet…</div>';
+  wrap.appendChild(list);
+  return wrap;
+}
+function userColor(u){ let h=0; for(let i=0;i<u.length;i++)h=(h*31+u.charCodeAt(i))>>>0; return ['var(--gold)','var(--info)','var(--gel)','var(--muted)','var(--warn)','#c98bd6'][h%6]; }
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function verdictPanel(){
+  const m=G.match, v=m.verdict; const edge=v.you.score-v.them.score;
+  const box=el('div','verdict');
+  const contrib=(ev)=>{ const items=ev.picks.map(p=>({k:S.CHAMP_BY_ID[p.champId].name+' ('+ROLE_LABEL[p.role]+')',v:p.total})).concat(ev.combos.map(c=>({k:cap(c.tag.replace(/([A-Z])/g,' $1').toLowerCase())+' combo',v:c.payoff}))); if(ev.curveFit)items.push({k:'Curve coherence',v:ev.curveFit}); return items.sort((a,b)=>Math.abs(b.v)-Math.abs(a.v)).slice(0,3); };
+  box.innerHTML='<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><div class="role-tag" style="font-size:9px;letter-spacing:.14em">DRAFT VERDICT</div>'+
+    '<div class="big" style="color:'+(edge>0.5?'var(--gel)':edge<-0.5?'var(--toxic)':'var(--ink)')+'">'+(edge>0.5?'YOU WON THE DRAFT':edge<-0.5?'THEY WON THE DRAFT':'EVEN DRAFT')+' <span class="mono" style="font-size:18px">'+(edge>=0?'+':'')+edge.toFixed(1)+'</span></div>'+
+    '<div class="mono" style="margin-left:auto;color:var(--muted);font-size:12px">you '+(v.you.score>=0?'+':'')+v.you.score.toFixed(1)+' · them '+(v.them.score>=0?'+':'')+v.them.score.toFixed(1)+' · strength points</div></div>'+
+    '<div class="vgrid"><div><div class="role-tag" style="color:var(--gold)">YOUR PLAN — '+v.you.label.toUpperCase()+'</div>'+contrib(v.you).map(i=>'<div class="k"><span>'+i.k+'</span><b style="color:'+(i.v>=0?'var(--gel)':'var(--toxic)')+'">'+(i.v>=0?'+':'')+i.v.toFixed(1)+'</b></div>').join('')+'</div>'+
+    '<div><div class="role-tag" style="color:var(--info)">'+m.opp.name.toUpperCase()+' — '+v.them.label.toUpperCase()+'</div>'+contrib(v.them).map(i=>'<div class="k"><span>'+i.k+'</span><b style="color:'+(i.v>=0?'var(--gel)':'var(--toxic)')+'">'+(i.v>=0?'+':'')+i.v.toFixed(1)+'</b></div>').join('')+'</div></div>';
+  const b=el('button','btn primary'); b.style.marginTop='14px'; b.textContent='Play game '+(m.gameIndex+1)+' ▸'; b.onclick=playGame; box.appendChild(b);
+  return box;
+}
+
+function renderLive(main){
+  const m=G.match; const g=m.games[m.games.length-1]; const won=g.winner==='a'; const done=m.phase==='postgame';
+  const shown=Math.min(m.liveStep,g.timeline.length);
+  const head=el('div','screen-head');
+  head.innerHTML='<p class="eyebrow">'+stage().name+' · game '+(m.gameIndex+1)+' of 3</p><h1 class="title cond">Match Day — Live</h1><p class="sub">You are the manager. Watch, read, and learn what mattered — the post-game breakdown attributes the result to draft, chemistry, and form.</p>';
+  main.appendChild(head);
+  const live=el('div','live');
+  const left=el('div');
+  const frac=shown/g.timeline.length;
+  const kA=Math.round(g.killsA*frac), kB=Math.round(g.killsB*frac), minute=Math.round(g.lengthMin*Math.max(0.1,frac));
+  const sb=el('div','scoreb');
+  sb.innerHTML='<span class="tn" style="color:var(--gold)">YOUR ORG</span><span class="sc">'+kA+' – '+kB+'</span><span class="tn" style="color:var(--muted)">'+m.opp.name.toUpperCase()+'</span>'+
+    '<span class="mono" style="font-size:12px;color:var(--muted)">'+g.verdict.you.label+' vs '+g.verdict.them.label+'</span><span class="mono" style="margin-left:auto;font-weight:600;font-size:20px">'+String(Math.floor(minute)).padStart(2,'0')+':'+(shown%2?'41':'12')+'</span>';
+  left.appendChild(sb);
+  // win prob
+  const pts=g.wpPath; const n=pts.length; const upto=Math.max(2,Math.round(n*frac));
+  const poly=pts.slice(0,upto).map((v,i)=>((i/(n-1))*620+10).toFixed(1)+','+(110-(v/100)*100).toFixed(1)).join(' ');
+  const cur=pts[upto-1];
+  const wp=el('div','wp-card');
+  wp.innerHTML='<div style="display:flex;align-items:baseline"><span class="role-tag" style="font-size:9px;letter-spacing:.14em">WIN PROBABILITY</span><span class="cond" style="margin-left:auto;font-weight:700;font-size:22px;color:'+(cur>=50?'var(--gel)':'var(--toxic)')+'">'+Math.round(cur)+'%</span></div>'+
+    '<svg viewBox="0 0 640 120" width="100%" height="120" role="img" aria-label="Win probability over the game"><line x1="10" y1="60" x2="630" y2="60" stroke="var(--line)" stroke-dasharray="3 4"/><polyline points="'+poly+'" fill="none" stroke="var(--gold)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+(((upto-1)/(n-1))*620+10).toFixed(1)+'" cy="'+(110-(cur/100)*100).toFixed(1)+'" r="4" fill="var(--gold)"/></svg>';
+  left.appendChild(wp);
+  // timeline
+  const tl=el('div','tl-card'); tl.innerHTML='<div class="role-tag" style="font-size:9px;letter-spacing:.14em;margin-bottom:6px">TIMELINE</div>';
+  const ul=el('ul','timeline'); g.timeline.slice(0,shown).forEach((t,i)=>{ const li=el('li',null,esc(t)); li.style.animationDelay=(i===shown-1?0.05:0)+'s'; ul.appendChild(li); });
+  if(!shown) ul.innerHTML='<li style="opacity:1;color:var(--faint)">Loading into the Rift-analogue…</li>';
+  tl.appendChild(ul); left.appendChild(tl);
+  if(done){
+    const bn=el('div','banner');
+    bn.innerHTML='<div class="big" style="color:'+(won?'var(--gel)':'var(--toxic)')+'">'+(won?'GAME '+(m.gameIndex+1)+' — VICTORY':'GAME '+(m.gameIndex+1)+' — DEFEAT')+'</div><div class="mono" style="color:var(--muted);font-size:12px">'+g.lengthMin+' min · '+g.killsA+'–'+g.killsB+' · MVP <span class="mvp">'+esc(g.mvp.name)+'</span></div>';
+    const yw=m.games.filter(x=>x.winner==='a').length, ow=m.games.length-yw; const over=yw>=2||ow>=2;
+    const b=el('button','btn primary'); b.style.marginLeft='auto'; b.textContent=over?'Finish series ▸':'Next game ▸'; b.onclick=nextGame; bn.appendChild(b);
+    left.appendChild(bn);
+    // why panel
+    const why=el('div','card'); why.style.padding='12px 16px';
+    const bd=g.breakdown; const dA=bd.a.strength-bd.b.strength;
+    why.innerHTML='<div class="section-label">Why it went this way</div><div class="vgrid" style="margin-top:0"><div>'+
+      '<div class="k"><span>Draft</span><b style="color:'+(g.verdict.you.score-g.verdict.them.score>=0?'var(--gel)':'var(--toxic)')+'">'+(g.verdict.you.score-g.verdict.them.score>=0?'+':'')+(g.verdict.you.score-g.verdict.them.score).toFixed(1)+'</b></div>'+
+      '<div class="k"><span>Team synergy (mesh ×'+bd.a.meshMult.toFixed(3)+' vs ×'+bd.b.meshMult.toFixed(3)+')</span><b>'+((bd.a.meshMult-bd.b.meshMult)*100>=0?'+':'')+((bd.a.meshMult-bd.b.meshMult)*100).toFixed(1)+'%</b></div>'+
+      '<div class="k"><span>Roster base strength</span><b>'+bd.a.base.toFixed(1)+' vs '+bd.b.base.toFixed(1)+'</b></div></div>'+
+      '<div><div class="k"><span>Final strength gap</span><b style="color:'+(dA>=0?'var(--gel)':'var(--toxic)')+'">'+(dA>=0?'+':'')+dA.toFixed(1)+'</b></div><div class="k"><span>Pre-game win probability</span><b>'+Math.round(g.winProbA*100)+'%</b></div><div class="k"><span>Result</span><b>'+(won?'held':'upset')+'</b></div></div></div>';
+    left.appendChild(why);
+    // box score
+    const sl=el('table','statline'); sl.innerHTML='<thead><tr><th>Your player</th><th>K</th><th>D</th><th>A</th><th>DMG%</th><th>Rating</th></tr></thead>';
+    const tb=el('tbody'); ROLE_ORDER.forEach(r=>{ const line=g.linesA.find(l=>l.role===r); if(!line)return; const tr=el('tr'); const mv=(g.mvp.side==='a'&&g.mvp.name===line.name); tr.innerHTML='<td>'+(mv?'<span class="mvp">★ </span>':'')+ROLE_LABEL[r]+' · '+esc(line.name)+'</td><td>'+line.kills+'</td><td>'+line.deaths+'</td><td>'+line.assists+'</td><td>'+Math.round(line.dmgShare*100)+'</td><td style="color:'+ratingColor(line.rating)+'">'+line.rating.toFixed(1)+'</td>'; tb.appendChild(tr); });
+    sl.appendChild(tb); const sc=el('div','card'); sc.style.cssText='padding:10px 14px;margin-top:12px'; sc.innerHTML='<div class="section-label">Your box score</div>'; sc.appendChild(sl); left.appendChild(sc);
+  }
+  live.appendChild(left);
+  const cc=el('div','crowd-card'); cc.appendChild(crowdBlock()); cc.insertAdjacentHTML('beforeend','<div class="mono" style="border-top:1px solid var(--line-soft);margin-top:8px;padding-top:6px;font-size:9px;color:var(--faint)">'+(8000+Math.round(G.reputation*140)).toLocaleString()+' watching · slow mode off</div>');
+  live.appendChild(cc);
+  main.appendChild(live);
+}
+function seriesSummaryCard(mt){
+  const st2=el('div','card'); st2.style.padding='16px';
+  let pips=''; mt.series.games.forEach((gm,i)=>{ const w=gm.winner==='a'; pips+='<div class="gpip '+(w?'win':'loss')+'">Game '+(i+1)+'<div style="font-family:Barlow Condensed;font-weight:700;font-size:18px">'+(w?'W':'L')+'</div><div class="mono" style="font-size:10px">'+gm.killsA+'–'+gm.killsB+' · '+gm.lengthMin+'m</div></div>'; });
+  const last=mt.series.games[mt.series.games.length-1];
+  st2.innerHTML='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px"><div class="section-label" style="margin:0">Last series · vs '+esc(mt.opp.name)+'</div>'+
+    '<div class="cond" style="font-weight:700;font-size:22px;color:'+(mt.won?'var(--gel)':'var(--toxic)')+'">'+(mt.won?'VICTORY':'DEFEAT')+' '+mt.series.scoreA+'–'+mt.series.scoreB+'</div></div><div class="games">'+pips+'</div>'+
+    '<div class="mono" style="font-size:11px;color:var(--muted);margin-top:8px">Deciding game MVP: <span class="mvp">'+esc(last.mvp.name)+'</span> · drafts: '+mt.series.games.map(g=>(g.verdict.you.score-g.verdict.them.score>=0?'+':'')+(g.verdict.you.score-g.verdict.them.score).toFixed(1)).join(' / ')+'</div>';
+  return st2;
+}
+function renderSeries(main){
+  const m=G.match; const mt=G.ui.match;
+  const head=el('div','screen-head');
+  head.innerHTML='<p class="eyebrow">'+stage().name+'</p><h1 class="title cond">Series '+(mt.won?'won':'lost')+'</h1><p class="sub">'+(mt.won?'The crowd goes home happy. Chemistry keeps building; the next opponent is already scouting you.':'It happens. Chemistry still gelled this week — and you learned what the draft cost you.')+'</p>';
+  main.appendChild(head);
+  main.appendChild(seriesSummaryCard(mt));
+  const row=el('div'); row.style.cssText='display:flex;gap:10px;margin-top:14px;flex-wrap:wrap';
+  const b=el('button','btn primary'); b.textContent='Continue ▸'; b.onclick=endSeriesView; row.appendChild(b); main.appendChild(row);
+  const cc=el('div','card'); cc.style.cssText='padding:12px 14px;margin-top:14px;max-width:520px'; cc.appendChild(crowdBlock()); main.appendChild(cc);
+}
+
+
 
 /* ---------- sponsors ---------- */
 function renderSponsors(main){

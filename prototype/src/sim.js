@@ -353,3 +353,207 @@
     clamp: clamp, round: round,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
+
+/* ===================== meta · pool · draft · crowd (port of @managelol/core) ===================== */
+(function (root) {
+  'use strict';
+  const S = root.LOLSim;
+  const clamp = S.clamp, round = S.round, ROLES = S.ROLES, ARCHES = S.ARCHES;
+  const mean = (xs) => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
+
+  // champions are injected at build time from packages/data (single source of truth)
+  S.CHAMPIONS = /*__CHAMPIONS__*/[];
+  S.CHAMP_BY_ID = {}; S.CHAMPIONS.forEach((c) => (S.CHAMP_BY_ID[c.id] = c));
+
+  // ---------- meta ----------
+  S.genPatch = function (rng, index, prev) {
+    const archDelta = {};
+    ARCHES.forEach((a) => { const p = prev ? prev.archDelta[a] || 0 : 0; archDelta[a] = clamp(0.6 * p + rng.gaussian(0, 4), -10, 10); });
+    const outliers = {}; const ids = S.CHAMPIONS.map((c) => c.id).sort(); const n = rng.int(3, 5);
+    for (let i = 0; i < n; i++) { const id = rng.pick(ids); outliers[id] = clamp(Math.round(rng.gaussian(0, 7)), -10, 10); }
+    return { index: index, archDelta: archDelta, outliers: outliers };
+  };
+  S.champStrength = function (c, patch) {
+    let s = c.basePower;
+    for (const a in c.styleTags) s += (patch.archDelta[a] || 0) * c.styleTags[a];
+    s += patch.outliers[c.id] || 0;
+    return clamp(s, 20, 90);
+  };
+  S.tierOf = (s) => (s >= 62 ? 'S' : s >= 55 ? 'A' : s >= 47 ? 'B' : 'C');
+
+  // ---------- champion pool ----------
+  function profCeiling(apt, tags) { let m = 0; for (const a in tags) m += (apt[a] || 0) * tags[a]; return clamp(100 * (0.4 + 0.6 * m / 100), 0, 100); }
+  S.seedPool = function (player, rng) {
+    const ra = player.attributes.roleAptitude, learning = player.attributes.growth.learningRate / 100, pref = player.attributes.chemistry.preferredArchetype;
+    player.championPool = {};
+    S.CHAMPIONS.forEach((c) => {
+      const ceiling = profCeiling(player.attributes.championAptitude, c.styleTags);
+      let frac;
+      if (c.roles.indexOf(ra.primaryRole) >= 0) frac = 0.45 + 0.5 * rng.float() * (0.6 + 0.4 * learning);
+      else if (c.roles.indexOf(ra.secondaryRole) >= 0) frac = 0.3 + 0.3 * rng.float();
+      else frac = 0.15 + 0.2 * rng.float();
+      if ((c.styleTags[pref] || 0) >= 0.5) frac = Math.min(1, frac + 0.15);
+      player.championPool[c.id] = round(clamp(ceiling * frac, 0, 100), 0);
+    });
+  };
+  S.prof = (player, id) => (player.championPool && player.championPool[id] !== undefined ? player.championPool[id] : 20);
+
+  // ---------- draft ----------
+  const B = 'blue', R = 'red';
+  S.DRAFT_SEQUENCE = [
+    { side: B, type: 'ban' }, { side: R, type: 'ban' }, { side: B, type: 'ban' }, { side: R, type: 'ban' }, { side: B, type: 'ban' }, { side: R, type: 'ban' },
+    { side: B, type: 'pick' }, { side: R, type: 'pick' }, { side: R, type: 'pick' }, { side: B, type: 'pick' }, { side: B, type: 'pick' }, { side: R, type: 'pick' },
+    { side: R, type: 'ban' }, { side: B, type: 'ban' }, { side: R, type: 'ban' }, { side: B, type: 'ban' },
+    { side: R, type: 'pick' }, { side: B, type: 'pick' }, { side: B, type: 'pick' }, { side: R, type: 'pick' },
+  ];
+  S.newDraft = () => ({ step: 0, bans: { blue: [], red: [] }, picks: { blue: [], red: [] } });
+  S.currentStep = (s) => S.DRAFT_SEQUENCE[s.step] || null;
+  S.isComplete = (s) => s.step >= S.DRAFT_SEQUENCE.length;
+  S.takenIds = function (s) { const t = {}; [B, R].forEach((side) => { s.bans[side].forEach((id) => (t[id] = 1)); s.picks[side].forEach((p) => (t[p.champId] = 1)); }); return t; };
+  S.openRoles = function (s, side) { const f = {}; s.picks[side].forEach((p) => (f[p.role] = 1)); return ROLES.filter((r) => !f[r]); };
+  S.assignRole = function (c, open) { for (const r of c.roles) if (open.indexOf(r) >= 0) return { role: r, offRole: false }; return open.length ? { role: open[0], offRole: true } : null; };
+  S.legalActions = function (s) { const t = S.takenIds(s); return S.CHAMPIONS.map((c) => c.id).filter((id) => !t[id]).sort(); };
+  S.applyAction = function (s, champId, team) {
+    const step = S.currentStep(s); if (!step) throw new Error('draft complete');
+    if (S.takenIds(s)[champId]) throw new Error('taken');
+    const c = S.CHAMP_BY_ID[champId];
+    const next = { step: s.step + 1, bans: { blue: s.bans.blue.slice(), red: s.bans.red.slice() }, picks: { blue: s.picks.blue.slice(), red: s.picks.red.slice() } };
+    if (step.type === 'ban') next.bans[step.side].push(champId);
+    else { const a = S.assignRole(c, S.openRoles(s, step.side)); next.picks[step.side].push({ champId: champId, role: a.role, playerId: team.lineup[a.role].id, offRole: a.offRole }); }
+    return next;
+  };
+  const COMBO_ANCHORS = { dive: ['jungle', 'mid'], pick: ['bot', 'support'], protectTheCarry: ['bot', 'support'], split131: ['jungle', 'top'], pokeSiege: ['mid', 'support'], earlyInvade: ['jungle', 'top'], frontToBack: ['top', 'support'] };
+  const comfortTerm = (p) => 2.0 * ((p - 50) / 50), metaTerm = (s) => 1.5 * ((s - 50) / 50);
+  S.pickValue = function (c, role, offRole, team, oppPicks, patch) {
+    const player = team.lineup[role];
+    const comfort = comfortTerm(S.prof(player, c.id)), meta = metaTerm(S.champStrength(c, patch));
+    let counter = 0;
+    oppPicks.forEach((op) => { if (c.counters.indexOf(op.champId) >= 0) counter += 1.2; const oc = S.CHAMP_BY_ID[op.champId]; if (oc && oc.counters.indexOf(c.id) >= 0) counter -= 1.2; });
+    const off = offRole ? -1.5 : 0;
+    return { champId: c.id, role: role, comfort: comfort, meta: meta, counter: counter, offRole: off, total: comfort + meta + counter + off };
+  };
+  S.winCondition = function (picks) {
+    const ch = picks.map((p) => S.CHAMP_BY_ID[p.champId]).filter(Boolean);
+    if (!ch.length) return { label: '—', curve: { early: 0.33, mid: 0.34, late: 0.33 } };
+    const curve = { early: mean(ch.map((c) => c.curve.early)), mid: mean(ch.map((c) => c.curve.mid)), late: mean(ch.map((c) => c.curve.late)) };
+    const tc = (t) => ch.filter((c) => c.comboTags.indexOf(t) >= 0).length;
+    let label = 'Teamfight';
+    if (curve.early >= 0.42) label = 'Early Snowball';
+    else if (tc('protectTheCarry') >= 2 && curve.late >= 0.38) label = 'Protect the Star';
+    else if (tc('pick') >= 2) label = 'Pick & Punish';
+    else if (tc('pokeSiege') >= 2) label = 'Siege';
+    else if (tc('split131') >= 2) label = '1-3-1';
+    else if (curve.late >= 0.42) label = 'Scaling';
+    return { label: label, curve: curve };
+  };
+  S.evaluateSide = function (s, side, team, patch) {
+    const opp = side === B ? R : B, picks = s.picks[side];
+    const pickEvals = picks.map((p) => { const v = S.pickValue(S.CHAMP_BY_ID[p.champId], p.role, p.offRole, team, s.picks[opp], patch); v.playerId = p.playerId; v.total = round(v.total, 2); return v; });
+    const combos = []; const byRole = {}; picks.forEach((p) => (byRole[p.role] = p));
+    for (const tag in COMBO_ANCHORS) {
+      const carriers = picks.filter((p) => S.CHAMP_BY_ID[p.champId].comboTags.indexOf(tag) >= 0); if (carriers.length < 2) continue;
+      const ra = COMBO_ANCHORS[tag][0], rb = COMBO_ANCHORS[tag][1], pa = byRole[ra], pb = byRole[rb]; if (!pa || !pb) continue;
+      const plA = team.lineup[ra], plB = team.lineup[rb];
+      const aptGate = mean([S.prof(plA, pa.champId), S.prof(plB, pb.champId)]) / 100;
+      const key = plA.id < plB.id ? plA.id + '|' + plB.id : plB.id + '|' + plA.id;
+      const pc = team.chem && team.chem.pairs[key];
+      const chemGate = 0.5 + 0.5 * ((pc ? pc.current : 30) / 100);
+      combos.push({ tag: tag, aptGate: round(aptGate, 3), chemGate: round(chemGate, 3), payoff: round(2.5 * aptGate * chemGate, 2) });
+    }
+    const wc = S.winCondition(picks); let curveFit = 0;
+    if (picks.length === 5) {
+      const commit = Math.max(wc.curve.early, wc.curve.late); curveFit = commit >= 0.45 ? 2.0 : commit >= 0.4 ? 1.0 : 0;
+      const ch = picks.map((p) => S.CHAMP_BY_ID[p.champId]); const ftb = ch.some((c) => c.comboTags.indexOf('frontToBack') >= 0);
+      if (wc.curve.early >= 0.42 && ch.some((c) => c.curve.late >= 0.5) && !ftb) curveFit -= 2.0;
+    }
+    const teamTempo = mean(ROLES.map((r) => team.lineup[r].attributes.chemistry.playstyleTempo));
+    const compTempo = 50 + 50 * (wc.curve.early - wc.curve.late);
+    const identity = round(1.05 - 0.1 * (Math.abs(teamTempo - compTempo) / 100), 3);
+    const raw = (pickEvals.reduce((a, p) => a + p.total, 0) + combos.reduce((a, c) => a + c.payoff, 0) + curveFit) * identity;
+    return { side: side, score: round(clamp(raw, -8, 8), 2), picks: pickEvals, combos: combos, curveFit: curveFit, identity: identity, label: wc.label, curve: wc.curve };
+  };
+  const noiseSigma = (t) => 1.3 * (1 - 0.5 * ((t.coachQuality || 50) / 100)) * (1 - 0.4 * ((t.patchFamiliarity || 50) / 100));
+  S.scoreActions = function (s, side, team, opp, patch) {
+    const step = S.currentStep(s); if (!step) return [];
+    const oppSide = side === B ? R : B, legal = S.legalActions(s), out = [];
+    if (step.type === 'ban') {
+      const oppOpen = S.openRoles(s, oppSide);
+      legal.forEach((id) => {
+        const c = S.CHAMP_BY_ID[id]; let best = -Infinity, who = '';
+        oppOpen.forEach((r) => { const p = opp.lineup[r]; const inRole = c.roles.indexOf(r) >= 0 ? 1 : 0.4; const v = (comfortTerm(S.prof(p, id)) + metaTerm(S.champStrength(c, patch))) * inRole; if (v > best) { best = v; who = p.name; } });
+        if (best === -Infinity) best = metaTerm(S.champStrength(c, patch));
+        const flexTax = c.roles.length > 1 ? 0.5 : 0;
+        const protect = s.picks[side].some((p) => c.counters.indexOf(p.champId) >= 0) ? 1.0 : 0;
+        out.push({ champId: id, value: best + flexTax + protect, reason: protect ? 'protects your plan' : 'denies ' + who + "'s comfort" });
+      });
+    } else {
+      const open = S.openRoles(s, side);
+      legal.forEach((id) => {
+        const c = S.CHAMP_BY_ID[id], a = S.assignRole(c, open); if (!a) return;
+        const v = S.pickValue(c, a.role, a.offRole, team, s.picks[oppSide], patch), option = c.roles.length > 1 ? 0.3 : 0;
+        const reason = v.counter > 0 ? 'counters their lock' : v.comfort > 1 ? 'comfort pick' : v.meta > 0.6 ? 'meta power' : a.offRole ? 'off-role gamble' : 'fills the plan';
+        out.push({ champId: id, value: v.total + option, reason: reason, role: a.role, offRole: a.offRole });
+      });
+    }
+    return out.sort((x, y) => y.value - x.value || (x.champId < y.champId ? -1 : 1));
+  };
+  S.aiChoose = function (s, side, team, opp, patch, rng) {
+    const scored = S.scoreActions(s, side, team, opp, patch), sigma = noiseSigma(team);
+    let best = scored[0], bestV = -Infinity;
+    scored.forEach((a) => { const v = a.value + rng.normal() * sigma; if (v > bestV) { bestV = v; best = a; } });
+    return best.champId;
+  };
+  S.coachSuggestions = (s, side, team, opp, patch, n) => S.scoreActions(s, side, team, opp, patch).slice(0, n || 3).map((a) => ({ champId: a.champId, value: round(a.value, 1), reason: a.reason, role: a.role, offRole: a.offRole }));
+
+  // ---------- the crowd ----------
+  const EMOTES = ['CLAP', 'GRIEF', 'Throwge', 'WardDog', 'PogSnail', 'Copeium', 'FFCELLO', 'BONKED'];
+  const SUFFIX = ['_fan88', 'Main', '_enjoyer', '_truther', 'xX', '_lol', '99', '_invoice', 'TTV', '_gaming'];
+  const T = {
+    ban: ['they banned {champ} LOL scared of {champ} mains', '{champ} ban? tactical {emote}', 'no {champ}?? in this economy', 'respect ban on {champ} {emote}', '{champ} gone. {opp} exhale'],
+    pickGeneric: ['{champ} {emote}', '{champ} pick — {team} is cooking', '{champ}?? bold', 'ok {champ} enjoyers eating good tonight'],
+    pilotWarning: ['{player} has NEVER played {champ} chat', '{player} on {champ}?? coach diff incoming', 'first time {champ}? {emote}', 'this is either genius or a disaster. no in between'],
+    comp: {
+      'Early Snowball': ['early snowball comp — win by 25 or FF', 'tempo comp {emote} someone is getting invaded', 'if this game hits 30 min {team} is cooked'],
+      'Protect the Star': ['protect-the-carry comp = 40 minute game incoming', '{team} said protect the carry at ALL costs', 'four bodyguards and a hypercarry, classic'],
+      'Pick & Punish': ["pick comp. don't facecheck chat", 'HOOK CITY POPULATION: {opp}', 'one misstep and its over {emote}'],
+      Siege: ['siege comp, bastions crying already', 'poke poke poke {emote}', 'they are going to make {opp} play from behind'],
+      '1-3-1': ['1-3-1 the map, ignore the game', 'sidelane enjoyers rise up', "{team}'s top laner will not join a single fight and win"],
+      Scaling: ['scaling comp — FF timers OFF', '{team} needs 3 items and a dream', 'gripping 15 minutes of farming incoming'],
+      Teamfight: ['5v5 comp, just fight them 4head', 'teamfight comp {emote} lets see it', 'no gimmicks, just violence'],
+    },
+    firstBlood: ['FIRST BLOOD {team} {emote}', '{player} with the first blood CLAP', 'early lead lets gooo', 'ok THAT was clean'],
+    objective: ['WARDEN SECURED {emote}', '{team} takes the Warden, scaling online', 'COLOSSUS?? {emote} {emote}', 'the Battering Shade goes in and the bastion is GONE'],
+    throw: ['its over', 'THROWGE {emote}', '{team} throwing?? GRIEF', 'why would you fight there. why.'],
+    comeback: ["WE'RE SO BACK {emote} {emote}", 'never doubted (i doubted)', '{team} comeback {emote}', 'chat i am unwell'],
+    stall: ['both teams respectfully farming. gripping stuff', 'chat is this real', '30 minutes and nobody has died. love esports', 'stall game {emote} wake me up at the Colossus'],
+    win: ['GG {team} {emote}', '{player} diff', 'ez clap {emote}', '{opp} gg go next', 'it was the draft. it was always the draft'],
+    loss: ['ff15 next time', '{opp} diff', 'it was the draft. it was always the draft', 'gg go next', 'coach diff btw', '{team} fans in shambles'],
+    ambient: ['chat is this real', '[message removed by AutoMod]', "anyone else's stream lagging", 'W chat', 'L take above me', 'first time watching, is this good?'],
+    sponsor: ['this pause brought to you by {sponsor}. CAFFEINATE RESPONSIBLY', '{sponsor} thanks you for your energy', 'the {sponsor} logo is doing a lot of work on that jersey'],
+    patchDay: ['{champ} mains in shambles', 'my whole pool is C tier FFCELLO', 'new patch who dis'],
+  };
+  function fill(t, p, rng) {
+    return t.replace(/\{emote\}/g, () => rng.pick(EMOTES)).replace(/\{champ\}/g, p.champ || 'that champ').replace(/\{team\}/g, p.team || 'they').replace(/\{opp\}/g, p.opp || 'the enemy').replace(/\{player\}/g, p.player || 'he').replace(/\{sponsor\}/g, p.sponsor || 'our sponsor');
+  }
+  function username(rng, p) {
+    const base = p && p.champ && rng.chance(0.35) ? p.champ.toLowerCase().replace(/[^a-z]/g, '') : rng.pick(['fenwick', 'wardDog', 'hesper', 'grapnel', 'quill', 'mossback', 'brindle', 'vexalia', 'pip', 'ogden', 'cindra', 'jorun']);
+    const suf = rng.pick(SUFFIX);
+    return suf === 'xX' ? 'xX' + base + 'Xx' : base + suf;
+  }
+  /** React to a trigger; returns messages {user, text, mood}. */
+  S.crowdReact = function (trigger, payload, rng, count) {
+    const p = payload || {}; const out = []; const n = count || 2;
+    let pool;
+    if (trigger === 'pick') { const c = p.champObj; pool = (c && c.chatLines ? c.chatLines : []).concat(T.pickGeneric); }
+    else if (trigger === 'compLock') pool = (T.comp[p.label] || T.comp.Teamfight).concat(T.ambient.slice(0, 1));
+    else if (trigger === 'result') pool = p.won ? T.win : T.loss;
+    else pool = T[trigger] || T.ambient;
+    for (let i = 0; i < n; i++) {
+      const raw = rng.pick(pool);
+      out.push({ user: username(rng, p), text: fill(raw, p, rng), mood: trigger });
+      if (rng.chance(0.18)) out.push({ user: username(rng, p), text: fill(rng.pick(T.ambient), p, rng), mood: 'ambient' });
+    }
+    return out;
+  };
+  S.EMOTES = EMOTES;
+})(typeof window !== 'undefined' ? window : globalThis);
