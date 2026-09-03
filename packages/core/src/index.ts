@@ -29,6 +29,7 @@ export * from './players/development.js';
 
 // systems
 export * from './ladder/ladder.js';
+export * from './ladder/bands.js';
 export * from './match/resolve.js';
 export * from './players/pool.js';
 export * from './meta/patches.js';

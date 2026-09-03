@@ -18,6 +18,7 @@ import { clamp, clamp100 } from '../util/math.js';
 import type { LadderEntryId, PlayerId } from '../util/ids.js';
 import { generatePlayer } from '../players/generate.js';
 import type { Archetype, Player, Role } from '../players/types.js';
+import { BAND_BY_KEY, type Band } from './bands.js';
 import type { RegionId as DataRegionId } from '@managelol/data';
 
 export const MMR_FLOOR = 500;
@@ -168,6 +169,17 @@ export interface LadderGenOpts {
   targetTier?: LadderTier;
   /** Force an archetype for planted prospects (e.g. a guaranteed gem). */
   plant?: 'hiddenGem' | 'smurf' | 'boosted' | 'bust' | null;
+  /**
+   * Generate to a visible-ladder band (see `bands.ts`). Sets the quality
+   * centre, the age range and the extra potential the top of the ladder
+   * carries. Without it the generator falls back to the old flat profile.
+   */
+  band?: Band;
+  /**
+   * Pin the *displayed* MMR. Steady MMR is still derived from truth, so a
+   * forced account that belongs far higher reads — correctly — as a smurf.
+   */
+  forceMmr?: number;
 }
 
 /**
@@ -180,14 +192,20 @@ export function generateLadderEntity(rng: Rng, opts: LadderGenOpts): LadderEntit
   // Quality center for the underlying player. Gems are young & high-ceiling.
   let qualityCenter = 55;
   let ageRange: [number, number] = [16, 24];
-  if (plant === 'hiddenGem' || plant === 'smurf') { qualityCenter = 72; ageRange = [16, 19]; }
-  if (plant === 'boosted' || plant === 'bust') { qualityCenter = 58; ageRange = [20, 25]; }
+  const bandDef = opts.band ? BAND_BY_KEY[opts.band] : null;
+  if (bandDef) { qualityCenter = bandDef.qualityCenter; ageRange = bandDef.ageRange; }
+  if (plant === 'hiddenGem' || plant === 'smurf') { qualityCenter = bandDef ? bandDef.qualityCenter - 4 : 72; ageRange = [16, 19]; }
+  if (plant === 'boosted' || plant === 'bust') { qualityCenter = bandDef ? bandDef.qualityCenter - 6 : 58; ageRange = [20, 25]; }
 
   const player = generatePlayer(rng, { id: opts.playerId, region: opts.region, qualityCenter, ageRange });
 
   // Planted archetypes push potential/soloAbility to make the trap/jackpot real.
   if (plant === 'hiddenGem') player.attributes.growth.potential = clamp100(Math.max(player.attributes.growth.potential, 82 + rng.range(0, 10)));
   if (plant === 'bust') player.attributes.growth.potential = clamp100(Math.min(player.attributes.growth.potential, 55));
+  // The top of the ladder carries more headroom than the middle of it.
+  if (bandDef && bandDef.potentialBonus > 0 && plant !== 'bust') {
+    player.attributes.growth.potential = clamp100(player.attributes.growth.potential + bandDef.potentialBonus);
+  }
 
   const solo = soloAbility(player.attributes);
   const potential = player.attributes.growth.potential;
@@ -199,7 +217,7 @@ export function generateLadderEntity(rng: Rng, opts: LadderGenOpts): LadderEntit
       ? Math.round(rng.range(30, 70))
       : Math.round(rng.range(140, 320));
 
-  const mmr = computeMmr({
+  const derived = computeMmr({
     soloAbility: solo,
     maxSoloApt: maxSoloApt(player.attributes),
     composure: player.attributes.mental.composure,
@@ -208,6 +226,11 @@ export function generateLadderEntity(rng: Rng, opts: LadderGenOpts): LadderEntit
     boost,
     gamesThisSeason,
   });
+  // A forced MMR moves only what the ladder *shows*; steady stays truth.
+  const mmr =
+    opts.forceMmr === undefined
+      ? derived
+      : { ...derived, currentMmr: opts.forceMmr, tier: tierFromMmr(opts.forceMmr).key };
 
   // Derive flags from truth (design §4.1).
   const flags: LadderFlag[] = [];
