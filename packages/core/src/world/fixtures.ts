@@ -130,23 +130,58 @@ export function recordResult(
 /**
  * Rank the table. Tiebreakers, in order:
  *   1. series wins (desc)
- *   2. head-to-head series wins against the tied team (desc)
+ *   2. head-to-head inside the tied block — a real mini-table (desc)
  *   3. game differential (desc)
  *   4. games won (desc)
  *   5. org id (asc) — the stable last resort, never insertion order
+ *
+ * Head-to-head is deliberately NOT evaluated inside the pairwise comparator.
+ * It is not transitive: with A beat B, B beat C, C beat A all level on wins, a
+ * pairwise comparator asserts A < B < C < A, and `Array.sort` given an
+ * inconsistent comparator is implementation-defined — V8's output then depends
+ * on the input array's order, which is exactly the insertion-order dependency
+ * CLAUDE.md forbids. A three-way tie on a promotion line is common in a
+ * ten-team double round-robin, so this would silently promote different teams
+ * on replay.
+ *
+ * Instead each block of teams level on wins is ranked by its own mini-table:
+ * head-to-head wins *within the block*, which is a scalar, so every level of
+ * the comparator is a genuine total order. No seeded coin is used as a last
+ * resort either — a coin would make the table depend on how many draws
+ * happened earlier in the stream, so an unrelated change elsewhere would
+ * reorder an old save's finished season.
  */
 export function standings(rows: readonly TableRow[]): TableRow[] {
-  return [...rows].sort((x, y) => {
-    if (y.wins !== x.wins) return y.wins - x.wins;
-    const h2hX = x.h2h[y.orgId] ?? 0;
-    const h2hY = y.h2h[x.orgId] ?? 0;
-    if (h2hX !== h2hY) return h2hY - h2hX;
-    const dx = x.gameWins - x.gameLosses;
-    const dy = y.gameWins - y.gameLosses;
-    if (dy !== dx) return dy - dx;
-    if (y.gameWins !== x.gameWins) return y.gameWins - x.gameWins;
-    return x.orgId < y.orgId ? -1 : x.orgId > y.orgId ? 1 : 0;
-  });
+  // Canonical starting order, so nothing downstream can observe input order.
+  const canon = [...rows].sort((x, y) => (x.orgId < y.orgId ? -1 : x.orgId > y.orgId ? 1 : 0));
+  const winLevels = [...new Set(canon.map((r) => r.wins))].sort((a, b) => b - a);
+
+  const out: TableRow[] = [];
+  for (const w of winLevels) {
+    const block = canon.filter((r) => r.wins === w);
+    if (block.length === 1) {
+      out.push(block[0]!);
+      continue;
+    }
+    const mini = new Map<string, number>();
+    for (const r of block) {
+      let s = 0;
+      for (const o of block) if (o.orgId !== r.orgId) s += r.h2h[o.orgId] ?? 0;
+      mini.set(r.orgId, s);
+    }
+    block.sort((x, y) => {
+      const mx = mini.get(x.orgId)!;
+      const my = mini.get(y.orgId)!;
+      if (mx !== my) return my - mx;
+      const dx = x.gameWins - x.gameLosses;
+      const dy = y.gameWins - y.gameLosses;
+      if (dy !== dx) return dy - dx;
+      if (y.gameWins !== x.gameWins) return y.gameWins - x.gameWins;
+      return x.orgId < y.orgId ? -1 : 1;
+    });
+    out.push(...block);
+  }
+  return out;
 }
 
 /** Win rate as a 0..1 fraction; no games played reads as 0. */

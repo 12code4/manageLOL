@@ -35,3 +35,7 @@ export * from './players/pool.js';
 export * from './meta/patches.js';
 export * from './draft/draft.js';
 export * from './match/ticks.js';
+
+// The season: the calendar, the pyramid, and the fast path that runs the world.
+export * from './season/calendar.js';
+export * from './season/fast.js';

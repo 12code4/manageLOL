@@ -109,3 +109,52 @@ describe('standings', () => {
     expect(winRate(emptyRow('x'))).toBe(0);
   });
 });
+
+describe('standings determinism under intransitive ties', () => {
+  it('resolves a three-way head-to-head cycle identically from any input order', () => {
+    // A beat B, B beat C, C beat A — all level on wins. A pairwise h2h
+    // comparator would assert A < B < C < A and sort by insertion order.
+    const mk = (id: string, beat: string): TableRow => ({
+      orgId: id,
+      wins: 3,
+      losses: 3,
+      gameWins: 7,
+      gameLosses: 7,
+      form: [],
+      h2h: { [beat]: 1 },
+    });
+    const a = mk('alpha', 'bravo');
+    const b = mk('bravo', 'chi');
+    const c = mk('chi', 'alpha');
+
+    const orders = [
+      [a, b, c], [a, c, b], [b, a, c], [b, c, a], [c, a, b], [c, b, a],
+    ];
+    const results = orders.map((o) => standings(o).map((r) => r.orgId).join(','));
+    expect(new Set(results).size).toBe(1);
+    // Every member of the cycle has one h2h win inside the block, so the
+    // mini-table is level and the stable id fallback decides.
+    expect(results[0]).toBe('alpha,bravo,chi');
+  });
+
+  it('counts head-to-head only inside the tied block', () => {
+    // x beat a team that is NOT tied with it; that must not break the tie.
+    const x: TableRow = { orgId: 'x', wins: 5, losses: 2, gameWins: 11, gameLosses: 6, form: [], h2h: { outsider: 2 } };
+    const y: TableRow = { orgId: 'y', wins: 5, losses: 2, gameWins: 11, gameLosses: 6, form: [], h2h: {} };
+    expect(standings([x, y]).map((r) => r.orgId)).toEqual(['x', 'y']);
+    expect(standings([y, x]).map((r) => r.orgId)).toEqual(['x', 'y']);
+
+    // Now y beat x head-to-head: y takes the block despite the later id.
+    const y2: TableRow = { ...y, h2h: { x: 1 } };
+    expect(standings([x, y2]).map((r) => r.orgId)).toEqual(['y', 'x']);
+    expect(standings([y2, x]).map((r) => r.orgId)).toEqual(['y', 'x']);
+  });
+
+  it('keeps win order above every tiebreaker', () => {
+    const rows: TableRow[] = [
+      { orgId: 'low', wins: 1, losses: 6, gameWins: 20, gameLosses: 2, form: [], h2h: {} },
+      { orgId: 'high', wins: 6, losses: 1, gameWins: 2, gameLosses: 20, form: [], h2h: {} },
+    ];
+    expect(standings(rows).map((r) => r.orgId)).toEqual(['high', 'low']);
+  });
+});
