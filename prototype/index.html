@@ -329,22 +329,236 @@ select,input[type=text]{font-family:inherit;font-size:12.5px;background:var(--su
   .nav{width:auto;white-space:nowrap} .rail-sep,.rail-title,.pyr{display:none}
   .stat-strip .stat:nth-child(n+3){display:none}
 }
+.seclabel{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 9px}
+.seclabel .secsub{font-size:9.5px;color:var(--faint);letter-spacing:.06em;white-space:nowrap}
+/* ===================== season · standings · org sheet ===================== */
+:root{ --meta:#a98bd6; --cell:34px; }
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){ --meta:#6b4fa8; }}
+:root[data-theme="dark"]{ --meta:#a98bd6; }
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.hub{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+.hubcol{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:1080px){.hub{grid-template-columns:1fr}}
+
+/* the run strip */
+.run{padding:14px 16px 12px}
+.runstrip{display:flex;gap:2px;margin:4px 0 8px}
+.runcell{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;
+  border-radius:5px;position:relative;transition:background .16s}
+.runcell .wknum{font-family:"IBM Plex Mono";font-size:9px;color:var(--faint);letter-spacing:.04em}
+.runcell .wkico{width:15px;height:15px;color:var(--faint);display:block}
+.runcell .wkico svg{width:15px;height:15px;display:block}
+.runcell .wkbar{width:70%;height:3px;border-radius:2px;background:var(--line)}
+.runcell .wkres{font-family:"IBM Plex Mono";font-size:9.5px;color:var(--faint);line-height:1}
+.runcell .wkres.w{color:var(--gel)} .runcell .wkres.l{color:var(--toxic)}
+.runcell.k-match .wkbar{background:color-mix(in srgb,var(--gold) 70%,transparent)}
+.runcell.k-market .wkbar{background:color-mix(in srgb,var(--info) 70%,transparent)}
+.runcell.k-event .wkbar{background:color-mix(in srgb,var(--meta) 70%,transparent)}
+.runcell.past{opacity:.55}
+.runcell.now{background:var(--gold-ghost);opacity:1}
+.runcell.now .wkico,.runcell.now .wknum{color:var(--gold)}
+.runcell.now::after{content:"";position:absolute;left:6px;right:6px;bottom:0;height:2px;background:var(--gold);border-radius:2px}
+.runlegend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--faint);letter-spacing:.04em}
+.runlegend .lg{display:inline-flex;align-items:center;gap:5px}
+.runlegend i{width:12px;height:3px;border-radius:2px;background:var(--line);display:inline-block}
+.runlegend .k-match i{background:color-mix(in srgb,var(--gold) 70%,transparent)}
+.runlegend .k-market i{background:color-mix(in srgb,var(--info) 70%,transparent)}
+.runlegend .k-event i{background:color-mix(in srgb,var(--meta) 70%,transparent)}
+
+/* the fixture card */
+.fixture{padding:14px 16px 16px}
+.fxvs{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin:8px 0 12px}
+.fxside{display:flex;flex-direction:column;align-items:center;gap:3px}
+.fxside.r{align-items:center}
+.otag{display:inline-block;padding:1px 5px;border:1px solid var(--line);border-radius:3px;font-size:10px;
+  letter-spacing:.06em;color:var(--muted);background:var(--surface-2)}
+.otag.big{font-size:14px;padding:6px 9px;letter-spacing:.08em;color:var(--ink)}
+.fxside .pos{font-size:10px;color:var(--faint)}
+.fxmid{text-align:center;min-width:0}
+.fxname{display:block;font-family:"Barlow Condensed";font-size:21px;letter-spacing:.01em;color:var(--ink);line-height:1.1}
+.fxstat{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.wpsplit{height:7px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+.wpsplit i{display:block;height:100%;background:var(--gold)}
+.wplabels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin:5px 0 10px}
+.fxwarn{font-size:11.5px;color:var(--warn);margin-bottom:10px;line-height:1.45}
+.fxlinks{margin-top:9px;text-align:center}
+.lnk{color:var(--muted);font-size:11.5px;border-bottom:1px dotted var(--line);cursor:pointer}
+.lnk:hover{color:var(--gold);border-bottom-color:var(--gold-deep)}
+.btn.wide{width:100%;justify-content:center;padding:11px}
+.weekbody{margin:6px 0 12px}
+.wknote{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 8px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-top:1px solid var(--line-soft);font-size:12px;color:var(--muted)}
+.kv b{color:var(--ink);font-size:12.5px}
+
+/* the standings table */
+.table-card{padding:0;overflow:hidden}
+.tablehead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:13px 15px 10px}
+.tablehead h3{margin:0;font-family:"Barlow Condensed";font-size:19px;letter-spacing:.02em}
+.tablehead .sub{margin:2px 0 0;font-size:11px}
+.roundchip{flex:none;font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:3px 7px;letter-spacing:.06em}
+table.standings{width:100%;border-collapse:collapse;table-layout:fixed}
+table.standings th{font-family:"IBM Plex Mono";font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);text-align:left;padding:0 10px 7px;border-bottom:1px solid var(--line)}
+table.standings th.r{text-align:right}
+table.standings td{padding:7px 10px;font-size:12px;border-top:1px solid var(--line-soft);height:34px;vertical-align:middle}
+table.standings td.r{text-align:right}
+table.standings tbody tr{cursor:pointer;transition:background .12s}
+table.standings tbody tr:not(.cutrow):hover{background:var(--surface-2)}
+table.standings tbody tr.you{background:var(--gold-ghost);box-shadow:inset 2px 0 0 var(--gold)}
+table.standings tbody tr.you .oname{color:var(--gold)}
+table.standings tbody tr.you .otag{color:var(--ink);border-color:var(--gold-deep);background:var(--gold-ghost)}
+.standings .pos{color:var(--muted);text-align:center}
+.standings .orgcell{display:flex;align-items:center;gap:7px;overflow:hidden}
+.standings .oname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.standings .laurel{color:var(--gold-deep);font-size:10px;flex:none}
+.standings .gd em{font-style:normal}
+.standings .gd em.up{color:var(--gel)} .standings .gd em.dn{color:var(--toxic)}
+.standings .wr{font-size:12.5px;color:var(--ink)}
+.mv{font-family:"IBM Plex Mono";font-size:10px;text-align:center;color:var(--faint);display:block}
+.mv.up{color:var(--gel)} .mv.dn{color:var(--toxic)}
+.form{display:flex;gap:4px;align-items:center}
+.form i{width:7px;height:7px;border-radius:50%;flex:none}
+.form i.w{background:var(--gel)}
+.form i.l{background:transparent;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--toxic) 65%,transparent)}
+.form i.n{background:var(--line)}
+tr.cutrow{cursor:default}
+tr.cutrow td{padding:0;height:18px;position:relative;border:0}
+tr.cutrow td::before{content:"";position:absolute;left:0;right:0;top:8px;height:1px;
+  background:repeating-linear-gradient(90deg,var(--c) 0 5px,transparent 5px 10px)}
+tr.cutrow span{position:relative;display:inline-block;margin-left:30px;padding:0 7px;background:var(--surface);
+  font-family:"IBM Plex Mono";font-size:8.5px;letter-spacing:.16em;color:var(--c);text-transform:uppercase}
+tr.cutrow.up{--c:color-mix(in srgb,var(--gold) 62%,transparent)}
+tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
+
+/* side cards */
+.formlist,.pyrlist,.desk{display:flex;flex-direction:column}
+.formrow{display:grid;grid-template-columns:26px 14px 34px 1fr auto;gap:8px;align-items:center;
+  padding:6px 0;border-top:1px solid var(--line-soft);font-size:11.5px}
+.formrow .rnd{color:var(--faint);font-size:10px}
+.formrow .res.w{color:var(--gel)} .formrow .res.l{color:var(--toxic)}
+.formrow .score{color:var(--ink)}
+.formrow .side{color:var(--faint);font-size:10px;letter-spacing:.05em}
+.pyrrow{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:center;padding:7px 0;
+  border-top:1px solid var(--line-soft);font-size:12px;color:var(--muted)}
+.pyrrow .tno{color:var(--faint);font-size:10px}
+.pyrrow.here{color:var(--ink)}
+.pyrrow.here .tno{color:var(--gold)}
+.pyrrow.here .tname{color:var(--gold)}
+.pyrrow .tnote{font-size:10.5px;color:var(--faint)}
+.deskrow{display:grid;grid-template-columns:6px 1fr auto;gap:9px;align-items:baseline;padding:7px 0;
+  border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--muted);line-height:1.45}
+.deskrow .dglyph{width:5px;height:5px;border-radius:50%;background:var(--line);align-self:center}
+.deskrow.unread .dglyph{background:var(--gold)}
+.deskrow.unread .dtx{color:var(--ink)}
+.deskrow.k-good .dglyph{background:var(--gel)}
+.deskrow.k-bad .dglyph{background:var(--toxic)}
+.deskrow .dwk{font-size:9.5px;color:var(--faint);white-space:nowrap}
+
+/* org sheet */
+.orgsheet{position:absolute;inset:0;background:var(--bg);overflow:auto;padding:20px 24px 40px;z-index:30;
+  animation:sheetIn .18s cubic-bezier(.4,0,.2,1)}
+@keyframes sheetIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sheetclose{position:absolute;top:16px;right:20px;font-size:15px}
+.osheet-head{display:grid;grid-template-columns:auto 1fr 200px;gap:18px;align-items:start;margin-bottom:16px;padding-right:40px}
+.crest{width:62px;height:62px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center}
+.crest span{font-size:15px;letter-spacing:.1em;color:var(--gold)}
+.oid h2{margin:0;font-family:"Barlow Condensed";font-size:30px;letter-spacing:.01em;line-height:1.05}
+.oid .blurb{margin:6px 0 0;font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.5;max-width:52ch}
+.prestigebox{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:11px 13px;text-align:center}
+.prestigebox .pval{display:block;font-size:30px;color:var(--gold);line-height:1}
+.prestigebox .plabel{display:block;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-top:3px}
+.prestigebox .pstature{display:block;font-family:"Barlow Condensed";font-size:15px;color:var(--ink);margin-top:5px;letter-spacing:.03em}
+.prestigebox .pbar{display:block;height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin:7px 0 5px}
+.prestigebox .pbar i{display:block;height:100%;background:var(--gold)}
+.prestigebox .psplit{display:block;font-size:9.5px;color:var(--faint)}
+.spine{margin-bottom:14px}
+.spinegrid{display:flex;flex-direction:column;gap:3px;margin:6px 0 10px}
+.spinerow{display:grid;grid-template-columns:26px 1fr 30px;gap:9px;align-items:center}
+.spinerow .tno{font-size:10px;color:var(--faint)}
+.spinerow .cells{display:flex;gap:2px;flex-wrap:wrap}
+.spinerow .cells i{width:9px;height:13px;border-radius:2px;background:var(--surface-3);display:block}
+.spinerow .cells i.title{background:var(--gold)}
+.spinerow .tcount{font-size:10px;color:var(--faint);text-align:right}
+.honors{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);padding-top:9px;border-top:1px solid var(--line-soft)}
+.osheet-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media (max-width:900px){.osheet-cols,.osheet-head{grid-template-columns:1fr}}
+.orgroster .orow{display:grid;grid-template-columns:34px 1fr 24px 28px 60px 34px;gap:8px;align-items:center;
+  padding:7px 0;border-top:1px solid var(--line-soft);font-size:12px}
+.orgroster .oname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orgroster .oage,.orgroster .oterm{color:var(--faint);font-size:10.5px;text-align:right}
+.orgroster .oca{color:var(--gold);text-align:right}
+.orgroster .oempty{color:var(--faint);font-style:italic}
+.termbar{position:relative;height:6px;border-radius:4px;background:var(--surface-3);overflow:hidden}
+.termbar i{display:block;height:100%;background:color-mix(in srgb,var(--gold) 55%,transparent)}
+.termbar.warn i{background:var(--warn)}
+.termbar.crit i{background:var(--toxic)}
+.orgread .oread{display:grid;grid-template-columns:78px 1fr 74px;gap:10px;align-items:center;
+  padding:7px 0;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--muted)}
+.orgread .oread .mono{font-size:10.5px;color:var(--ink);text-align:right}
+
+/* the ledger strip on Squad */
+.wagestrip{display:flex;align-items:center;gap:14px;padding:10px 14px;margin-bottom:14px;flex-wrap:wrap;
+  border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);font-size:11.5px;color:var(--muted)}
+.wagestrip b{color:var(--ink);font-family:"IBM Plex Mono";font-size:12px}
+.wagestrip .bar{flex:1;min-width:120px;height:8px;border-radius:5px;background:var(--surface-3);overflow:hidden;display:flex}
+.wagestrip .bar i{height:100%;background:var(--gold)}
+.wagestrip.tight{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.wagestrip.critical,.wagestrip.insolvent{border-color:color-mix(in srgb,var(--toxic) 55%,var(--line))}
+.wagestrip.critical .bar i,.wagestrip.insolvent .bar i{background:var(--toxic)}
+.wagestrip .state{letter-spacing:.14em;text-transform:uppercase;font-size:9px}
+.contractlane{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin:8px 0 2px;font-size:10.5px;color:var(--faint)}
+.contractlane .mono{color:var(--muted)}
+
+/* the continue button in the topbar */
+.continue{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 13px;border-radius:var(--r);
+  border:1px solid var(--gold-deep);background:var(--gold-ghost);color:var(--gold);cursor:pointer;min-width:168px;
+  transition:background .14s,transform .1s}
+.continue:hover{background:color-mix(in srgb,var(--gold) 18%,transparent)}
+.continue:active{transform:translateY(1px)}
+.continue .verb{font-family:"Barlow Condensed";font-size:15px;letter-spacing:.03em;line-height:1.1}
+.continue .csub{font-family:"IBM Plex Mono";font-size:9px;color:var(--muted);letter-spacing:.04em}
+.bell{position:relative}
+.bell .count{position:absolute;top:-3px;right:-3px;min-width:14px;height:14px;border-radius:8px;background:var(--gold);
+  color:var(--bg);font-family:"IBM Plex Mono";font-size:9px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:88vw;background:var(--surface);z-index:60;
+  border-left:1px solid var(--line);box-shadow:var(--shadow);overflow:auto;padding:18px 18px 30px;
+  animation:drawerIn .2s cubic-bezier(.4,0,.2,1)}
+@keyframes drawerIn{from{transform:translateX(20px);opacity:0}to{transform:none;opacity:1}}
+.drawer h3{margin:0 0 3px;font-family:"Barlow Condensed";font-size:21px}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55}
+
+/* recruit tabs */
+.bandtabs{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.bandtabs button{background:var(--surface);border:0;color:var(--muted);font:inherit;font-size:11.5px;padding:6px 12px;cursor:pointer}
+.bandtabs button+button{border-left:1px solid var(--line)}
+.bandtabs button.on{background:var(--gold-ghost);color:var(--gold)}
+.laddercount{font-size:11px;color:var(--faint);margin:8px 0 2px}
+.prochip{display:inline-block;padding:0 4px;border:1px solid var(--line);border-radius:3px;font-family:"IBM Plex Mono";
+  font-size:8.5px;letter-spacing:.08em;color:var(--faint);margin-left:6px}
+
 </style>
 
 <div class="app" id="app">
   <div class="topbar">
     <div class="brand cond">manage<b>LOL</b><span class="tag">esports team manager · prototype</span></div>
     <div class="stat-strip" id="stats"></div>
+    <button class="iconbtn bell" id="inboxBtn" title="The desk" aria-label="Open the desk">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M10 20a2 2 0 0 0 4 0"/></svg>
+      <span class="count" id="inboxCount">0</span>
+    </button>
+    <button class="continue" id="continueBtn"><span class="verb" id="continueVerb">Continue</span><span class="csub" id="continueSub"></span></button>
     <button class="iconbtn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     </button>
   </div>
 
-  <nav class="rail">
-    <button class="nav" data-screen="scout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M11 7v8M7 11h8M21 21l-4-4"/></svg><span>Scout the Ladder</span><span class="badge" id="nb-scout">0</span></button>
-    <button class="nav" data-screen="squad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M15 20c0-2.3 1-4 4-4s4 1.7 4 4"/></svg><span>Squad &amp; Chemistry</span><span class="badge" id="nb-squad">0/5</span></button>
-    <button class="nav" data-screen="compete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 4h10v4a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 15h6M8 20h8M12 13v2"/></svg><span>Compete</span></button>
-    <button class="nav" data-screen="sponsors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 12l-8 8-9-9V4h7zM7.5 7.5h.01"/></svg><span>Sponsors</span><span class="badge" id="nb-sponsors">0</span></button>
+  <nav class="rail" id="rail">
+    <button class="nav" data-screen="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Season</span><span class="badge" id="nb-season">—</span></button>
+    <button class="nav" data-screen="squad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5M15 20c0-2.3 1-4 4-4s4 1.7 4 4"/></svg><span>Squad</span><span class="badge" id="nb-squad">0/5</span></button>
+    <button class="nav" data-screen="scout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M11 7v8M7 11h8M21 21l-4-4"/></svg><span>Recruit</span><span class="badge" id="nb-scout">0</span></button>
+    <button class="nav" data-screen="sponsors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 12l-8 8-9-9V4h7zM7.5 7.5h.01"/></svg><span>Business</span><span class="badge" id="nb-sponsors">0</span></button>
     <div class="rail-sep"></div>
     <div class="rail-title">The Climb</div>
     <div class="pyr" id="pyr"></div>
@@ -540,16 +754,26 @@ select,input[type=text]{font-family:inherit;font-size:12.5px;background:var(--su
   function genLadderEntity(rng, opts) {
     const plant = opts.plant || null;
     let qc = 55, ar = [16, 24];
-    if (plant === 'hiddenGem' || plant === 'smurf') { qc = 72; ar = [16, 19]; }
-    if (plant === 'boosted' || plant === 'bust') { qc = 58; ar = [20, 25]; }
+    // Band-aware generation: the visible ladder starts at Onyx I, so accounts
+    // are generated *to* a band rather than to one flat quality centre.
+    const bandDef = opts.band && root.LOLSim.BAND_BY_KEY ? root.LOLSim.BAND_BY_KEY[opts.band] : null;
+    if (bandDef) { qc = bandDef.qualityCenter; ar = bandDef.ageRange; }
+    if (plant === 'hiddenGem' || plant === 'smurf') { qc = bandDef ? bandDef.qualityCenter - 4 : 72; ar = [16, 19]; }
+    if (plant === 'boosted' || plant === 'bust') { qc = bandDef ? bandDef.qualityCenter - 6 : 58; ar = [20, 25]; }
     const player = genPlayer(rng, { id: opts.id, region: opts.region, qualityCenter: qc, ageRange: ar });
     if (plant === 'hiddenGem') player.attributes.growth.potential = c100(Math.max(player.attributes.growth.potential, 82 + rng.range(0, 10)));
     if (plant === 'bust') player.attributes.growth.potential = c100(Math.min(player.attributes.growth.potential, 55));
+    if (bandDef && bandDef.potentialBonus > 0 && plant !== 'bust')
+      player.attributes.growth.potential = c100(player.attributes.growth.potential + bandDef.potentialBonus);
     const solo = soloAbility(player.attributes), pot = player.attributes.growth.potential;
     const autofill = plant === 'hiddenGem' || rng.chance(0.12);
     const boost = plant === 'boosted' ? rng.range(350, 600) : (rng.chance(0.08) ? rng.range(150, 400) : 0);
     const games = (plant === 'smurf' || plant === 'hiddenGem') ? Math.round(rng.range(30, 70)) : Math.round(rng.range(140, 320));
-    const mmr = computeMmr({ soloAbility: solo, maxSoloApt: maxSoloApt(player.attributes), composure: player.attributes.mental.composure, tiltResistance: player.attributes.mental.tiltResistance, autofill: autofill, boost: boost, games: games });
+    const derived = computeMmr({ soloAbility: solo, maxSoloApt: maxSoloApt(player.attributes), composure: player.attributes.mental.composure, tiltResistance: player.attributes.mental.tiltResistance, autofill: autofill, boost: boost, games: games });
+    // A forced MMR moves only what the ladder shows; steady stays truth, so an
+    // account that belongs far higher reads — correctly — as a smurf.
+    const mmr = opts.forceMmr === undefined ? derived
+      : { current: opts.forceMmr, steady: derived.steady, tier: tierFromMmr(opts.forceMmr).key };
     const flags = [];
     if (autofill) flags.push('autofillVictim');
     if (boost > 300) flags.push('boosted');
@@ -1073,6 +1297,968 @@ select,input[type=text]{font-family:inherit;font-size:12.5px;background:var(--su
   };
 })(typeof window !== 'undefined' ? window : globalThis);
 
+/* ── world: orgs, development, contracts, the ladder cutoff, the season ──
+   Port of packages/core/src/{world,players/development,ladder/bands,season}.
+   Same constants, same formulas, same determinism guarantees. */
+(function (root) {
+  'use strict';
+  const S = root.LOLSim;
+  const Rng = S.Rng, ROLES = S.ROLES, clamp = S.clamp, round = S.round;
+  const c100 = (x) => clamp(x, 0, 100);
+  const mean = (xs) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
+
+  // ---------- org identities (injected from packages/data at build) ----------
+  S.ORG_PACK = [{"id":"kyo-hallowvane","name":"Hallowvane","tag":"HVN","region":"kyo","personality":"methodical","blurb":"Twelve-hour scrim blocks and a coach who has never once raised his voice."},{"id":"kyo-seorin","name":"Seorin Dynamics","tag":"SRD","region":"kyo","personality":"superteam","blurb":"A conglomerate side that treats a second-place finish as a governance failure."},{"id":"kyo-whitecrane","name":"White Crane","tag":"WCR","region":"kyo","personality":"academy","blurb":"Their academy has produced four world champions and one very good barista."},{"id":"kyo-ironpine","name":"Ironpine","tag":"IRP","region":"kyo","personality":"stable","blurb":"Same five players for three years. The scene calls it stubborn until they win."},{"id":"kyo-nocturn","name":"Nocturn Guild","tag":"NCT","region":"kyo","personality":"methodical","blurb":"Publishes its own patch analysis. Rivals read it. Rivals still lose."},{"id":"kyo-blueleaf","name":"Blueleaf","tag":"BLF","region":"kyo","personality":"academy","blurb":"Signs sixteen-year-olds and lets them lose in public until they stop losing."},{"id":"kyo-taeryu","name":"Taeryu Esports","tag":"TRY","region":"kyo","personality":"superteam","blurb":"Buys the best player at every position. Occasionally remembers they must play together."},{"id":"kyo-stonewell","name":"Stonewell","tag":"STW","region":"kyo","personality":"stable","blurb":"Forty years old as a company, six as a team, and allergic to hype."},{"id":"kyo-quietmoon","name":"Quiet Moon","tag":"QMN","region":"kyo","personality":"methodical","blurb":"No social media presence. No interviews. An unreasonable number of trophies."},{"id":"kyo-emberhold","name":"Emberhold","tag":"EMB","region":"kyo","personality":"chaotic","blurb":"Rebuilds the entire roster every off-season. It has worked exactly twice."},{"id":"kyo-goldenroe","name":"Golden Roe","tag":"GRO","region":"kyo","personality":"stable","blurb":"Owned by a fish-processing empire. The jersey is, unavoidably, a fish."},{"id":"kyo-lanternward","name":"Lanternward","tag":"LWD","region":"kyo","personality":"academy","blurb":"Runs three tiers of youth teams and a genuinely excellent cafeteria."},{"id":"kyo-severance","name":"Severance","tag":"SVR","region":"kyo","personality":"superteam","blurb":"Named by a founder who thought it sounded cool before HR explained it."},{"id":"kyo-hanbit","name":"Hanbit Foundry","tag":"HBF","region":"kyo","personality":"methodical","blurb":"Machine-shop money, machine-shop attitude: measure twice, engage once."},{"id":"tia-crimsonarc","name":"Crimson Arc","tag":"CRA","region":"tia","personality":"superteam","blurb":"Has never met a transfer record it did not want to break."},{"id":"tia-jadeharbor","name":"Jade Harbor","tag":"JDH","region":"tia","personality":"stable","blurb":"A port-city institution whose fans have opinions about everything, loudly."},{"id":"tia-vermilion","name":"Vermilion Nine","tag":"VM9","region":"tia","personality":"chaotic","blurb":"Nine was the lucky number. They have fielded eleven rosters since."},{"id":"tia-lotusgate","name":"Lotus Gate","tag":"LTG","region":"tia","personality":"academy","blurb":"Scouts the ladder obsessively and signs whoever is angriest at 4am."},{"id":"tia-thunderpeak","name":"Thunderpeak","tag":"THP","region":"tia","personality":"superteam","blurb":"Their owner attends every match and every press conference. Especially the bad ones."},{"id":"tia-silkroute","name":"Silk Route","tag":"SLK","region":"tia","personality":"methodical","blurb":"Logistics money. They talk about drafting the way freight companies talk about routes."},{"id":"tia-glasswing","name":"Glasswing","tag":"GLW","region":"tia","personality":"chaotic","blurb":"Beautiful to watch, structurally unsound, beloved for both."},{"id":"tia-northgate","name":"Northgate Union","tag":"NGU","region":"tia","personality":"stable","blurb":"Members vote on the jersey. It takes four months and nobody is happy."},{"id":"tia-orchidsteel","name":"Orchid Steel","tag":"ORS","region":"tia","personality":"superteam","blurb":"Steel conglomerate, orchid logo, zero sense of irony."},{"id":"tia-ninefold","name":"Ninefold","tag":"NFD","region":"tia","personality":"methodical","blurb":"Employs more analysts than players. The analysts have analysts."},{"id":"tia-riverlantern","name":"River Lantern","tag":"RVL","region":"tia","personality":"academy","blurb":"A charity foundation that accidentally became a very good esports team."},{"id":"tia-blackpagoda","name":"Black Pagoda","tag":"BPG","region":"tia","personality":"chaotic","blurb":"Signs a superstar, benches him, signs him back. Every single year."},{"id":"tia-cloudbreak","name":"Cloudbreak","tag":"CBK","region":"tia","personality":"stable","blurb":"The neutral favourite. Everyone likes them. Nobody fears them."},{"id":"tia-goldenfleet","name":"Golden Fleet","tag":"GFL","region":"tia","personality":"superteam","blurb":"Shipping magnate, shipping metaphors, shipping their entire roster each spring."},{"id":"mer-halcyon","name":"Halcyon","tag":"HAL","region":"mer","personality":"stable","blurb":"The region’s grown-ups. Boring, solvent, permanently in the playoffs."},{"id":"mer-blackrail","name":"Blackrail","tag":"BRL","region":"mer","personality":"methodical","blurb":"Built out of a freight depot. Still smells faintly of diesel and spite."},{"id":"mer-novaturn","name":"Novaturn","tag":"NVT","region":"mer","personality":"superteam","blurb":"Venture-funded. Spends like the money is imaginary, which it partly is."},{"id":"mer-driftwood","name":"Driftwood","tag":"DWD","region":"mer","personality":"academy","blurb":"A coastal org that signs kids nobody has heard of and is usually right."},{"id":"mer-saltandiron","name":"Salt & Iron","tag":"SAI","region":"mer","personality":"chaotic","blurb":"Their content team is better than their coaching staff and everyone knows it."},{"id":"mer-atlascorp","name":"Atlas Collective","tag":"ATC","region":"mer","personality":"stable","blurb":"Player-owned. Democratic. Slow. Occasionally magnificent."},{"id":"mer-vulture","name":"Vulture Club","tag":"VUL","region":"mer","personality":"chaotic","blurb":"Buys distressed talent at a discount. Sometimes the discount was correct."},{"id":"mer-brightside","name":"Brightside","tag":"BRS","region":"mer","personality":"academy","blurb":"Relentlessly wholesome. The crowd finds this suspicious."},{"id":"mer-kestrel","name":"Kestrel","tag":"KST","region":"mer","personality":"methodical","blurb":"Small budget, enormous prep. The team nobody wants to draw in a gauntlet."},{"id":"mer-goldenhour","name":"Golden Hour","tag":"GHR","region":"mer","personality":"superteam","blurb":"An entertainment label that signed five pros and a documentary crew."},{"id":"mer-ferrous","name":"Ferrous","tag":"FER","region":"mer","personality":"stable","blurb":"Has finished exactly fourth for six consecutive splits. It is becoming a bit."},{"id":"mer-lowtide","name":"Low Tide","tag":"LTD","region":"mer","personality":"chaotic","blurb":"Named after their bank balance, which was honest of them."},{"id":"mer-pinnacle","name":"Pinnacle Divison","tag":"PIN","region":"mer","personality":"superteam","blurb":"Yes, the typo is in the legal name. No, they will not fix it."},{"id":"mer-hearthstead","name":"Hearthstead","tag":"HTH","region":"mer","personality":"academy","blurb":"Runs a bootcamp house with one bathroom and a startling success rate."},{"id":"van-solveig","name":"Solveig","tag":"SLV","region":"van","personality":"methodical","blurb":"A century-old sporting club that added an esports section and then took over."},{"id":"van-argentum","name":"Argentum","tag":"ARG","region":"van","personality":"superteam","blurb":"Silver everything. Silver jersey, silver stage, silver medals, historically."},{"id":"van-lindenfell","name":"Lindenfell","tag":"LDF","region":"van","personality":"stable","blurb":"Owned by the city. Relegating them would cause an actual municipal crisis."},{"id":"van-marchfield","name":"Marchfield","tag":"MFD","region":"van","personality":"academy","blurb":"Sells its best youngster every summer and somehow keeps getting better."},{"id":"van-oriflamme","name":"Oriflamme","tag":"ORF","region":"van","personality":"chaotic","blurb":"Fires the coach at the first sign of trouble. There is always trouble."},{"id":"van-kestenholt","name":"Kestenholt","tag":"KTH","region":"van","personality":"methodical","blurb":"The most detailed scouting report in the world, delivered forty minutes late."},{"id":"van-blauwvogel","name":"Blauwvogel","tag":"BVG","region":"van","personality":"stable","blurb":"Fan-owned, fan-funded, and fan-criticised with unusual precision."},{"id":"van-consortium","name":"The Consortium","tag":"CNS","region":"van","personality":"superteam","blurb":"Nobody is entirely sure who owns them. The lawyers are excellent."},{"id":"van-varangian","name":"Varangian","tag":"VRG","region":"van","personality":"chaotic","blurb":"A mercenary org: highest bidder, shortest contracts, best highlight reel."},{"id":"van-holloway","name":"Holloway Athletic","tag":"HWA","region":"van","personality":"stable","blurb":"Football club first, esports team second, and the fans never let them forget it."},{"id":"van-nordhavn","name":"Nordhavn","tag":"NDH","region":"van","personality":"academy","blurb":"Cold, patient, and willing to lose for two years to win for five."},{"id":"van-ravelin","name":"Ravelin","tag":"RVN","region":"van","personality":"methodical","blurb":"Named for a fortification. Drafts like one, too."},{"id":"van-augurey","name":"Augurey","tag":"AUG","region":"van","personality":"chaotic","blurb":"Predicts its own doom in every pre-match interview, then wins 3–0."},{"id":"van-castellan","name":"Castellan","tag":"CTL","region":"van","personality":"superteam","blurb":"Has bought a title before. Intends to keep buying until one sticks."},{"id":"wld-tinhouse","name":"Tin House","tag":"TIN","region":"wilds","personality":"chaotic","blurb":"Five friends, one gaming house, zero staff, occasional brilliance."},{"id":"wld-longshot","name":"Longshot","tag":"LGS","region":"wilds","personality":"academy","blurb":"Exists purely to sell players upward, and is entirely at peace with that."},{"id":"wld-saltflats","name":"Saltflats","tag":"SLF","region":"wilds","personality":"stable","blurb":"The most remote org in the pyramid. Their ping is a personality trait."},{"id":"wld-freeport","name":"Freeport","tag":"FPT","region":"wilds","personality":"chaotic","blurb":"Takes anyone with a visa problem and turns them into a cult hero."},{"id":"wld-emberline","name":"Emberline","tag":"EML","region":"wilds","personality":"methodical","blurb":"One coach, one whiteboard, one very specific plan that keeps working."},{"id":"wld-outriders","name":"Outriders","tag":"OUT","region":"wilds","personality":"academy","blurb":"Scours regions nobody scouts. Half their signings cannot legally travel yet."},{"id":"wld-driftline","name":"Driftline","tag":"DRF","region":"wilds","personality":"stable","blurb":"Been around eleven years, never promoted, never folded, never shut up."},{"id":"wld-lastcall","name":"Last Call","tag":"LSC","region":"wilds","personality":"chaotic","blurb":"Formed in a bar, funded by a bar, named after the bar. Still in the bar."}];
+  S.ORG_NAME_PARTS = {"prefixes":["Ash","Bright","Cinder","Dawn","Ever","Frost","Grey","High","Iron","Long","North","Pale","Quick","Red","Stone","Storm","Thorn","Vale","Wild","Wolf"],"suffixes":["bank","crest","fall","gate","harbor","hollow","mark","reach","ridge","spire","vane","ward","watch","wind"],"standalone":["Ascendancy","Bastion","Beacon","Cartel","Chorus","Compass","Ensemble","Foundry","Horizon","Lantern","Legion","Meridian","Odyssey","Paragon","Quarry","Relay","Sable","Tempo","Vector","Verdict","Vigil","Zenith"],"qualifiers":["Esports","Gaming","Collective","Club","Academy","Union","Syndicate",""]};
+
+  // ---------- orgs ----------
+  S.TIER_WEIGHT = { 1: 1, 2: 0.45, 3: 0.18, 4: 0.05 };
+  const LEGACY_GAIN = 4.2, LEGACY_DECAY = 0.35, STANDING_RAMP = 0.34, FACILITY_DECAY = 1.1;
+
+  S.prestige = (o) => c100(0.62 * o.standing + 0.38 * o.legacy);
+  S.statureLabel = function (o) {
+    const p = S.prestige(o);
+    if (p >= 82) return o.legacy >= 60 ? 'Dynasty' : 'Superpower';
+    if (p >= 66) return o.legacy >= 45 ? 'Institution' : 'Contender';
+    if (p >= 48) return 'Established';
+    if (p >= 30) return o.seasons <= 3 ? 'Upstart' : 'Journeyman';
+    return o.seasons <= 2 ? 'Newcomer' : 'Minnow';
+  };
+  S.orgEffects = function (o) {
+    const env = 0.55 * o.facilities + 0.45 * o.coaching;
+    return {
+      coachQuality: round(o.coaching, 1),
+      patchFamiliarity: round(o.analytics, 1),
+      chemRampMult: round(0.85 + 0.4 * (o.facilities / 100), 3),
+      developmentMult: round(0.55 + 0.9 * (env / 100), 3),
+    };
+  };
+  S.tierWealth = (t) => ({ 1: 240, 2: 90, 3: 34, 4: 14 })[t];
+  S.accrueLegacy = (legacy, tier) => c100(legacy + LEGACY_GAIN * S.TIER_WEIGHT[tier] * (1 - legacy / 100) - LEGACY_DECAY);
+  S.standingTarget = function (tier, placeFraction) {
+    const ceil = { 1: 96, 2: 72, 3: 50, 4: 30 }[tier], floor = { 1: 56, 2: 36, 3: 20, 4: 6 }[tier];
+    return floor + (ceil - floor) * (1 - clamp(placeFraction, 0, 1));
+  };
+
+  S.seedOrg = function (rng, identity, tier, history) {
+    const seasons = Math.max(0, history);
+    let legacy = 0, best = tier;
+    const titles = { 1: 0, 2: 0, 3: 0, 4: 0 }, atTier = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    for (let s = 0; s < seasons; s++) {
+      const drift = rng.chance(0.22) ? (rng.chance(0.5) ? -1 : 1) : 0;
+      const t = clamp(tier + drift, 1, 4);
+      atTier[t]++; if (t < best) best = t;
+      legacy = S.accrueLegacy(legacy, t);
+      if (rng.chance(0.12 * S.TIER_WEIGHT[t] + 0.04)) titles[t]++;
+    }
+    const p = identity.personality;
+    const infra = (bias) => c100(rng.gaussian(30 + 52 * (1 - (tier - 1) / 3) + bias, 9));
+    const standing = c100(rng.gaussian(S.standingTarget(tier, 0.5), 7));
+    return {
+      id: identity.id, name: identity.name, tag: identity.tag, region: identity.region,
+      personality: p, blurb: identity.blurb,
+      founded: -seasons, seasons: seasons,
+      legacy: round(legacy, 2), standing: round(standing, 2),
+      facilities: infra(p === 'academy' ? 8 : 0),
+      coaching: infra(p === 'methodical' ? 10 : p === 'chaotic' ? -8 : 0),
+      analytics: infra(p === 'methodical' ? 12 : p === 'superteam' ? -4 : 0),
+      scouting: infra(p === 'academy' ? 12 : p === 'superteam' ? -6 : 0),
+      fanbase: c100(rng.gaussian(18 + 0.55 * legacy + 0.25 * standing, 8)),
+      cash: round(S.tierWealth(tier) * rng.range(0.7, 1.4), 1),
+      tier: tier,
+      history: { titles: titles, bestTier: best, seasonsAtTier: atTier, finishes: [] },
+      roster: { top: null, jungle: null, mid: null, bot: null, support: null },
+      contracts: {},
+    };
+  };
+
+  S.advanceOrgSeason = function (org, out) {
+    const pf = out.of <= 1 ? 0 : (out.place - 1) / (out.of - 1);
+    const standing = c100(org.standing + (S.standingTarget(out.tier, pf) - org.standing) * STANDING_RAMP);
+    let legacy = S.accrueLegacy(org.legacy, out.tier);
+    if (out.wonTitle) legacy = c100(legacy + 3.4 * S.TIER_WEIGHT[out.tier] + 0.6);
+    const spend = Math.max(0, out.investment || 0);
+    const lift = (v, share) => c100(v + 9 * (1 - v / 100) * Math.sqrt(Math.max(0, (spend * share) / 40)) - FACILITY_DECAY);
+    const titles = Object.assign({}, org.history.titles); if (out.wonTitle) titles[out.tier]++;
+    const atTier = Object.assign({}, org.history.seasonsAtTier); atTier[out.tier]++;
+    const nextPrestige = 0.62 * standing + 0.38 * legacy;
+    return Object.assign({}, org, {
+      seasons: org.seasons + 1,
+      standing: round(standing, 2), legacy: round(legacy, 2),
+      facilities: round(lift(org.facilities, 0.34), 2),
+      coaching: round(lift(org.coaching, 0.26), 2),
+      analytics: round(lift(org.analytics, 0.22), 2),
+      scouting: round(lift(org.scouting, 0.18), 2),
+      fanbase: round(c100(org.fanbase + (nextPrestige - org.fanbase) * 0.22 + (out.wonTitle ? 4 : 0) - 0.6), 2),
+      cash: round(org.cash + (out.netCash || 0) - spend, 1),
+      tier: out.tier,
+      history: {
+        titles: titles, bestTier: Math.min(org.history.bestTier, out.tier), seasonsAtTier: atTier,
+        finishes: [{ season: out.season, tier: out.tier, place: out.place, of: out.of }].concat(org.history.finishes).slice(0, 24),
+      },
+    });
+  };
+
+  S.investmentBudget = function (o) {
+    const rate = { superteam: 0.10, academy: 0.26, stable: 0.16, chaotic: 0.08, methodical: 0.24 }[o.personality];
+    return round(Math.max(0, (o.cash - S.tierWealth(o.tier) * 0.35) * rate), 1);
+  };
+
+  S.generateOrg = function (rng, id, region, tier, taken) {
+    const P = S.ORG_NAME_PARTS;
+    let name = '';
+    for (let i = 0; i < 40 && !name; i++) {
+      const stem = rng.chance(0.55) ? rng.pick(P.prefixes) + rng.pick(P.suffixes) : rng.pick(P.standalone);
+      const q = rng.pick(P.qualifiers);
+      const cand = q === '' ? stem : stem + ' ' + q;
+      if (!taken[cand]) name = cand;
+    }
+    if (!name) name = rng.pick(P.standalone) + ' ' + id.toUpperCase();
+    const letters = name.replace(/[^A-Za-z]/g, '').toUpperCase();
+    const personalities = ['superteam', 'academy', 'stable', 'chaotic', 'methodical'];
+    return S.seedOrg(rng, {
+      id: id, name: name, tag: letters.slice(0, 3) || 'NEW', region: region,
+      personality: rng.pick(personalities),
+      blurb: 'A new name in the scene. No history, no habits, nothing to lose.',
+    }, tier, 0);
+  };
+
+  // ---------- development ----------
+  const DEV_BASE = 0.085, FULL_SPEED_HEADROOM = 22;
+  S.LADDER_ENV = 22; S.LADDER_PLAYTIME = 25;
+  S.ladderContext = () => ({ environment: 22, playingTime: 25, mentorship: 0, success: 0.5, offRole: false });
+  S.driveScore = (a) => c100(0.45 * a.growth.growthRate + 0.30 * a.growth.learningRate + 0.25 * a.growth.workEthic);
+  S.supportScore = (ctx) => c100(0.5 * ctx.environment + 0.3 * ctx.playingTime + 0.2 * ctx.mentorship);
+  S.ageGrowthMult = function (age, peakAge) {
+    const t = clamp((age - 16) / Math.max(1, peakAge - 16), 0, 1);
+    return clamp(1.32 * (1 - t * t), 0.04, 1.32);
+  };
+  S.growthMix = function (age) {
+    if (age < 21) return { mechanical: 0.45, knowledge: 0.35, mental: 0.20 };
+    if (age < 25) return { mechanical: 0.30, knowledge: 0.45, mental: 0.25 };
+    return { mechanical: 0.10, knowledge: 0.55, mental: 0.35 };
+  };
+  const FAM_W = { mechanical: 0.44, knowledge: 0.34, mental: 0.22 };
+  const MECH_K = ['mechanics', 'laning', 'teamfighting', 'reflexes', 'positioning'];
+  const KNOW_K = ['mapAwareness', 'waveManagement', 'objectiveControl', 'visionControl', 'rotations', 'adaptability', 'shotcalling'];
+  const MENT_K = ['composure', 'consistency', 'focus', 'clutch', 'tiltResistance'];
+
+  S.developWeek = function (player, ctx, rng) {
+    const a = player.attributes, g = a.growth, age = player.age;
+    if (age >= g.declineStartAge) {
+      const rate = 0.0055 * (g.declineRate / 50) * (1 + 0.45 * (age - g.declineStartAge));
+      const resist = 0.75 + 0.5 * (1 - g.workEthic / 100);
+      return { delta: round(-rate * resist, 4), leap: false, declining: true };
+    }
+    const headroom = clamp((g.potential - S.currentAbility(a)) / FULL_SPEED_HEADROOM, 0, 1.15);
+    if (headroom <= 0) return { delta: 0, leap: false, declining: false };
+    const drive = 0.45 + 1.1 * (S.driveScore(a) / 100);
+    const support = 0.45 + 1.1 * (S.supportScore(ctx) / 100);
+    let delta = DEV_BASE * headroom * S.ageGrowthMult(age, g.peakAge) * drive * support
+      * (0.88 + 0.24 * clamp(ctx.success, 0, 1)) * (ctx.offRole ? 0.85 : 1);
+    const leapChance = age < 22 ? 0.018 * headroom * (S.supportScore(ctx) / 100) : 0;
+    const leap = leapChance > 0 && rng.chance(leapChance);
+    if (leap) delta *= 3.2;
+    return { delta: round(delta, 4), leap: leap, declining: false };
+  };
+
+  S.applyDevelopment = function (player, week, rng) {
+    if (!week.delta) return;
+    const a = player.attributes;
+    const ceiling = c100(a.growth.potential + 6);
+    const mix = week.declining
+      ? { mechanical: 0.75 + 0.25 * (a.growth.mechanicalDeclineBias / 100), knowledge: -0.18, mental: -0.05 }
+      : S.growthMix(player.age);
+    const bump = (obj, keys, fam) => {
+      if (!fam) return;
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i]; if (obj[k] === undefined) continue;
+        const next = obj[k] + fam * (0.7 + 0.6 * rng.float());
+        obj[k] = week.delta > 0 ? Math.min(c100(next), ceiling) : c100(next);
+      }
+    };
+    bump(a.mechanical, MECH_K, (week.delta * mix.mechanical) / FAM_W.mechanical);
+    bump(a.gameKnowledge, KNOW_K, (week.delta * mix.knowledge) / FAM_W.knowledge);
+    bump(a.mental, MENT_K, (week.delta * mix.mental) / FAM_W.mental);
+  };
+
+  S.developSeason = function (player, ctx, rng, weeks) {
+    const w = weeks || 40, before = S.currentAbility(player.attributes);
+    let leaps = 0;
+    for (let i = 0; i < w; i++) {
+      const week = S.developWeek(player, ctx, rng);
+      if (week.leap) leaps++;
+      S.applyDevelopment(player, week, rng);
+    }
+    player.age = round(player.age + w / 52, 2);
+    return { gained: round(S.currentAbility(player.attributes) - before, 2), leaps: leaps };
+  };
+
+  // ---------- contracts ----------
+  S.WAGE_BASE = 0.22; S.WAGE_CURVE = 1.068; S.SEASON_WEEKS = 40; S.ACCEPT_THRESHOLD = 0.72;
+  S.tierWageMult = (t) => ({ 1: 1.25, 2: 1, 3: 0.8, 4: 0.65 })[t];
+
+  S.wageDemand = function (player, tier, orgPrestige) {
+    const ca = S.currentAbility(player.attributes), g = player.attributes.growth, age = player.age;
+    const potentialPremium = Math.min(1.4, 1 + 0.011 * Math.max(0, g.potential - ca));
+    const ageFactor = age >= g.declineStartAge ? 0.85 : age <= 18 ? 0.92 : 1;
+    const prestigeDiscount = clamp(1.12 - 0.0022 * c100(orgPrestige), 0.9, 1.15);
+    const star = 1 + 0.0025 * player.attributes.brand.starPower;
+    return round(Math.max(0.05, S.WAGE_BASE * Math.pow(S.WAGE_CURVE, ca - 50)
+      * potentialPremium * ageFactor * S.tierWageMult(tier) * prestigeDiscount * star), 3);
+  };
+  S.defaultBuyout = (wage, weeks) => round(wage * weeks * 1.8 + wage * 12, 1);
+
+  S.evaluateOffer = function (player, org, offer, tier) {
+    const p = player.attributes.personality, pres = S.prestige(org);
+    const demand = S.wageDemand(player, tier, pres);
+    const wageRatio = clamp(offer.wage / Math.max(0.01, demand), 0, 1.6);
+    const prestigePull = (0.4 + 0.6 * (p.ambition / 100)) * (pres / 100);
+    const seat = clamp(offer.starterChance, 0, 1);
+    const loyalty = offer.renewal ? p.loyalty / 100 : 0;
+    const lengthFit = offer.weeks >= S.SEASON_WEEKS * 2 ? (p.ambition > 70 ? -0.03 : 0.04) : 0;
+    const utility = clamp(0.48 * wageRatio + 0.22 * prestigePull + 0.20 * seat + 0.10 * loyalty + lengthFit, 0, 1.6);
+    let reason;
+    if (wageRatio < 0.8) reason = 'the money is short';
+    else if (seat < 0.5) reason = 'no guarantee of a starting seat';
+    else if (prestigePull < 0.2 && p.ambition > 65) reason = 'the project is not ambitious enough';
+    else if (utility >= S.ACCEPT_THRESHOLD) reason = offer.renewal ? 'happy to stay' : 'a step up';
+    else reason = 'not convinced';
+    return { accepted: utility >= S.ACCEPT_THRESHOLD, utility: round(utility, 3), reason: reason };
+  };
+
+  S.offerToAccept = function (player, org, tier, starterChance, renewal) {
+    const p = player.attributes.personality, pres = S.prestige(org);
+    const demand = S.wageDemand(player, tier, pres);
+    const nonWage = 0.22 * (0.4 + 0.6 * (p.ambition / 100)) * (pres / 100)
+      + 0.20 * clamp(starterChance, 0, 1) + 0.10 * (renewal ? p.loyalty / 100 : 0);
+    return round(demand * clamp((S.ACCEPT_THRESHOLD - nonWage) / 0.48, 0, 1.6) * 1.02, 3);
+  };
+
+  S.wageBill = (contracts) => round(contracts.reduce((s, c) => s + c.wage, 0), 3);
+  S.runwayWeeks = function (org, contracts, weeklyIncome) {
+    const net = weeklyIncome - S.wageBill(contracts);
+    return net >= 0 ? Infinity : Math.max(0, Math.floor(org.cash / -net));
+  };
+  S.financialState = function (org, contracts, weeklyIncome) {
+    if (org.cash < 0) return 'insolvent';
+    const r = S.runwayWeeks(org, contracts, weeklyIncome);
+    if (r === Infinity) return 'healthy';
+    return r > S.SEASON_WEEKS / 2 ? 'tight' : 'critical';
+  };
+  S.attractsApproach = function (contract, player, rng) {
+    const ca = S.currentAbility(player.attributes);
+    if (ca < 55) return false;
+    const base = contract.weeksRemaining <= S.SEASON_WEEKS / 2 ? 0.05 : 0.012;
+    return rng.chance(base * (0.4 + clamp((ca - 55) / 40, 0, 1)));
+  };
+  /* An expiry is reported exactly once: an already-expired deal is left alone. */
+  S.tickContracts = function (contracts) {
+    const expired = [];
+    contracts.forEach((c) => {
+      if (c.weeksRemaining <= 0) return;
+      c.weeksRemaining--;
+      if (c.weeksRemaining <= 0) expired.push(c);
+    });
+    return expired;
+  };
+  S.bidInterest = function (org, player, opts) {
+    const ca = S.currentAbility(player.attributes);
+    const upgrade = (ca - opts.incumbentAbility) / 20;
+    if (upgrade <= 0 && org.personality !== 'academy') return 0;
+    const wage = S.wageDemand(player, opts.tier, S.prestige(org));
+    if (wage > opts.budgetPerWeek) return 0;
+    const youth = Math.max(0, player.attributes.growth.potential - ca) / 40;
+    const taste = {
+      superteam: { now: 1.15, later: 0.35 }, academy: { now: 0.5, later: 1.3 },
+      stable: { now: 0.9, later: 0.8 }, chaotic: { now: 1, later: 0.9 }, methodical: { now: 0.85, later: 1 },
+    }[org.personality];
+    const afford = clamp(1 - wage / Math.max(0.01, opts.budgetPerWeek), 0, 1);
+    return round(clamp(taste.now * clamp(upgrade, 0, 1.4) * 0.6 + taste.later * clamp(youth, 0, 1) * 0.4 + 0.15 * afford, 0, 1), 3);
+  };
+
+  // ---------- the visible ladder ----------
+  S.SHOW_CUTOFF = 2525; S.DEEP_FLOOR = 2050; S.DEEP_SCOUT_COST = 4;
+  S.BAND_DEFS = [
+    { key: 'onyxI', floor: 2525, qualityCenter: 66, potentialBonus: 0, ageRange: [16, 24], label: 'Onyx I' },
+    { key: 'ascendant', floor: 2600, qualityCenter: 71, potentialBonus: 2, ageRange: [16, 24], label: 'Ascendant' },
+    { key: 'paragon', floor: 2850, qualityCenter: 76, potentialBonus: 4, ageRange: [17, 25], label: 'Paragon' },
+    { key: 'apex', floor: 3050, qualityCenter: 81, potentialBonus: 7, ageRange: [17, 26], label: 'Apex' },
+  ];
+  S.BAND_BY_KEY = {}; S.BAND_DEFS.forEach((b) => (S.BAND_BY_KEY[b.key] = b));
+  S.bandFromMmr = function (mmr) {
+    if (mmr < S.SHOW_CUTOFF) return null;
+    let out = 'onyxI';
+    S.BAND_DEFS.forEach((b) => { if (mmr >= b.floor) out = b.key; });
+    return out;
+  };
+  S.onBoard = (mmr) => mmr >= 2850;
+  S.visibleOnLadder = (mmr) => mmr >= S.SHOW_CUTOFF;
+  S.deepScoutGemChance = (networkTier, analystScouting) =>
+    clamp(0.18 + 0.22 * (networkTier / 3) + 0.10 * ((c100(analystScouting) - 50) / 50), 0.10, 0.55);
+  S.deepScoutTargetMmr = (rng) => Math.round(rng.range(S.DEEP_FLOOR, S.SHOW_CUTOFF));
+  S.reentryMmr = (lastMmr, steady) => Math.round(0.55 * lastMmr + 0.45 * steady);
+  S.SOLO_PHASE_MULT = { preseason: 1.2, regular: 1, playoffs: 0.5, offseason: 1.8 };
+  S.soloGamesPerWeek = (workEthic, phase, contracted) =>
+    Math.round((contracted ? 6 : 6 * 3.4) * (0.7 + 0.6 * (c100(workEthic) / 100)) * S.SOLO_PHASE_MULT[phase]);
+
+  // ---------- fixtures & standings ----------
+  S.roundRobin = function (teams, legs) {
+    legs = legs || 1;
+    if (teams.length < 2) return [];
+    const BYE = ' bye';
+    const field = teams.length % 2 === 0 ? teams.slice() : teams.concat([BYE]);
+    const n = field.length, rounds = n - 1, half = n / 2;
+    const blue = {}; teams.forEach((t) => (blue[t] = 0));
+    const rot = field.slice(), leg1 = [];
+    for (let r = 0; r < rounds; r++) {
+      for (let i = 0; i < half; i++) {
+        const x = rot[i], y = rot[n - 1 - i];
+        if (x === BYE || y === BYE) continue;
+        const xFirst = blue[x] !== blue[y] ? blue[x] < blue[y] : (r % 2 === 0 ? x < y : x > y);
+        const a = xFirst ? x : y, b = xFirst ? y : x;
+        blue[a]++;
+        leg1.push({ round: r + 1, a: a, b: b });
+      }
+      const last = rot[n - 1];
+      for (let i = n - 1; i > 1; i--) rot[i] = rot[i - 1];
+      rot[1] = last;
+    }
+    const out = [];
+    for (let leg = 0; leg < legs; leg++) {
+      const off = leg * rounds, flip = leg % 2 === 1;
+      leg1.forEach((m) => out.push(flip ? { round: m.round + off, a: m.b, b: m.a } : { round: m.round + off, a: m.a, b: m.b }));
+    }
+    return out;
+  };
+
+  S.emptyRow = (orgId) => ({ orgId: orgId, wins: 0, losses: 0, gameWins: 0, gameLosses: 0, form: [], h2h: {} });
+  S.recordResult = function (table, winnerId, loserId, wg, lg, formWindow) {
+    const w = table[winnerId], l = table[loserId];
+    if (!w || !l) return;
+    const win = formWindow || 5;
+    w.wins++; l.losses++;
+    w.gameWins += wg; w.gameLosses += lg; l.gameWins += lg; l.gameLosses += wg;
+    w.h2h[loserId] = (w.h2h[loserId] || 0) + 1;
+    if (l.h2h[winnerId] === undefined) l.h2h[winnerId] = 0;
+    w.form.unshift(true); l.form.unshift(false);
+    if (w.form.length > win) w.form.length = win;
+    if (l.form.length > win) l.form.length = win;
+  };
+  /* Block-wise mini-table: head-to-head is not transitive, so it may never be
+     evaluated inside a pairwise comparator (see core/world/fixtures.ts). */
+  S.standings = function (rows) {
+    const canon = rows.slice().sort((x, y) => (x.orgId < y.orgId ? -1 : x.orgId > y.orgId ? 1 : 0));
+    const levels = [];
+    canon.forEach((r) => { if (levels.indexOf(r.wins) < 0) levels.push(r.wins); });
+    levels.sort((a, b) => b - a);
+    const out = [];
+    levels.forEach((w) => {
+      const block = canon.filter((r) => r.wins === w);
+      if (block.length === 1) { out.push(block[0]); return; }
+      const mini = {};
+      block.forEach((r) => {
+        let s = 0;
+        block.forEach((o) => { if (o.orgId !== r.orgId) s += r.h2h[o.orgId] || 0; });
+        mini[r.orgId] = s;
+      });
+      block.sort((x, y) => {
+        if (mini[x.orgId] !== mini[y.orgId]) return mini[y.orgId] - mini[x.orgId];
+        const dx = x.gameWins - x.gameLosses, dy = y.gameWins - y.gameLosses;
+        if (dx !== dy) return dy - dx;
+        if (x.gameWins !== y.gameWins) return y.gameWins - x.gameWins;
+        return x.orgId < y.orgId ? -1 : 1;
+      });
+      block.forEach((r) => out.push(r));
+    });
+    return out;
+  };
+
+  // ---------- fast resolution ----------
+  S.DRAFT_GAIN = 4; S.VAR_BASE = 3.2; S.MATCH_SCALE = 15;
+  S.resolveFastSeries = function (a, b, bestOf, rng, opts) {
+    opts = opts || {};
+    const draftMu = (S.DRAFT_GAIN * (a.drafting - b.drafting)) / 100 + (a.metaFit - b.metaFit);
+    const draftSigma = 1.9 - 0.85 * ((a.drafting + b.drafting) / 200);
+    const draftDelta = rng.gaussian(draftMu, draftSigma, -8, 8);
+    const noiseSigma = S.VAR_BASE * (1 - 0.4 * ((a.consistency + b.consistency) / 200));
+    const dayDelta = rng.gaussian(0, noiseSigma, -3 * noiseSigma, 3 * noiseSigma);
+    const gap = a.strength - b.strength + draftDelta + dayDelta;
+    const pA = 1 / (1 + Math.pow(10, -gap / S.MATCH_SCALE));
+    const need = Math.ceil((bestOf + 1) / 2), dom = Math.abs(pA - 0.5) * 2;
+    const games = []; let wa = 0, wb = 0;
+    while (wa < need && wb < need) {
+      const aWon = rng.chance(pA);
+      if (aWon) wa++; else wb++;
+      if (opts.games === false) continue;
+      const len = clamp(Math.round(rng.gaussian(34 - 6 * dom, 5)), 22, 52);
+      const total = Math.max(6, Math.round((24 * len) / 32 + rng.gaussian(0, 5)));
+      const wk = Math.round(total * (0.55 + 0.2 * dom));
+      games.push({ winnerIdx: aWon ? 0 : 1, lengthMin: len, killsA: aWon ? wk : total - wk, killsB: aWon ? total - wk : wk });
+    }
+    const winner = wa > wb ? 0 : 1, favA = pA >= 0.5, decisive = Math.abs(pA - 0.5) >= 0.15;
+    return {
+      winner: winner, score: [wa, wb], games: games, winProbA: round(pA, 3),
+      upset: decisive && ((favA && winner === 1) || (!favA && winner === 0)),
+      draftDelta: round(draftDelta, 2),
+    };
+  };
+  S.fastRating = (roleStrength, teamStrength, won, rng) =>
+    round(clamp(rng.gaussian(5.6 + (won ? 1.1 : -1.1) + (roleStrength - teamStrength) / 8, 0.85), 0, 10), 1);
+
+  // ---------- the calendar & the pyramid ----------
+  S.CALENDAR = (function () {
+    const w = [];
+    const add = (week, kind, window, note, split, tw) =>
+      w.push({ week: week, kind: kind, window: window, note: note, split: split || null, transferWindow: !!tw });
+    add(1, 'market', 'Preseason', 'Rosters lock at the end of the week.', null, true);
+    add(2, 'training', 'Preseason', 'Bootcamp. Set the training emphasis for the split.');
+    for (let i = 3; i <= 11; i++) add(i, 'match', 'Spring Split', 'Split 1, rounds ' + ((i - 3) * 2 + 1) + '–' + ((i - 3) * 2 + 2) + '.', 1);
+    add(12, 'training', 'Seeding', 'Tiebreakers, if you are in one. Otherwise, rest.', 1);
+    add(13, 'match', 'Spring Playoffs', 'Playoffs. Win the bracket and the split is yours.', 1);
+    add(14, 'match', 'Spring Playoffs', 'The Spring final.', 1);
+    add(15, 'market', 'Split break', 'The mid-season window opens.', null, true);
+    add(16, 'event', 'Mid-season', 'The Crucible: the champions of every region.', null, true);
+    add(17, 'event', 'Mid-season', 'The Crucible continues.', null, true);
+    add(18, 'event', 'Mid-season', 'The Crucible final.', null, true);
+    add(19, 'market', 'Split break', 'The mid-season window closes on Sunday.', null, true);
+    for (let i = 20; i <= 28; i++) add(i, 'match', 'Summer Split', 'Split 2, rounds ' + ((i - 20) * 2 + 1) + '–' + ((i - 20) * 2 + 2) + '.', 2);
+    add(29, 'training', 'Seeding', 'Tiebreakers and the last week of prep.', 2);
+    add(30, 'match', 'Summer Playoffs', 'Playoffs. The Summit seeds are decided here.', 2);
+    add(31, 'match', 'Summer Playoffs', 'The Summer final.', 2);
+    add(32, 'event', 'Seeding', 'Championship points reconciled; Summit seeds announced.');
+    add(33, 'match', 'Regional Finals', 'The gauntlet for the last seat at the Summit.');
+    add(34, 'match', 'Regional Finals', 'Regional finals conclude.');
+    add(35, 'training', 'Bootcamp', 'Travel and bootcamp, or a double scouting week.');
+    add(36, 'event', 'The Summit', 'The Summit: play-in.');
+    add(37, 'event', 'The Summit', 'The Summit: groups.');
+    add(38, 'event', 'The Summit', 'The Summit: groups conclude.');
+    add(39, 'event', 'The Summit', 'The Summit: quarters and semis.');
+    add(40, 'event', 'The Summit', 'The Summit final.');
+    add(41, 'event', 'Season review', 'Awards, and the legacy tick every org lives or dies by.');
+    add(42, 'match', 'Promotion', 'The promotion gauntlets. Seats change hands.');
+    add(43, 'match', 'Promotion', 'Gauntlets conclude; the pyramid is redrawn.');
+    add(44, 'event', 'Structure', 'Expansion review and any franchise conversion.');
+    add(45, 'market', 'Expiries', 'The contract expiry wave. Renew now or lose them.', null, true);
+    add(46, 'market', 'Free agency', 'Free agency opens. Rivals are bidding.', null, true);
+    add(47, 'market', 'Free agency', 'Free agency. The good ones go early.', null, true);
+    add(48, 'market', 'Free agency', 'Free agency closes on the best of them.', null, true);
+    add(49, 'event', 'Turnover', 'Retirements, new talent on the ladder, academy intake.', null, true);
+    add(50, 'event', 'Board', 'The awards show, and next season’s mandate from the board.', null, true);
+    add(51, 'event', 'Preseason patch', 'A big patch lands and the ladder season resets.', null, true);
+    add(52, 'training', 'Preseason', 'Scrims on the new patch. The roster deadline approaches.', null, true);
+    return w;
+  })();
+  S.weekDef = (week) => S.CALENDAR[(((week - 1) % 52) + 52) % 52];
+  S.phaseOfWeek = function (week) {
+    const d = S.weekDef(week);
+    if (d.window.indexOf('Playoffs') >= 0 || d.window === 'Promotion') return 'playoffs';
+    if (d.split !== null) return 'regular';
+    if (d.window === 'Preseason') return 'preseason';
+    return 'offseason';
+  };
+  S.matchWeeksOfSplit = (split) =>
+    S.CALENDAR.filter((d) => d.split === split && d.kind === 'match' && d.window.indexOf('Playoffs') < 0).map((d) => d.week);
+
+  S.PYRAMID = [
+    { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 6.5, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
+    { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 2.4, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
+    { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 0.7, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
+    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 0.15, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
+  ];
+  S.LEAGUE_BY_TIER = {}; S.PYRAMID.forEach((l) => (S.LEAGUE_BY_TIER[l.tier] = l));
+  S.prizeFor = function (cfg, place) {
+    const shares = [0.34, 0.21, 0.14, 0.10, 0.07, 0.05, 0.035, 0.025, 0.015, 0.01];
+    return round(cfg.prizePool * (shares[place - 1] !== undefined ? shares[place - 1] : 0.005), 1);
+  };
+  S.championshipPoints = function (cfg, place) {
+    if (cfg.tier !== 1) return 0;
+    const table = [90, 70, 55, 40, 25, 25, 12, 12, 4, 4];
+    return table[place - 1] || 0;
+  };
+  S.resolveBoundary = (upper, lower, autoSeats) => ({
+    relegated: upper.slice(Math.max(0, upper.length - autoSeats)),
+    promoted: lower.slice(0, autoSeats),
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* manageLOL — the persistent world.
+   Builds the pyramid out of orgs that have a past, runs a league week for
+   every tier, moves players between the ladder and rosters, and advances a
+   season. Everything here reads the sim (window.LOLSim) and mutates G. */
+(function (root) {
+  'use strict';
+  const S = root.LOLSim;
+  const W = {};
+  root.LOLWorld = W;
+
+  const ROLES = S.ROLES;
+  const clamp = S.clamp;
+  const round = S.round;
+  const HOME = 'mer';
+
+  /* ─────────────────────────── world creation ─────────────────────────── */
+
+  // Orgs whose home is the player's region anchor the pyramid; the rest of the
+  // seats are filled with generated names that are *also* given a past, so the
+  // world reads as though it existed long before the manager turned up.
+  W.buildOrgs = function (seed) {
+    const rng = new S.Rng(seed, 'world:orgs');
+    const pack = S.ORG_PACK.filter((o) => o.region === HOME || o.region === 'wilds');
+    const foreign = S.ORG_PACK.filter((o) => o.region !== HOME && o.region !== 'wilds');
+    const need = S.PYRAMID.reduce((n, l) => n + l.slots, 0);
+
+    const identities = pack.slice();
+    // A few clubs from abroad have relocated into the region — cheap colour,
+    // and it keeps every handcrafted name in play across a long career.
+    for (let i = 0; identities.length < need - 8 && i < foreign.length; i += 3) identities.push(foreign[i]);
+
+    const taken = {};
+    S.ORG_PACK.forEach((o) => (taken[o.name] = 1));
+    let gen = 0;
+    while (identities.length < need) {
+      const o = S.generateOrg(new S.Rng(seed, 'world:gen:' + gen), 'gen-' + gen, HOME, 3, taken);
+      taken[o.name] = 1;
+      identities.push({ id: o.id, name: o.name, tag: o.tag, region: HOME, personality: o.personality, blurb: o.blurb });
+      gen++;
+    }
+
+    // Strongest identities settle at the top. Deterministic: sort by a hash of
+    // the id, never by pack order, so adding a name later does not reshuffle
+    // an existing save's entire pyramid.
+    const keyed = identities.map((idn) => ({ idn: idn, k: new S.Rng(seed, 'seat:' + idn.id).float() }));
+    keyed.sort((a, b) => (a.k !== b.k ? a.k - b.k : a.idn.id < b.idn.id ? -1 : 1));
+
+    const orgs = {};
+    const seats = {};
+    let cursor = 0;
+    S.PYRAMID.forEach((cfg) => {
+      seats[cfg.tier] = [];
+      // The player takes one seat at the bottom; the rest are filled.
+      const fill = cfg.tier === 4 ? cfg.slots - 1 : cfg.slots;
+      for (let i = 0; i < fill; i++) {
+        const idn = keyed[cursor++].idn;
+        const r = new S.Rng(seed, 'org:' + idn.id);
+        // Deeper history the higher the seat: institutions live at the top.
+        const history = Math.round(r.range(cfg.tier === 1 ? 9 : cfg.tier === 2 ? 5 : 2, cfg.tier === 1 ? 24 : cfg.tier === 2 ? 16 : 10));
+        const org = S.seedOrg(r, idn, cfg.tier, history);
+        orgs[org.id] = org;
+        seats[cfg.tier].push(org.id);
+      }
+    });
+    return { orgs: orgs, seats: seats };
+  };
+
+  /** Stock every AI org with five players sized to its tier and prestige. */
+  W.stockRosters = function (G) {
+    Object.keys(G.orgs).sort().forEach((id) => {
+      const org = G.orgs[id];
+      if (id === G.you) return;
+      const rng = new S.Rng(G.seed, 'roster:' + id);
+      const centre = { 1: 76, 2: 67, 3: 58, 4: 49 }[org.tier] + (S.prestige(org) - 50) * 0.12;
+      ROLES.forEach((role, i) => {
+        const p = S.genPlayer(rng, {
+          id: id + ':' + role,
+          region: org.region,
+          qualityCenter: clamp(rng.gaussian(centre, 4.5), 30, 94),
+          ageRange: [17, 28],
+          primaryRole: role,
+        });
+        org.roster[role] = p;
+        const wage = S.wageDemand(p, org.tier, S.prestige(org));
+        org.contracts[p.id] = {
+          playerId: p.id, orgId: id, wage: wage,
+          weeksRemaining: Math.round(rng.range(20, 120)),
+          termWeeks: 80, signedSeason: 0,
+          buyout: S.defaultBuyout(wage, 80), role: role,
+        };
+        void i;
+      });
+      org.chem = S.initChem(org.roster);
+      for (let w = 0; w < 30; w++) S.rampWeek(org.chem, org.roster, 1);
+    });
+  };
+
+  /* ────────────────────────── strength & the table ────────────────────── */
+
+  /** One org's precomputed fast-path side. Recomputed once a week, not per match. */
+  W.fastSide = function (G, orgId) {
+    const org = G.orgs[orgId];
+    const lineup = W.lineupOf(org);
+    if (!lineup) return { orgId: orgId, strength: 35, drafting: 30, metaFit: 0, consistency: 45 };
+    const bd = S.teamBreakdown({ name: org.name, lineup: lineup, chem: org.chem, draftScore: 0 });
+    const eff = S.orgEffects(org);
+    const sense = ROLES.map((r) => {
+      const k = lineup[r].attributes.gameKnowledge;
+      return (k.shotcalling + k.adaptability + k.mapAwareness) / 3;
+    });
+    const cohesionV = bd.cohesion;
+    const drafting = clamp(0.35 * eff.coachQuality + 0.30 * cohesionV + 0.35 * (sense.reduce((a, b) => a + b, 0) / 5), 0, 100);
+    return {
+      orgId: orgId,
+      strength: bd.strength,
+      drafting: drafting,
+      metaFit: clamp((eff.patchFamiliarity - 50) / 25, -2, 2),
+      consistency: ROLES.reduce((s, r) => s + lineup[r].attributes.mental.consistency, 0) / 5,
+    };
+  };
+
+  W.lineupOf = function (org) {
+    const l = {};
+    let n = 0;
+    ROLES.forEach((r) => { if (org.roster[r]) { l[r] = org.roster[r]; n++; } });
+    return n === 5 ? l : null;
+  };
+
+  /* ──────────────────────────── the season ────────────────────────────── */
+
+  W.newLeagueState = function (G, tier) {
+    const cfg = S.LEAGUE_BY_TIER[tier];
+    const seats = G.seats[tier].slice().sort();
+    const fixtures = S.roundRobin(seats, cfg.legs);
+    const table = {};
+    seats.forEach((id) => (table[id] = S.emptyRow(id)));
+    return { tier: tier, cfg: cfg, fixtures: fixtures, table: table, round: 0, lastOrder: seats.slice(), results: [] };
+  };
+
+  W.startSeason = function (G) {
+    G.leagues = {};
+    S.PYRAMID.forEach((cfg) => (G.leagues[cfg.tier] = W.newLeagueState(G, cfg.tier)));
+    G.champion = null;
+  };
+
+  /** Rounds played in a given match week: two a week for the Bo3 tiers. */
+  W.roundsThisWeek = function (league, week) {
+    const weeks = S.matchWeeksOfSplit(S.weekDef(week).split || 1);
+    const idx = weeks.indexOf(week);
+    if (idx < 0) return [];
+    const total = Math.max.apply(null, league.fixtures.map((f) => f.round));
+    const perWeek = Math.ceil(total / weeks.length);
+    const out = [];
+    for (let i = 0; i < perWeek; i++) {
+      const r = idx * perWeek + i + 1;
+      if (r <= total) out.push(r);
+    }
+    return out;
+  };
+
+  /** Your fixture this week, if any. */
+  W.yourFixture = function (G) {
+    const league = G.leagues[G.orgs[G.you].tier];
+    if (!league) return null;
+    const rounds = W.roundsThisWeek(league, G.week);
+    for (let i = 0; i < rounds.length; i++) {
+      const f = league.fixtures.filter((x) => x.round === rounds[i] && (x.a === G.you || x.b === G.you))[0];
+      if (f && !league.results.some((r) => r.round === f.round && (r.a === f.a && r.b === f.b))) return f;
+    }
+    return null;
+  };
+
+  /**
+   * Play every fixture in this week's rounds. Your own is skipped when
+   * `skipYours` is set — the match-day takeover resolves that one.
+   */
+  W.playLeagueWeek = function (G, tier, skipYours) {
+    const league = G.leagues[tier];
+    if (!league) return [];
+    const cfg = league.cfg;
+    const rounds = W.roundsThisWeek(league, G.week);
+    const sides = {};
+    league.fixtures.forEach((f) => {
+      if (!sides[f.a]) sides[f.a] = W.fastSide(G, f.a);
+      if (!sides[f.b]) sides[f.b] = W.fastSide(G, f.b);
+    });
+    const before = W.orderOf(league);
+    const played = [];
+    rounds.forEach((r) => {
+      league.fixtures.filter((f) => f.round === r).forEach((f) => {
+        if (skipYours && (f.a === G.you || f.b === G.you)) return;
+        if (league.results.some((x) => x.round === r && x.a === f.a && x.b === f.b)) return;
+        const rng = new S.Rng(G.seed, 'match:' + G.season + ':' + tier + ':' + r + ':' + f.a + ':' + f.b);
+        const res = S.resolveFastSeries(sides[f.a], sides[f.b], cfg.regularBestOf, rng, { games: false });
+        W.commitResult(G, league, f, res);
+        played.push({ f: f, res: res });
+      });
+      league.round = Math.max(league.round, r);
+    });
+    W.stampMovement(league, before);
+    return played;
+  };
+
+  W.commitResult = function (G, league, fixture, res) {
+    const winner = res.winner === 0 ? fixture.a : fixture.b;
+    const loser = res.winner === 0 ? fixture.b : fixture.a;
+    const wg = Math.max(res.score[0], res.score[1]);
+    const lg = Math.min(res.score[0], res.score[1]);
+    S.recordResult(league.table, winner, loser, wg, lg);
+    league.results.push({ round: fixture.round, a: fixture.a, b: fixture.b, score: res.score, upset: res.upset });
+  };
+
+  W.orderOf = (league) => S.standings(Object.keys(league.table).sort().map((k) => league.table[k])).map((r) => r.orgId);
+
+  /** Cache each row's movement once, when the round is recorded. */
+  W.stampMovement = function (league, before) {
+    const after = W.orderOf(league);
+    after.forEach((id, i) => {
+      const was = before.indexOf(id);
+      league.table[id].move = was < 0 ? 0 : was - i;
+    });
+    league.lastOrder = after;
+  };
+
+  /* ───────────────────────────── the ladder ───────────────────────────── */
+
+  W.buildLadder = function (G) {
+    const board = [];
+    const pool = [];
+    const alloc = { apex: 14, paragon: 26, ascendant: 34, onyxI: 46 };
+    let n = 0;
+    ['apex', 'paragon', 'ascendant', 'onyxI'].forEach((band) => {
+      const def = S.BAND_BY_KEY[band];
+      const ceiling = { apex: 3400, paragon: 3050, ascendant: 2850, onyxI: 2600 }[band];
+      for (let i = 0; i < alloc[band]; i++) {
+        const rng = new S.Rng(G.seed, 'lad:' + band + ':' + i);
+        // A thin, honest sprinkle of the archetypes that make scouting matter.
+        const plant = i % 17 === 3 ? 'smurf' : i % 23 === 5 ? 'boosted' : i % 19 === 7 ? 'bust' : null;
+        const e = S.genLadderEntity(rng, {
+          id: 'lad' + n++, region: rng.chance(0.72) ? HOME : rng.pick(['kyo', 'tia', 'van', 'wilds']),
+          band: band, plant: plant,
+          forceMmr: Math.round(rng.range(def.floor, ceiling)),
+        });
+        e.band = band;
+        e.scout = { conf: 0, status: 'spotted', revealed: [] };
+        (S.onBoard(e.mmr) ? board : pool).push(e);
+      }
+    });
+    board.sort((a, b) => b.mmr - a.mmr);
+    board.forEach((e, i) => (e.boardRank = i + 1));
+    pool.sort((a, b) => b.mmr - a.mmr);
+    return { board: board, pool: pool, deepDraws: 0, deep: [] };
+  };
+
+  /** One deep scout: four analyst weeks for one account out of the badlands. */
+  W.deepScout = function (G) {
+    const you = G.orgs[G.you];
+    const rng = new S.Rng(G.seed, 'deep:' + G.season + ':' + G.ladderDeepDraws++);
+    const chance = S.deepScoutGemChance(Math.min(3, Math.floor(you.scouting / 25)), you.scouting);
+    const gem = rng.chance(chance);
+    if (!gem) return null;
+    const e = S.genLadderEntity(rng, {
+      id: 'deep' + G.ladderDeepDraws, region: HOME, band: 'onyxI', plant: 'hiddenGem',
+      forceMmr: S.deepScoutTargetMmr(rng),
+    });
+    e.band = 'onyxI';
+    e.isDeep = true;
+    // You already paid the weeks, so the file opens partly filled in.
+    e.scout = { conf: 0.3, status: 'watched', revealed: [] };
+    G.ladderDeep.push(e);
+    G.ladderPool.unshift(e);
+    G.ladder.unshift(e);
+    return e;
+  };
+
+  /* ───────────────────────── weekly world tick ────────────────────────── */
+
+  /** Develop everyone: your roster in your environment, the rest in theirs. */
+  W.developWeek = function (G) {
+    const notes = [];
+    const phase = S.phaseOfWeek(G.week);
+    Object.keys(G.orgs).sort().forEach((id) => {
+      const org = G.orgs[id];
+      const eff = S.orgEffects(org);
+      const lineup = W.lineupOf(org);
+      if (!lineup) return;
+      const success = W.successOf(G, id);
+      const mentor = W.mentorshipOf(org);
+      ROLES.forEach((role) => {
+        const p = org.roster[role];
+        const rng = new S.Rng(G.seed, 'dev:' + G.season + ':' + G.week + ':' + p.id);
+        const ctx = {
+          environment: 0.55 * org.facilities + 0.45 * org.coaching,
+          playingTime: 100,
+          mentorship: mentor,
+          success: success,
+          offRole: p.attributes.roleAptitude.primaryRole !== role,
+        };
+        void eff;
+        const wk = S.developWeek(p, ctx, rng);
+        S.applyDevelopment(p, wk, rng);
+        p.age = round(p.age + 1 / 52, 3);
+        if (wk.leap && id === G.you) notes.push(p.name + ' had a week. Something clicked.');
+      });
+    });
+    // Ladder hopefuls keep grinding — slower, but they are not standing still.
+    const ctx = S.ladderContext();
+    G.ladder.forEach((e, i) => {
+      if (e.signed) return;
+      if (i % 4 !== G.week % 4) return; // stagger: a quarter of the pool a week
+      const rng = new S.Rng(G.seed, 'ladderdev:' + G.season + ':' + G.week + ':' + e.id);
+      const wk = S.developWeek(e.hidden.player, ctx, rng);
+      S.applyDevelopment(e.hidden.player, wk, rng);
+      e.hidden.player.age = round(e.hidden.player.age + 4 / 52, 3);
+    });
+    void phase;
+    return notes;
+  };
+
+  W.successOf = function (G, orgId) {
+    const league = G.leagues[G.orgs[orgId].tier];
+    if (!league || !league.table[orgId]) return 0.5;
+    const row = league.table[orgId];
+    const played = row.wins + row.losses;
+    return played === 0 ? 0.5 : row.wins / played;
+  };
+
+  W.mentorshipOf = function (org) {
+    const lineup = W.lineupOf(org);
+    if (!lineup) return 0;
+    let sum = 0;
+    let n = 0;
+    ROLES.forEach((r) => {
+      const p = lineup[r];
+      if (p.age >= 23) { sum += p.attributes.chemistry.mentorship; n++; }
+    });
+    return n === 0 ? 0 : sum / n;
+  };
+
+  /** Weekly income for an org: league revenue plus sponsors plus fanbase. */
+  W.weeklyIncome = function (G, orgId) {
+    const org = G.orgs[orgId];
+    const cfg = S.LEAGUE_BY_TIER[org.tier];
+    const merch = 0.02 * org.fanbase * (org.tier === 1 ? 1.6 : org.tier === 2 ? 1 : 0.5);
+    const sponsors = orgId === G.you
+      ? G.sponsors.active.reduce((s, d) => s + d.weekly, 0)
+      : round(0.6 + 0.05 * S.prestige(org) * (org.tier === 1 ? 1.4 : 1), 2);
+    return round(cfg.weeklyRevenue + merch + sponsors, 2);
+  };
+
+  W.contractsOf = function (org) {
+    return Object.keys(org.contracts).sort().map((k) => org.contracts[k]);
+  };
+
+  /** Money, contracts and rival interest — the weekly business tick. */
+  W.businessWeek = function (G) {
+    const events = [];
+    Object.keys(G.orgs).sort().forEach((id) => {
+      const org = G.orgs[id];
+      const cs = W.contractsOf(org);
+      org.cash = round(org.cash + W.weeklyIncome(G, id) - S.wageBill(cs), 2);
+      const expired = S.tickContracts(cs);
+      expired.forEach((c) => {
+        if (id === G.you) {
+          events.push({ kind: 'expiry', text: (org.roster[c.role] ? org.roster[c.role].name : 'A player') + '’s contract has run out.', role: c.role });
+        } else {
+          W.aiRenew(G, org, c);
+        }
+      });
+    });
+
+    // Rivals come knocking on your short deals. Never silent — always an item.
+    const you = G.orgs[G.you];
+    W.contractsOf(you).forEach((c) => {
+      const p = you.roster[c.role];
+      if (!p) return;
+      const rng = new S.Rng(G.seed, 'approach:' + G.season + ':' + G.week + ':' + p.id);
+      if (!S.attractsApproach(c, p, rng)) return;
+      const suitor = W.findSuitor(G, p, c.role, rng);
+      if (!suitor) return;
+      events.push({
+        kind: 'bid', text: suitor.name + ' have made an approach for ' + p.name + '.',
+        orgId: suitor.id, role: c.role,
+        wage: S.offerToAccept(p, suitor, suitor.tier, 0.9, false),
+        fee: round(c.buyout * (0.6 + rng.range(0, 0.5)), 1),
+      });
+    });
+    return events;
+  };
+
+  W.findSuitor = function (G, player, role, rng) {
+    const you = G.orgs[G.you];
+    const candidates = Object.keys(G.orgs).sort().map((k) => G.orgs[k]).filter((o) => {
+      if (o.id === G.you) return false;
+      const incumbent = o.roster[role];
+      const budget = Math.max(0.3, W.weeklyIncome(G, o.id) - S.wageBill(W.contractsOf(o)) + 2);
+      return S.bidInterest(o, player, {
+        incumbentAbility: incumbent ? S.currentAbility(incumbent.attributes) : 40,
+        tier: o.tier, budgetPerWeek: budget,
+      }) > 0.35;
+    });
+    void you;
+    return candidates.length ? candidates[Math.floor(rng.float() * candidates.length)] : null;
+  };
+
+  /** An AI org re-signs its own expiring player, or lets them go. */
+  W.aiRenew = function (G, org, c) {
+    const p = org.roster[c.role];
+    if (!p) return;
+    const wage = S.offerToAccept(p, org, org.tier, 0.9, true);
+    const budget = Math.max(0.2, W.weeklyIncome(G, org.id) - S.wageBill(W.contractsOf(org)) + c.wage);
+    if (wage <= budget) {
+      c.wage = wage;
+      c.weeksRemaining = S.SEASON_WEEKS * 2;
+      c.termWeeks = S.SEASON_WEEKS * 2;
+      c.buyout = S.defaultBuyout(wage, c.termWeeks);
+    } else {
+      c.weeksRemaining = S.SEASON_WEEKS; // they hang on a season, then it's a real problem
+    }
+  };
+
+  /* ─────────────────────────── season rollover ────────────────────────── */
+
+  W.finishSeason = function (G) {
+    const lines = [];
+    const movements = {};
+    // Every table is read before anything is applied, so promotion cannot
+    // depend on which tier happens to be processed first.
+    S.PYRAMID.forEach((cfg) => {
+      const league = G.leagues[cfg.tier];
+      movements[cfg.tier] = W.orderOf(league);
+    });
+
+    S.PYRAMID.forEach((cfg) => {
+      const order = movements[cfg.tier];
+      order.forEach((id, i) => {
+        const org = G.orgs[id];
+        const place = i + 1;
+        const prize = S.prizeFor(cfg, place);
+        const wonTitle = place === 1;
+        const invest = S.investmentBudget(org);
+        G.orgs[id] = S.advanceOrgSeason(org, {
+          season: G.season, tier: cfg.tier, place: place, of: order.length,
+          wonTitle: wonTitle, netCash: prize, investment: invest,
+        });
+        if (wonTitle) lines.push(cfg.name + ': ' + org.name + ' are champions.');
+      });
+    });
+
+    // Seats change hands, both directions committed together.
+    for (let t = 1; t < 4; t++) {
+      const auto = t === 3 ? 2 : 1;
+      const move = S.resolveBoundary(movements[t], movements[t + 1], auto);
+      move.relegated.forEach((id) => { G.orgs[id].tier = t + 1; });
+      move.promoted.forEach((id) => { G.orgs[id].tier = t; });
+      move.promoted.forEach((id) => lines.push(G.orgs[id].name + ' are promoted to ' + S.LEAGUE_BY_TIER[t].name + '.'));
+      move.relegated.forEach((id) => lines.push(G.orgs[id].name + ' are relegated from ' + S.LEAGUE_BY_TIER[t].name + '.'));
+    }
+
+    G.seats = { 1: [], 2: [], 3: [], 4: [] };
+    Object.keys(G.orgs).sort().forEach((id) => G.seats[G.orgs[id].tier].push(id));
+
+    G.season++;
+    G.week = 1;
+    W.startSeason(G);
+    return lines;
+  };
+
+  W.tableRows = function (G, tier) {
+    const league = G.leagues[tier];
+    if (!league) return [];
+    return S.standings(Object.keys(league.table).sort().map((k) => league.table[k]));
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
 </script>
 <script>
 /* ============================================================= game layer ============================================================= */
@@ -1122,35 +2308,55 @@ function toast(text,kind){
 
 function newGame(seed){
   seed = seed || ('career-'+(Date.now?.()||seedCtr++)+'-'+Math.floor((typeof performance!=='undefined'?performance.now():seedCtr)*7%9973));
-  const rng=new S.Rng(seed,'world');
-  const ladder=[];
-  // a home-region ladder pool: mostly ordinary, a controlled sprinkle of archetypes
-  const plants=[null,null,null,null,null,null,'hiddenGem',null,null,'boosted',null,'smurf',null,null,'bust',null,'hiddenGem',null,null,'boosted'];
-  const regions=['mer','mer','mer','kyo','tia','van','wilds'];
-  for(let i=0;i<46;i++){
-    const region=rng.pick(regions);
-    const e=S.genLadderEntity(new S.Rng(seed,'lad:'+i),{id:'lad'+i,region:region,plant:plants[i%plants.length]});
-    e.scout={conf:0,status:'spotted',revealed:[]};
-    ladder.push(e);
-  }
-  ladder.sort((a,b)=>b.mmr-a.mmr);
+  const W=window.LOLWorld;
+  const built=W.buildOrgs(seed);
+  // Your org takes the last seat at the bottom of the pyramid.
+  const yours=S.seedOrg(new S.Rng(seed,'you'),{id:'you',name:'Ashgrove Collective',tag:'ASH',region:'mer',
+    personality:'academy',blurb:'A garage org with a whiteboard, a spreadsheet, and you.'},4,0);
+  yours.cash=60; yours.facilities=32; yours.coaching=45; yours.analytics=60; yours.scouting=38;
+  yours.roster={top:null,jungle:null,mid:null,bot:null,support:null}; yours.contracts={};
+  built.orgs['you']=yours; built.seats[4].push('you');
+
   G={
-    seed:seed, week:1, cash:60, reputation:8, scoutPts:6, scoutBudget:6,
-    stageIndex:0, stageWins:0,
-    ladder:ladder, roster:{top:null,jungle:null,mid:null,bot:null,support:null}, chem:null,
-    sponsors:{active:[],offers:[]}, inbox:[], ui:{screen:'scout',selLad:ladder[0]?.id||null,match:null},
-    orgName:'Your Org', matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
+    seed:seed, season:1, week:1, you:'you',
+    orgs:built.orgs, seats:built.seats, leagues:null,
+    scoutPts:6, scoutBudget:6,
+    ladder:[], sponsors:{active:[],offers:[]}, inbox:[], weekResults:{},
+    ui:{screen:'season',selLad:null,match:null,orgSheet:null,drawer:false,band:'board'},
+    orgName:yours.name, matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
+    pendingBids:[],
   };
+  // cash / reputation / roster / chem alias straight through to your org, so
+  // every screen written before the world existed keeps working unchanged.
+  Object.defineProperty(G,'cash',{get:()=>G.orgs[G.you].cash,set:(v)=>{G.orgs[G.you].cash=S.round(v,2);},configurable:true});
+  Object.defineProperty(G,'reputation',{get:()=>S.prestige(G.orgs[G.you]),set:(v)=>{G.orgs[G.you].standing=S.clamp(v,0,100);},configurable:true});
+  Object.defineProperty(G,'roster',{get:()=>G.orgs[G.you].roster,configurable:true});
+  Object.defineProperty(G,'chem',{get:()=>G.orgs[G.you].chem||null,set:(v)=>{G.orgs[G.you].chem=v;},configurable:true});
+  Object.defineProperty(G,'coachQuality',{get:()=>G.orgs[G.you].coaching,set:(v)=>{G.orgs[G.you].coaching=S.clamp(v,0,100);},configurable:true});
+  Object.defineProperty(G,'patchFamiliarity',{get:()=>G.orgs[G.you].analytics,set:(v)=>{G.orgs[G.you].analytics=S.clamp(v,0,100);},configurable:true});
+
+  W.stockRosters(G);
+  W.startSeason(G);
+  const lad=W.buildLadder(G);
+  G.ladderBoard=lad.board; G.ladderPool=lad.pool; G.ladderDeep=lad.deep; G.ladderDeepDraws=0;
+  G.ladder=lad.board.concat(lad.pool);
+  Object.defineProperty(G,'ladderState',{get:()=>({board:G.ladderBoard,pool:G.ladderPool,deep:G.ladderDeep,deepDraws:G.ladderDeepDraws}),configurable:true});
   G.patch=S.genPatch(new S.Rng(seed,'meta:0'),0);
   refreshSponsorOffers();
-  pushLog('Career started. You take over a broke amateur org — fill five seats and earn a Regional invite.','info');
+  pushLog('You take over '+yours.name+', bottom of the Open Circuit. Fill five seats and start climbing.','info');
   render();
 }
-
-function stage(){return STAGES[G.stageIndex];}
+function you(){return G.orgs[G.you];}
+function stage(){
+  const cfg=S.LEAGUE_BY_TIER[you().tier];
+  return {key:cfg.id,name:cfg.name,blurb:cfg.blurb,
+    oppCenter:({1:76,2:67,3:58,4:49})[cfg.tier],
+    wins:cfg.playoffTeams,prize:S.prizeFor(cfg,1),rep:{1:13,2:9,3:7,4:5}[cfg.tier],
+    fee:({1:2.2,2:1.6,3:1.25,4:1.0})[cfg.tier]};
+}
 function rosterCount(){return ROLE_ORDER.filter(r=>G.roster[r]).length;}
 function lineup(){const l={};ROLE_ORDER.forEach(r=>{if(G.roster[r])l[r]=G.roster[r];});return l;}
-function recomputeChem(){G.chem=S.reconcileChem(G.chem,lineup());}
+function recomputeChem(){you().chem=S.reconcileChem(you().chem,lineup());}
 
 function scoutedRange(tv,conf){const half=22*(1-conf);return [Math.max(0,tv-half),Math.min(100,tv+half)];}
 function potentialRead(pot,conf){
@@ -1215,39 +2421,91 @@ function doRelease(role){
   pushLog('Released the '+ROLE_LABEL[role]+', '+p.name+'.','info');render();
 }
 function advanceWeek(){
-  G.week++;
-  // gel chemistry (scrims)
-  if(G.chem)S.rampWeek(G.chem,lineup(),1.0);
-  // ladder churn: drift toward steady, boosted decay, mild noise
-  const rng=new S.Rng(G.seed,'churn:'+G.week);
-  G.ladder.forEach(e=>{
-    if(e.signed)return;
-    const step=0.12; e.mmr=Math.round(e.mmr+(e.hidden.steady-e.mmr)*step+rng.range(-25,25));
-    e.tier=S.tierFromMmr(e.mmr).key; e.division=S.divFromMmr(e.mmr);
+  const W=window.LOLWorld;
+  const d=S.weekDef(G.week);
+
+  // A match week you have a fixture in must be played, not skipped.
+  const fx=W.yourFixture(G);
+  if(d.kind==='match'&&fx){ toast('You have a series to play this week.','bad'); G.ui.screen='season'; render(); return; }
+
+  // Every league in the pyramid plays its rounds.
+  if(d.kind==='match'){ S.PYRAMID.forEach(cfg=>W.playLeagueWeek(G,cfg.tier,true)); }
+
+  // Chemistry, development, money, contracts, rivals.
+  if(G.chem&&rosterCount()===5)S.rampWeek(G.chem,lineup(),1.0*S.orgEffects(you()).chemRampMult);
+  const notes=W.developWeek(G);
+  notes.slice(0,2).forEach(n=>pushLog(n,'good'));
+  const events=W.businessWeek(G);
+  events.forEach(ev=>{
+    if(ev.kind==='bid'){ G.pendingBids.push(ev); pushLog(ev.text+' They are offering '+ev.wage.toFixed(1)+'◈/wk and '+ev.fee.toFixed(0)+'◈ to us.','info'); }
+    else pushLog(ev.text,'bad');
   });
-  // fatigue / sharpness
-  ROLE_ORDER.forEach(r=>{const p=G.roster[r];if(p){p.state.fatigue=S.clamp(p.state.fatigue+3,0,100);p.state.sharpness=S.clamp(p.state.sharpness+2,0,100);}});
-  // sponsor income
-  let inc=0;G.sponsors.active.forEach(s=>inc+=s.weekly);
-  if(inc>0){G.cash+=inc;}
+
+  ROLE_ORDER.forEach(r=>{const p=G.roster[r];if(p){
+    p.state.fatigue=S.clamp(p.state.fatigue+(d.kind==='match'?5:-6),0,100);
+    p.state.sharpness=S.clamp(p.state.sharpness+(d.kind==='training'?4:1),0,100);
+  }});
+
   G.scoutPts=G.scoutBudget;
   if(G.week%2===0)refreshSponsorOffers();
-  pushLog('Week '+G.week+' — scrims run'+(inc>0?', +'+inc.toFixed(1)+'◈ sponsor income':'')+'. Scouting budget refreshed.','info');
+  if(G.week%4===0){ G.patch=S.genPatch(new S.Rng(G.seed,'meta:'+G.season+':'+G.week),Math.floor(G.week/4),G.patch); pushLog('Patch '+G.patch.index+'.0 lands. The tier list moves.','info'); }
+
+  G.week++;
+  if(G.week>52){
+    const lines=W.finishSeason(G);
+    lines.slice(0,6).forEach(l=>pushLog(l,'good'));
+    toast('Season '+(G.season-1)+' is over. '+S.LEAGUE_BY_TIER[you().tier].name+' next.','good');
+  } else {
+    pushLog('Week '+G.week+' — '+S.weekDef(G.week).note,'info');
+  }
   render();
 }
 function makeOpponent(){
-  const st=stage();const rng=new S.Rng(G.seed,'opp:'+G.stageIndex+':'+G.stageWins);
-  const names=['Ashfall','Kestrel','Meridian B','Onyx Guard','Riptide','Vantablack','Zephyr','Ironclad','Sunder','Halcyon','Nightfall','Gravel'];
-  const nm=names[(G.stageIndex*3+G.stageWins)%names.length];
-  const lu={};ROLE_ORDER.forEach(role=>{lu[role]=S.genPlayer(rng,{id:'opp'+role,region:rng.pick(['mer','kyo','tia','van']),qualityCenter:st.oppCenter+rng.range(-4,4),primaryRole:role,ageRange:[19,26]});lu[role].languageIds=['common'];});
+  const W=window.LOLWorld;
+  const fx=G.ui.fixture||W.yourFixture(G);
+  if(fx){
+    const oppId=fx.a===G.you?fx.b:fx.a;
+    const org=G.orgs[oppId];
+    const lu=W.lineupOf(org);
+    if(lu) return {name:org.name,tag:org.tag,orgId:oppId,lineup:lu,chem:org.chem};
+  }
+  // Fallback: a scratch side, only reachable outside a scheduled week.
+  const st=stage();const rng=new S.Rng(G.seed,'opp:'+G.season+':'+G.week);
+  const lu={};ROLE_ORDER.forEach(role=>{lu[role]=S.genPlayer(rng,{id:'opp'+role,region:rng.pick(['mer','kyo','tia','van']),qualityCenter:st.oppCenter+rng.range(-4,4),primaryRole:role,ageRange:[19,26]});});
   let ch=S.initChem(lu);const wk=Math.round(rng.range(6,26));for(let i=0;i<wk;i++)S.rampWeek(ch,lu,1);
-  return {name:nm,lineup:lu,chem:ch};
+  return {name:'Scrim Partners',tag:'SCR',orgId:null,lineup:lu,chem:ch};
 }
+window.startFixture=function(fx){
+  G.ui.fixture=fx; G.matchOpp=null; G.ui.screen='compete'; G.ui.orgSheet=null;
+  render();
+};
+/* Commit the series you actually played into the league table. */
+window.commitYourSeries=function(yw,ow){
+  const W=window.LOLWorld;
+  const fx=G.ui.fixture; if(!fx) return;
+  const league=G.leagues[you().tier];
+  const before=W.orderOf(league);
+  const yourSideIsA=fx.a===G.you;
+  const res={winner:(yw>ow)===yourSideIsA?0:1,score:yourSideIsA?[yw,ow]:[ow,yw],upset:false};
+  W.commitResult(G,league,fx,res);
+  league.round=Math.max(league.round,fx.round);
+  // The rest of the league plays the same rounds.
+  W.playLeagueWeek(G,you().tier,true);
+  S.PYRAMID.forEach(cfg=>{ if(cfg.tier!==you().tier) W.playLeagueWeek(G,cfg.tier,false); });
+  W.stampMovement(league,before);
+  G.weekResults[G.season+':'+G.week]=yw>ow?'w':'l';
+  G.ui.fixture=null;
+};
 /* playMatch → matchday.js (startSeries / concludeSeries) */
-function advanceWeekQuiet(){ // a match consumes a week without the separate log line
-  G.week++;if(G.chem)S.rampWeek(G.chem,lineup(),1.0);
+function advanceWeekQuiet(){ // a match consumes a week; the world still turns
+  const W=window.LOLWorld;
+  if(G.chem&&rosterCount()===5)S.rampWeek(G.chem,lineup(),1.0*S.orgEffects(you()).chemRampMult);
+  W.developWeek(G);
+  W.businessWeek(G).forEach(ev=>{ if(ev.kind==='bid')G.pendingBids.push(ev); pushLog(ev.text,ev.kind==='bid'?'info':'bad'); });
   ROLE_ORDER.forEach(r=>{const p=G.roster[r];if(p){p.state.fatigue=S.clamp(p.state.fatigue+5,0,100);}});
-  let inc=0;G.sponsors.active.forEach(s=>inc+=s.weekly);G.cash+=inc;G.scoutPts=G.scoutBudget;
+  G.scoutPts=G.scoutBudget;
+  G.week++;
+  if(G.week>52){ W.finishSeason(G).slice(0,6).forEach(l=>pushLog(l,'good')); }
 }
 function acceptSponsor(id){
   const o=G.sponsors.offers.find(x=>x.id===id);if(!o)return;
@@ -1259,34 +2517,90 @@ function acceptSponsor(id){
 
 /* ============================================================= rendering ============================================================= */
 function render(){
-  renderStats();renderNav();renderPyramid();
+  renderStats();renderNav();renderPyramid();renderContinue();
   const scr=G.ui.screen;
   const main=$('#main');main.innerHTML='';
-  if(scr==='scout')renderScout(main);
+  if(scr==='season')window.renderSeasonHub(G,main);
+  else if(scr==='scout')renderScout(main);
   else if(scr==='squad')renderSquad(main);
   else if(scr==='compete')renderCompete(main);
   else if(scr==='sponsors')renderSponsors(main);
+  if(G.ui.orgSheet)main.appendChild(window.buildOrgSheet(G,G.ui.orgSheet));
+  renderDrawer();
+}
+window.openOrgSheet=(id)=>{G.ui.orgSheet=id;render();$('#main').scrollTop=0;};
+window.closeOrgSheet=()=>{G.ui.orgSheet=null;render();};
+function renderContinue(){
+  const d=S.weekDef(G.week);
+  const fx=window.LOLWorld.yourFixture(G);
+  const v=$('#continueVerb'),sub=$('#continueSub');
+  if(d.kind==='match'&&fx){
+    const opp=G.orgs[fx.a===G.you?fx.b:fx.a];
+    v.textContent='▶ Play · vs '+opp.tag;
+    sub.textContent='Bo'+S.LEAGUE_BY_TIER[you().tier].regularBestOf+' · round '+fx.round;
+    $('#continueBtn').onclick=()=>window.startFixture(fx);
+  } else {
+    v.textContent=d.kind==='market'?'▶ Advance · window':d.kind==='training'?'▶ Advance · scrims':d.kind==='event'?'▶ Advance · '+d.window.toLowerCase():'▶ Advance';
+    sub.textContent='week '+G.week+' · '+d.window.toLowerCase();
+    $('#continueBtn').onclick=()=>advanceWeek();
+  }
+  const unread=G.inbox.filter(m=>!m.read).length;
+  const c=$('#inboxCount'); c.textContent=unread; c.style.display=unread?'flex':'none';
+}
+function renderDrawer(){
+  const old=document.querySelector('.drawer'),scrim=document.querySelector('.scrim');
+  if(old)old.remove(); if(scrim)scrim.remove();
+  if(!G.ui.drawer)return;
+  const sc=el('div','scrim'); sc.onclick=()=>{G.ui.drawer=false;render();}; document.body.appendChild(sc);
+  const d=el('div','drawer');
+  d.innerHTML='<h3 class="cond">The desk</h3><p class="sub" style="margin:0 0 12px">Everything the season has put in front of you.</p>';
+  const list=el('div','desk');
+  G.inbox.slice(0,40).forEach(m=>{
+    const row=el('div','deskrow k-'+(m.kind||'info')+(m.read?'':' unread'));
+    row.innerHTML='<span class="dglyph"></span><span class="dtx">'+m.text+'</span><span class="dwk mono">wk '+m.week+'</span>';
+    list.appendChild(row);
+  });
+  if(!G.inbox.length)list.appendChild(el('div','empty-note','Nothing yet.'));
+  d.appendChild(list);
+  G.inbox.forEach(m=>{m.read=true;});
+  document.body.appendChild(d);
 }
 function renderStats(){
   const s=$('#stats');s.innerHTML='';
-  const items=[['Week',G.week,''],['Credits',fmt(G.cash)+'◈','gold'],['Reputation',Math.round(G.reputation),''],['Scouting',G.scoutPts+'/'+G.scoutBudget,'']];
-  items.forEach(([k,v,c])=>{const d=el('div','stat');d.innerHTML='<span class="k">'+k+'</span><span class="v '+c+'">'+v+'</span>';s.appendChild(d);});
+  const d=S.weekDef(G.week);
+  const inc=window.LOLWorld.weeklyIncome(G,G.you);
+  const bill=S.wageBill(window.LOLWorld.contractsOf(you()));
+  const net=inc-bill;
+  const items=[
+    ['Season','S'+G.season+' · wk '+G.week,''],
+    ['Phase',d.window,''],
+    ['Credits',you().cash.toFixed(0)+'◈','gold'],
+    ['Net',(net>=0?'+':'')+net.toFixed(1)+'/wk',net>=0?'':'bad'],
+    ['Prestige',Math.round(S.prestige(you())),''],
+    ['Scouting',G.scoutPts+'/'+G.scoutBudget,''],
+  ];
+  items.forEach(([k,v,c])=>{const e2=el('div','stat');e2.innerHTML='<span class="k">'+k+'</span><span class="v '+c+'">'+v+'</span>';s.appendChild(e2);});
 }
 function renderNav(){
   document.querySelectorAll('.nav[data-screen]').forEach(n=>n.classList.toggle('active',n.dataset.screen===G.ui.screen));
   $('#nb-scout').textContent=G.ladder.filter(e=>!e.signed&&e.scout.conf>0).length||'0';
   $('#nb-squad').textContent=rosterCount()+'/5';
   $('#nb-sponsors').textContent=G.sponsors.offers.length||'0';
+  const order=G.leagues?window.LOLWorld.orderOf(G.leagues[you().tier]):[];
+  $('#nb-season').textContent=order.length?(order.indexOf(G.you)+1)+'/'+order.length:'—';
 }
 function renderPyramid(){
   const p=$('#pyr');p.innerHTML='';
-  STAGES.forEach((st,i)=>{
-    const cls=i<G.stageIndex?'done':i===G.stageIndex?'cur':'';
-    const d=el('div','step '+cls);d.innerHTML='<span class="dot"></span><span>'+st.name+'</span>';
+  S.PYRAMID.forEach(cfg=>{
+    const here=cfg.tier===you().tier;
+    const cls=cfg.tier<you().tier?'':here?'cur':'done';
+    const d=el('div','step '+(here?'cur':cfg.tier<you().tier?'':'done'));
+    d.innerHTML='<span class="dot"></span><span>'+cfg.name+'</span>';
+    d.title=cfg.blurb;
     p.appendChild(d);
+    void cls;
   });
 }
-
 /* ---------- scout ---------- */
 function renderScout(main){
   const head=el('div','screen-head');
@@ -1657,24 +2971,23 @@ function nextGame(){
   m.gameIndex++; beginDraft();
 }
 function concludeSeries(yw,ow){
-  const m=G.match; clearTimers(); const won=yw>ow; const st=stage(); const opp=m.opp;
+  const m=G.match; clearTimers(); const won=yw>ow; const opp=m.opp; const cfg=S.LEAGUE_BY_TIER[you().tier];
   G.ui.match={series:{scoreA:yw,scoreB:ow,games:m.games,winner:won?'a':'b',bestOf:3},opp:opp,won:won};
+  // The result goes into the table this week; the rest of the pyramid plays too.
+  window.commitYourSeries(yw,ow);
+  const order=window.LOLWorld.orderOf(G.leagues[you().tier]);
+  const place=order.indexOf(G.you)+1;
   if(won){
-    G.cash+=st.prize; G.reputation=Math.min(100,G.reputation+st.rep); G.stageWins++; G.matchOpp=null;
-    pushLog('Won the series vs <b>'+opp.name+'</b> '+yw+'-'+ow+' (+'+st.prize+'◈, +'+st.rep+' rep).','good');
-    toast('Series won vs '+opp.name+' — '+yw+'-'+ow+'!','good');
-    if(G.stageWins>=st.wins){
-      if(G.stageIndex<STAGES.length-1){ G.stageIndex++; G.stageWins=0; const ns=stage(); pushLog('★ Promoted to <b>'+ns.name+'</b>!','good'); toast('★ You\'ve reached '+ns.name+'!','good'); refreshSponsorOffers(); }
-      else { pushLog('★★ You are WORLD CHAMPIONS. The garage org made it all the way.','good'); toast('★★ WORLDS CHAMPIONS. You did it.','good'); }
-    }
+    pushLog('Beat <b>'+opp.name+'</b> '+yw+'–'+ow+'. You are '+window.seasonOrd(place)+' in '+cfg.name+'.','good');
+    toast('Series won vs '+opp.name+' — '+yw+'–'+ow+'.','good');
   } else {
-    pushLog('Lost the series vs '+opp.name+' '+ow+'-'+yw+'. Regroup and try again.','bad');
-    toast('Series lost vs '+opp.name+'. Back to the drawing board.','bad');
+    pushLog('Lost to '+opp.name+' '+ow+'–'+yw+'. '+window.seasonOrd(place)+' in '+cfg.name+'.','bad');
+    toast('Series lost vs '+opp.name+'.','bad');
   }
   m.phase='series'; G.patchFamiliarity=Math.min(100,G.patchFamiliarity+6);
   advanceWeekQuiet(); render();
 }
-function endSeriesView(){ clearTimers(); G.match=null; render(); }
+function endSeriesView(){ clearTimers(); G.match=null; G.ui.screen='season'; render(); }
 function crowdPush(trigger,payload,count){ const m=G.match; if(!m)return; const msgs=S.crowdReact(trigger,payload,m.chatRng,count); m.crowd=m.crowd.concat(msgs).slice(-40); }
 function commsPush(line){ const m=G.match; if(!m||!line)return; m.comms=m.comms.concat([line]).slice(-40); }
 
@@ -1723,7 +3036,7 @@ function renderDraft(main){
   const ours=!!step&&step.side===m.yourSide, manual=ours&&!AUTO();
   const you=yourTeam(), them=oppTeam(m.opp);
   const head=el('div','screen-head');
-  head.innerHTML='<p class="eyebrow">'+stage().name+' · vs '+m.opp.name+'</p><h1 class="title cond">Draft — Game '+(m.gameIndex+1)+'</h1><p class="sub">Blue buys first pick; Red buys the counter-pick window. '+(AUTO()?'Your team is drafting for itself — listen to the comms.':'You are on the clock for every pick and ban.')+'</p>';
+  head.innerHTML='<p class="eyebrow">'+stage().name+' · round '+(G.ui.fixture?G.ui.fixture.round:'—')+' · vs '+m.opp.name+'</p><h1 class="title cond">Draft — Game '+(m.gameIndex+1)+'</h1><p class="sub">Blue buys first pick; Red buys the counter-pick window. '+(AUTO()?'Your team is drafting for itself — listen to the comms.':'You are on the clock for every pick and ban.')+'</p>';
   main.appendChild(head);
 
   const board=el('div','draft');
@@ -1952,6 +3265,470 @@ function renderSeries(main){
 
 
 
+/* ---------- season hub / standings / org sheet: from src/season.js ---------- */
+
+/* manageLOL — the Season hub, the standings table, and the org profile sheet.
+   The FM surfaces. Craft here is rhythm and restraint: one gold button on the
+   screen, hairline rules, tabular numerals that never jitter between rounds. */
+(function () {
+  'use strict';
+  const S = window.LOLSim;
+  const W = window.LOLWorld;
+
+  // Small local helpers so this module never depends on load order.
+  const el = (tag, cls, html) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html != null) e.innerHTML = html;
+    return e;
+  };
+  /** The mono all-caps rule every card in the app wears. */
+  function sectionLabel(title, sub) {
+    const d = el('div', 'seclabel');
+    d.innerHTML = '<span class="section-label" style="margin:0">' + title + '</span>' +
+      (sub ? '<span class="secsub mono">' + sub + '</span>' : '');
+    return d;
+  }
+
+  /* ────────────────────────────── the run strip ───────────────────────── */
+
+  const WEEK_GLYPH = {
+    match: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4l6 6M19 4l-6 6M12 11l-5 9h10l-5-9z"/></svg>',
+    market: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg>',
+    training: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h16M7 8v8M17 8v8"/></svg>',
+    event: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.4 5.5 6 .5-4.5 4 1.3 5.9L12 15.8 6.8 18.9 8.1 13 3.6 9l6-.5z"/></svg>',
+  };
+
+  function runStrip(G) {
+    const box = el('div', 'card run');
+    box.appendChild(sectionLabel('The run', 'Season ' + G.season + ' · ' + S.weekDef(G.week).window));
+    const strip = el('div', 'runstrip');
+    const start = Math.max(1, Math.min(41, G.week - 4));
+    for (let i = 0; i < 12; i++) {
+      const wk = start + i;
+      const d = S.weekDef(wk);
+      const cell = el('div', 'runcell k-' + d.kind + (wk === G.week ? ' now' : '') + (wk < G.week ? ' past' : ''));
+      cell.title = 'Week ' + wk + ' — ' + d.note;
+      const res = G.weekResults[G.season + ':' + wk];
+      cell.innerHTML =
+        '<span class="wknum">' + wk + '</span>' +
+        '<span class="wkico">' + WEEK_GLYPH[d.kind] + '</span>' +
+        '<span class="wkbar"></span>' +
+        '<span class="wkres ' + (res || '') + '">' + (res === 'w' ? 'W' : res === 'l' ? 'L' : '·') + '</span>';
+      strip.appendChild(cell);
+    }
+    box.appendChild(strip);
+    const legend = el('div', 'runlegend');
+    legend.innerHTML = [
+      ['match', 'match'], ['market', 'window'], ['training', 'scrim'], ['event', 'event'],
+    ].map((p) => '<span class="lg k-' + p[0] + '"><i></i>' + p[1] + '</span>').join('');
+    box.appendChild(legend);
+    return box;
+  }
+
+  /* ───────────────────────────── standings ────────────────────────────── */
+
+  function movementCell(move) {
+    if (!move) return '<span class="mv">·</span>';
+    return '<span class="mv ' + (move > 0 ? 'up' : 'dn') + '">' + (move > 0 ? '▲' : '▼') + Math.abs(move) + '</span>';
+  }
+
+  function formDots(form) {
+    const shown = form.slice(0, 5).reverse();
+    let html = '<span class="form">';
+    for (let i = 0; i < 5 - shown.length; i++) html += '<i class="n"></i>';
+    shown.forEach((w) => (html += '<i class="' + (w ? 'w' : 'l') + '"></i>'));
+    return html + '</span>';
+  }
+
+  function standingsTable(G, tier) {
+    const league = G.leagues[tier];
+    const cfg = league.cfg;
+    const rows = W.tableRows(G, tier);
+    const wrap = el('div', 'card table-card');
+
+    const head = el('div', 'tablehead');
+    head.innerHTML =
+      '<div><h3>' + cfg.name + '</h3><p class="sub">' +
+      (cfg.legs === 2 ? 'Double round-robin' : 'Single round-robin') + ' · Bo' + cfg.regularBestOf +
+      ' · top ' + cfg.playoffTeams + ' to playoffs' +
+      (cfg.relegationLine <= cfg.slots ? ' · bottom ' + (cfg.slots - cfg.relegationLine + 1) + ' relegated' : '') +
+      '</p></div>' +
+      '<span class="roundchip mono">R' + Math.max(1, league.round) + '/' + maxRound(league) + '</span>';
+    wrap.appendChild(head);
+
+    const t = el('table', 'standings');
+    t.innerHTML =
+      '<colgroup><col style="width:34px"><col style="width:30px"><col><col style="width:32px">' +
+      '<col style="width:32px"><col style="width:32px"><col style="width:44px"><col style="width:76px"><col style="width:52px"></colgroup>' +
+      '<thead><tr><th>Pos</th><th></th><th>Org</th><th class="r">P</th><th class="r">W</th><th class="r">L</th>' +
+      '<th class="r">GD</th><th>Form</th><th class="r">Win%</th></tr></thead>';
+    const body = el('tbody');
+
+    rows.forEach((row, i) => {
+      const place = i + 1;
+      if (place === cfg.playoffTeams + 1) body.appendChild(cutRow('up', 'Playoffs ▲'));
+      if (cfg.relegationLine <= cfg.slots && place === cfg.relegationLine) body.appendChild(cutRow('down', 'Relegation ▼'));
+
+      const org = G.orgs[row.orgId];
+      const played = row.wins + row.losses;
+      const gd = row.gameWins - row.gameLosses;
+      const tr = el('tr', row.orgId === G.you ? 'you' : '');
+      tr.dataset.org = row.orgId;
+      if (row.orgId === G.you) tr.setAttribute('aria-current', 'true');
+      tr.innerHTML =
+        '<td class="mono pos">' + place + '</td>' +
+        '<td>' + movementCell(row.move) + '</td>' +
+        '<td class="orgcell"><span class="otag mono">' + org.tag + '</span>' +
+        '<span class="oname">' + org.name + '</span>' +
+        (org.legacy >= 55 ? '<span class="laurel" title="' + S.statureLabel(org) + ' · ' + totalTitles(org) + ' titles · ' + org.seasons + ' seasons">⚜</span>' : '') +
+        '</td>' +
+        '<td class="mono r">' + played + '</td>' +
+        '<td class="mono r">' + row.wins + '</td>' +
+        '<td class="mono r">' + row.losses + '</td>' +
+        '<td class="mono r gd">' + (gd > 0 ? '<em class="up">+</em>' : gd < 0 ? '<em class="dn">−</em>' : '') + Math.abs(gd) + '</td>' +
+        '<td>' + formDots(row.form) + '</td>' +
+        '<td class="mono r wr">' + (played ? (100 * row.wins / played).toFixed(1) : '—') + '</td>';
+      body.appendChild(tr);
+    });
+    t.appendChild(body);
+    // One delegated listener for the whole table, never one per row.
+    body.onclick = (e) => {
+      const tr = e.target.closest && e.target.closest('tr[data-org]');
+      if (tr) window.openOrgSheet(tr.dataset.org);
+    };
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  function cutRow(kind, label) {
+    const tr = el('tr', 'cutrow ' + kind);
+    tr.innerHTML = '<td colspan="9"><span>' + label + '</span></td>';
+    return tr;
+  }
+
+  const maxRound = (league) => league.fixtures.reduce((m, f) => Math.max(m, f.round), 0);
+  const totalTitles = (org) => [1, 2, 3, 4].reduce((s, t) => s + (org.history.titles[t] || 0), 0);
+
+  /* ─────────────────────────── the fixture card ───────────────────────── */
+
+  function fixtureCard(G) {
+    const d = S.weekDef(G.week);
+    const card = el('div', 'card fixture');
+    const fx = W.yourFixture(G);
+
+    if (d.kind === 'match' && fx) {
+      const oppId = fx.a === G.you ? fx.b : fx.a;
+      const opp = G.orgs[oppId];
+      const you = G.orgs[G.you];
+      const mine = W.fastSide(G, G.you);
+      const theirs = W.fastSide(G, oppId);
+      const p = 1 / (1 + Math.pow(10, -(mine.strength - theirs.strength) / 15));
+      const league = G.leagues[you.tier];
+      const order = W.orderOf(league);
+
+      card.appendChild(sectionLabel('Next', 'Round ' + fx.round + ' · ' + (fx.a === G.you ? 'blue side' : 'red side')));
+      const vs = el('div', 'fxvs');
+      vs.innerHTML =
+        '<div class="fxside"><span class="otag mono big">' + you.tag + '</span><span class="pos mono">' + ord(order.indexOf(G.you) + 1) + '</span></div>' +
+        '<div class="fxmid"><span class="fxname">' + opp.name + '</span>' +
+        '<span class="fxstat">' + S.statureLabel(opp) + ' · legacy ' + Math.round(opp.legacy) + (opp.legacy >= 55 ? ' ⚜' : '') + '</span></div>' +
+        '<div class="fxside r"><span class="otag mono big">' + opp.tag + '</span><span class="pos mono">' + ord(order.indexOf(oppId) + 1) + '</span></div>';
+      card.appendChild(vs);
+
+      const bar = el('div', 'wpsplit');
+      bar.innerHTML = '<i style="width:' + (p * 100).toFixed(1) + '%"></i>';
+      card.appendChild(bar);
+      const pct = el('div', 'wplabels');
+      pct.innerHTML = '<span class="mono">' + Math.round(p * 100) + '% you</span><span class="mono">' + Math.round((1 - p) * 100) + '% ' + opp.tag + '</span>';
+      card.appendChild(pct);
+
+      const warn = matchWarnings(G, you);
+      if (warn) card.appendChild(warn);
+
+      const btn = el('button', 'btn primary wide', '▶  Play the series');
+      btn.onclick = () => window.startFixture(fx);
+      card.appendChild(btn);
+      const links = el('div', 'fxlinks');
+      links.innerHTML = '<a class="lnk" data-org="' + oppId + '">' + opp.name + ' profile ▸</a>';
+      links.onclick = (e) => { if (e.target.dataset.org) window.openOrgSheet(e.target.dataset.org); };
+      card.appendChild(links);
+      return card;
+    }
+
+    card.appendChild(sectionLabel(d.kind === 'market' ? 'The window' : d.kind === 'training' ? 'Training' : 'This week', d.window));
+    const body = el('div', 'weekbody');
+    body.innerHTML = '<p class="wknote">' + d.note + '</p>' + weekDetail(G, d);
+    card.appendChild(body);
+    const btn = el('button', 'btn primary wide', continueLabel(G));
+    btn.onclick = () => window.advanceWeek();
+    card.appendChild(btn);
+    return card;
+  }
+
+  function weekDetail(G, d) {
+    const you = G.orgs[G.you];
+    if (d.kind === 'training') {
+      const lineup = W.lineupOf(you);
+      const coh = lineup ? S.cohesion(you.chem, lineup).cohesion : 0;
+      return '<div class="kv"><span>Cohesion</span><b class="mono">' + coh.toFixed(1) + '</b></div>' +
+        '<div class="kv"><span>Facilities</span><b class="mono">' + Math.round(you.facilities) + '</b></div>' +
+        '<div class="kv"><span>Coaching</span><b class="mono">' + Math.round(you.coaching) + '</b></div>';
+    }
+    if (d.kind === 'market') {
+      const expiring = W.contractsOf(you).filter((c) => c.weeksRemaining <= 12).length;
+      return '<div class="kv"><span>Contracts expiring soon</span><b class="mono">' + expiring + '</b></div>' +
+        '<div class="kv"><span>Cash</span><b class="mono">' + you.cash.toFixed(1) + '◈</b></div>' +
+        '<div class="kv"><span>Wage bill</span><b class="mono">' + S.wageBill(W.contractsOf(you)).toFixed(1) + '◈/wk</b></div>';
+    }
+    const order = W.orderOf(G.leagues[you.tier]);
+    return '<div class="kv"><span>Position</span><b class="mono">' + ord(order.indexOf(G.you) + 1) + ' of ' + order.length + '</b></div>' +
+      '<div class="kv"><span>Prestige</span><b class="mono">' + Math.round(S.prestige(you)) + '</b></div>';
+  }
+
+  function matchWarnings(G, you) {
+    const lineup = W.lineupOf(you);
+    if (!lineup) {
+      const w = el('div', 'fxwarn');
+      w.textContent = '⚠ You cannot field five players.';
+      return w;
+    }
+    const notes = [];
+    S.ROLES.forEach((r) => {
+      const p = lineup[r];
+      if (p.state.fatigue > 65) notes.push(p.name + ' fatigue ' + Math.round(p.state.fatigue));
+    });
+    const coh = S.cohesion(you.chem, lineup);
+    if (coh.cohesion < 50) notes.push('cohesion ' + coh.cohesion.toFixed(0) + ' — the room is not settled');
+    if (!notes.length) return null;
+    const w = el('div', 'fxwarn');
+    w.textContent = '⚠ ' + notes.join(' · ');
+    return w;
+  }
+
+  function continueLabel(G) {
+    const d = S.weekDef(G.week);
+    if (d.kind === 'market') return '▶  Advance the week';
+    if (d.kind === 'training') return '▶  Run the week';
+    return '▶  Continue';
+  }
+
+  /* ─────────────────────────── side column cards ──────────────────────── */
+
+  function formCard(G) {
+    const you = G.orgs[G.you];
+    const league = G.leagues[you.tier];
+    const mine = league.results.filter((r) => r.a === G.you || r.b === G.you).slice(-5).reverse();
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('Form', mine.length ? 'last ' + mine.length : 'no games yet'));
+    if (!mine.length) {
+      card.appendChild(el('div', 'empty-note', 'The season has not started.'));
+      return card;
+    }
+    const list = el('div', 'formlist');
+    mine.forEach((r) => {
+      const home = r.a === G.you;
+      const oppId = home ? r.b : r.a;
+      const my = home ? r.score[0] : r.score[1];
+      const th = home ? r.score[1] : r.score[0];
+      const won = my > th;
+      const row = el('div', 'formrow');
+      row.innerHTML =
+        '<span class="mono rnd">R' + r.round + '</span>' +
+        '<span class="res ' + (won ? 'w' : 'l') + '">' + (won ? '▲' : '▼') + '</span>' +
+        '<span class="otag mono">' + G.orgs[oppId].tag + '</span>' +
+        '<span class="score mono">' + my + '–' + th + '</span>' +
+        '<span class="side">' + (home ? 'blue' : 'red') + '</span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
+  function pyramidCard(G) {
+    const you = G.orgs[G.you];
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('The pyramid', 'season ' + G.season));
+    const list = el('div', 'pyrlist');
+    S.PYRAMID.forEach((cfg) => {
+      const here = cfg.tier === you.tier;
+      const order = G.leagues[cfg.tier] ? W.orderOf(G.leagues[cfg.tier]) : [];
+      const row = el('div', 'pyrrow' + (here ? ' here' : ''));
+      row.innerHTML =
+        '<span class="tno mono">T' + cfg.tier + '</span>' +
+        '<span class="tname">' + cfg.name + '</span>' +
+        '<span class="tnote mono">' + (here ? ord(order.indexOf(G.you) + 1) + ' of ' + cfg.slots : cfg.slots + ' seats') + '</span>';
+      row.title = cfg.blurb;
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
+  function deskCard(G) {
+    const unread = G.inbox.filter((m) => !m.read).length;
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('The desk', unread ? unread + ' new' : 'clear'));
+    const list = el('div', 'desk');
+    G.inbox.slice(0, 5).forEach((m) => {
+      const row = el('div', 'deskrow k-' + (m.kind || 'info') + (m.read ? '' : ' unread'));
+      row.innerHTML = '<span class="dglyph"></span><span class="dtx">' + m.text + '</span><span class="dwk mono">wk ' + m.week + '</span>';
+      list.appendChild(row);
+    });
+    if (!G.inbox.length) list.appendChild(el('div', 'empty-note', 'Nothing yet.'));
+    card.appendChild(list);
+    return card;
+  }
+
+  /* ───────────────────────────── the org sheet ────────────────────────── */
+
+  function orgSheet(G, orgId) {
+    const org = G.orgs[orgId];
+    const sheet = el('div', 'orgsheet');
+    const close = el('button', 'iconbtn sheetclose', '✕');
+    close.onclick = () => window.closeOrgSheet();
+    sheet.appendChild(close);
+
+    const head = el('div', 'osheet-head');
+    head.innerHTML =
+      '<div class="crest"><span class="mono">' + org.tag + '</span></div>' +
+      '<div class="oid"><h2>' + org.name + '</h2>' +
+      '<p class="sub">' + regionName(org.region) + ' · founded season ' + org.founded + ' · ' + org.personality + '</p>' +
+      '<p class="blurb">“' + org.blurb + '”</p></div>' +
+      '<div class="prestigebox"><span class="pval mono">' + Math.round(S.prestige(org)) + '</span>' +
+      '<span class="plabel">Prestige</span><span class="pstature">' + S.statureLabel(org) + '</span>' +
+      '<span class="pbar"><i style="width:' + S.prestige(org).toFixed(0) + '%"></i></span>' +
+      '<span class="psplit mono">legacy ' + Math.round(org.legacy) + ' · standing ' + Math.round(org.standing) + '</span></div>';
+    sheet.appendChild(head);
+
+    sheet.appendChild(spineBlock(org));
+
+    const cols = el('div', 'osheet-cols');
+    cols.appendChild(rosterBlock(G, org));
+    cols.appendChild(orgReadBlock(G, org));
+    sheet.appendChild(cols);
+    return sheet;
+  }
+
+  /* The spine: one row per tier, one cell per season. The whole point of a
+     persistent world in a single glance — where this org has actually lived. */
+  function spineBlock(org) {
+    const card = el('div', 'card spine');
+    card.appendChild(sectionLabel('The spine', org.seasons + ' seasons'));
+    const grid = el('div', 'spinegrid');
+    const total = [1, 2, 3, 4].reduce((s, t) => s + (org.history.seasonsAtTier[t] || 0), 0);
+    if (!total) {
+      card.appendChild(el('div', 'empty-note', 'No history yet. Everyone starts somewhere.'));
+      return card;
+    }
+    [1, 2, 3, 4].forEach((t) => {
+      const row = el('div', 'spinerow');
+      const n = org.history.seasonsAtTier[t] || 0;
+      const titles = org.history.titles[t] || 0;
+      let cells = '';
+      for (let i = 0; i < n; i++) cells += '<i class="' + (i < titles ? 'title' : '') + '"></i>';
+      row.innerHTML = '<span class="tno mono">T' + t + '</span><span class="cells">' + cells + '</span>' +
+        '<span class="tcount mono">' + (n ? n : '—') + '</span>';
+      row.title = n ? n + ' season' + (n === 1 ? '' : 's') + ' at tier ' + t + (titles ? ', ' + titles + ' title' + (titles === 1 ? '' : 's') : '') : 'never';
+      grid.appendChild(row);
+    });
+    card.appendChild(grid);
+    const honors = el('div', 'honors');
+    const titleTotal = totalTitles(org);
+    honors.innerHTML =
+      '<span>' + (titleTotal ? titleTotal + ' title' + (titleTotal === 1 ? '' : 's') : 'No titles') + '</span>' +
+      '<span>Best tier reached: T' + org.history.bestTier + '</span>' +
+      '<span>' + (org.history.seasonsAtTier[1] ? org.history.seasonsAtTier[1] + ' seasons in the top league' : 'Never in the top league') + '</span>';
+    card.appendChild(honors);
+    return card;
+  }
+
+  function rosterBlock(G, org) {
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('Roster', org.name === G.orgs[G.you].name ? 'yours' : 'their five'));
+    const list = el('div', 'orgroster');
+    S.ROLES.forEach((r) => {
+      const p = org.roster[r];
+      const row = el('div', 'orow');
+      if (!p) {
+        row.innerHTML = '<span class="role-tag">' + r.slice(0, 3) + '</span><span class="oempty">vacant</span>';
+      } else {
+        const c = org.contracts[p.id];
+        const ca = Math.round(S.currentAbility(p.attributes));
+        const weeks = c ? c.weeksRemaining : 0;
+        row.innerHTML =
+          '<span class="role-tag">' + r.slice(0, 3) + '</span>' +
+          '<span class="oname">' + p.name + '</span>' +
+          '<span class="mono oage">' + Math.floor(p.age) + '</span>' +
+          '<span class="mono oca">' + ca + '</span>' +
+          '<span class="termbar' + (weeks <= 12 ? ' warn' : '') + '"><i style="width:' +
+          Math.max(4, Math.min(100, (weeks / 120) * 100)).toFixed(0) + '%"></i></span>' +
+          '<span class="mono oterm">' + weeks + 'w</span>';
+      }
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
+  function orgReadBlock(G, org) {
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('The org', 'your scouts’ read'));
+    const list = el('div', 'orgread');
+    [
+      ['Facilities', org.facilities], ['Coaching', org.coaching],
+      ['Analytics', org.analytics], ['Scouting', org.scouting], ['Fanbase', org.fanbase],
+    ].forEach((pair) => {
+      const row = el('div', 'oread');
+      row.innerHTML = '<span>' + pair[0] + '</span><span class="track"><i style="width:' + pair[1].toFixed(0) + '%"></i></span>' +
+        '<span class="mono">' + descriptor(pair[1]) + '</span>';
+      list.appendChild(row);
+    });
+    const cs = W.contractsOf(org);
+    const row = el('div', 'oread wide');
+    row.innerHTML = '<span>Wage bill</span><span class="track"><i style="width:' +
+      Math.min(100, S.wageBill(cs) * 4).toFixed(0) + '%"></i></span><span class="mono">' + S.wageBill(cs).toFixed(1) + '◈/wk</span>';
+    list.appendChild(row);
+    card.appendChild(list);
+    return card;
+  }
+
+  const descriptor = (v) => (v >= 85 ? 'elite' : v >= 70 ? 'very good' : v >= 55 ? 'good' : v >= 40 ? 'fair' : v >= 25 ? 'poor' : 'threadbare');
+  const regionName = (id) => ({ mer: 'Meridia', kyo: 'Kyorin', tia: 'Tianxu', van: 'Vantia', wilds: 'the Wilds' })[id] || id;
+  const ord = (n) => (n <= 0 ? '—' : n + (n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'));
+
+  /* ─────────────────────────────── assembly ───────────────────────────── */
+
+  window.renderSeasonHub = function (G, main) {
+    const you = G.orgs[G.you];
+    const head = el('div', 'screen-head');
+    head.innerHTML =
+      '<h2>' + S.LEAGUE_BY_TIER[you.tier].name + '</h2>' +
+      '<p class="sub">' + S.LEAGUE_BY_TIER[you.tier].blurb + '</p>';
+    main.appendChild(head);
+
+    main.appendChild(runStrip(G));
+
+    const grid = el('div', 'hub');
+    const left = el('div', 'hubcol');
+    left.appendChild(fixtureCard(G));
+    left.appendChild(standingsTable(G, you.tier));
+    const right = el('div', 'hubcol');
+    right.appendChild(formCard(G));
+    right.appendChild(pyramidCard(G));
+    right.appendChild(deskCard(G));
+    grid.appendChild(left);
+    grid.appendChild(right);
+    main.appendChild(grid);
+  };
+
+  window.buildOrgSheet = orgSheet;
+  window.seasonOrd = ord;
+  window.seasonStandingsTable = standingsTable;
+})();
+
+
+
 /* ---------- sponsors ---------- */
 function renderSponsors(main){
   const head=el('div','screen-head');
@@ -2000,6 +3777,13 @@ function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 /* ---------- wiring ---------- */
 document.querySelectorAll('.nav[data-screen]').forEach(n=>n.onclick=()=>{G.ui.screen=n.dataset.screen;render();});
 $('#newGameBtn').onclick=()=>{if(confirm('Start a fresh career? Current progress is lost.'))newGame();};
+$('#inboxBtn').onclick=()=>{G.ui.drawer=!G.ui.drawer;render();};
+document.addEventListener('keydown',(e)=>{
+  if(e.target&&/input|textarea|select/i.test(e.target.tagName))return;
+  if(e.key==='Escape'){ if(G.ui.drawer){G.ui.drawer=false;render();} else if(G.ui.orgSheet){window.closeOrgSheet();} return; }
+  if(e.key==='i'||e.key==='I'){G.ui.drawer=!G.ui.drawer;render();return;}
+  if(e.key===' '&&G.ui.screen!=='compete'){e.preventDefault();$('#continueBtn').click();}
+});
 $('#themeBtn').onclick=()=>{
   const root=document.documentElement;const cur=root.getAttribute('data-theme');
   const next=cur==='dark'?'light':cur==='light'?'dark':(matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');

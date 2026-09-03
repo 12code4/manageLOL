@@ -162,24 +162,23 @@ function nextGame(){
   m.gameIndex++; beginDraft();
 }
 function concludeSeries(yw,ow){
-  const m=G.match; clearTimers(); const won=yw>ow; const st=stage(); const opp=m.opp;
+  const m=G.match; clearTimers(); const won=yw>ow; const opp=m.opp; const cfg=S.LEAGUE_BY_TIER[you().tier];
   G.ui.match={series:{scoreA:yw,scoreB:ow,games:m.games,winner:won?'a':'b',bestOf:3},opp:opp,won:won};
+  // The result goes into the table this week; the rest of the pyramid plays too.
+  window.commitYourSeries(yw,ow);
+  const order=window.LOLWorld.orderOf(G.leagues[you().tier]);
+  const place=order.indexOf(G.you)+1;
   if(won){
-    G.cash+=st.prize; G.reputation=Math.min(100,G.reputation+st.rep); G.stageWins++; G.matchOpp=null;
-    pushLog('Won the series vs <b>'+opp.name+'</b> '+yw+'-'+ow+' (+'+st.prize+'◈, +'+st.rep+' rep).','good');
-    toast('Series won vs '+opp.name+' — '+yw+'-'+ow+'!','good');
-    if(G.stageWins>=st.wins){
-      if(G.stageIndex<STAGES.length-1){ G.stageIndex++; G.stageWins=0; const ns=stage(); pushLog('★ Promoted to <b>'+ns.name+'</b>!','good'); toast('★ You\'ve reached '+ns.name+'!','good'); refreshSponsorOffers(); }
-      else { pushLog('★★ You are WORLD CHAMPIONS. The garage org made it all the way.','good'); toast('★★ WORLDS CHAMPIONS. You did it.','good'); }
-    }
+    pushLog('Beat <b>'+opp.name+'</b> '+yw+'–'+ow+'. You are '+window.seasonOrd(place)+' in '+cfg.name+'.','good');
+    toast('Series won vs '+opp.name+' — '+yw+'–'+ow+'.','good');
   } else {
-    pushLog('Lost the series vs '+opp.name+' '+ow+'-'+yw+'. Regroup and try again.','bad');
-    toast('Series lost vs '+opp.name+'. Back to the drawing board.','bad');
+    pushLog('Lost to '+opp.name+' '+ow+'–'+yw+'. '+window.seasonOrd(place)+' in '+cfg.name+'.','bad');
+    toast('Series lost vs '+opp.name+'.','bad');
   }
   m.phase='series'; G.patchFamiliarity=Math.min(100,G.patchFamiliarity+6);
   advanceWeekQuiet(); render();
 }
-function endSeriesView(){ clearTimers(); G.match=null; render(); }
+function endSeriesView(){ clearTimers(); G.match=null; G.ui.screen='season'; render(); }
 function crowdPush(trigger,payload,count){ const m=G.match; if(!m)return; const msgs=S.crowdReact(trigger,payload,m.chatRng,count); m.crowd=m.crowd.concat(msgs).slice(-40); }
 function commsPush(line){ const m=G.match; if(!m||!line)return; m.comms=m.comms.concat([line]).slice(-40); }
 
@@ -228,7 +227,7 @@ function renderDraft(main){
   const ours=!!step&&step.side===m.yourSide, manual=ours&&!AUTO();
   const you=yourTeam(), them=oppTeam(m.opp);
   const head=el('div','screen-head');
-  head.innerHTML='<p class="eyebrow">'+stage().name+' · vs '+m.opp.name+'</p><h1 class="title cond">Draft — Game '+(m.gameIndex+1)+'</h1><p class="sub">Blue buys first pick; Red buys the counter-pick window. '+(AUTO()?'Your team is drafting for itself — listen to the comms.':'You are on the clock for every pick and ban.')+'</p>';
+  head.innerHTML='<p class="eyebrow">'+stage().name+' · round '+(G.ui.fixture?G.ui.fixture.round:'—')+' · vs '+m.opp.name+'</p><h1 class="title cond">Draft — Game '+(m.gameIndex+1)+'</h1><p class="sub">Blue buys first pick; Red buys the counter-pick window. '+(AUTO()?'Your team is drafting for itself — listen to the comms.':'You are on the clock for every pick and ban.')+'</p>';
   main.appendChild(head);
 
   const board=el('div','draft');

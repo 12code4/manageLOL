@@ -181,16 +181,26 @@
   function genLadderEntity(rng, opts) {
     const plant = opts.plant || null;
     let qc = 55, ar = [16, 24];
-    if (plant === 'hiddenGem' || plant === 'smurf') { qc = 72; ar = [16, 19]; }
-    if (plant === 'boosted' || plant === 'bust') { qc = 58; ar = [20, 25]; }
+    // Band-aware generation: the visible ladder starts at Onyx I, so accounts
+    // are generated *to* a band rather than to one flat quality centre.
+    const bandDef = opts.band && root.LOLSim.BAND_BY_KEY ? root.LOLSim.BAND_BY_KEY[opts.band] : null;
+    if (bandDef) { qc = bandDef.qualityCenter; ar = bandDef.ageRange; }
+    if (plant === 'hiddenGem' || plant === 'smurf') { qc = bandDef ? bandDef.qualityCenter - 4 : 72; ar = [16, 19]; }
+    if (plant === 'boosted' || plant === 'bust') { qc = bandDef ? bandDef.qualityCenter - 6 : 58; ar = [20, 25]; }
     const player = genPlayer(rng, { id: opts.id, region: opts.region, qualityCenter: qc, ageRange: ar });
     if (plant === 'hiddenGem') player.attributes.growth.potential = c100(Math.max(player.attributes.growth.potential, 82 + rng.range(0, 10)));
     if (plant === 'bust') player.attributes.growth.potential = c100(Math.min(player.attributes.growth.potential, 55));
+    if (bandDef && bandDef.potentialBonus > 0 && plant !== 'bust')
+      player.attributes.growth.potential = c100(player.attributes.growth.potential + bandDef.potentialBonus);
     const solo = soloAbility(player.attributes), pot = player.attributes.growth.potential;
     const autofill = plant === 'hiddenGem' || rng.chance(0.12);
     const boost = plant === 'boosted' ? rng.range(350, 600) : (rng.chance(0.08) ? rng.range(150, 400) : 0);
     const games = (plant === 'smurf' || plant === 'hiddenGem') ? Math.round(rng.range(30, 70)) : Math.round(rng.range(140, 320));
-    const mmr = computeMmr({ soloAbility: solo, maxSoloApt: maxSoloApt(player.attributes), composure: player.attributes.mental.composure, tiltResistance: player.attributes.mental.tiltResistance, autofill: autofill, boost: boost, games: games });
+    const derived = computeMmr({ soloAbility: solo, maxSoloApt: maxSoloApt(player.attributes), composure: player.attributes.mental.composure, tiltResistance: player.attributes.mental.tiltResistance, autofill: autofill, boost: boost, games: games });
+    // A forced MMR moves only what the ladder shows; steady stays truth, so an
+    // account that belongs far higher reads — correctly — as a smurf.
+    const mmr = opts.forceMmr === undefined ? derived
+      : { current: opts.forceMmr, steady: derived.steady, tier: tierFromMmr(opts.forceMmr).key };
     const flags = [];
     if (autofill) flags.push('autofillVictim');
     if (boost > 300) flags.push('boosted');
@@ -712,4 +722,489 @@
     for (let i = 0; i < n; i++) { let l = pool[i]; if (used[l]) continue; used[l] = 1; out.push(Object.assign(speakerSplit(fillC(l, c)), { mood: mood })); }
     return out;
   };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ── world: orgs, development, contracts, the ladder cutoff, the season ──
+   Port of packages/core/src/{world,players/development,ladder/bands,season}.
+   Same constants, same formulas, same determinism guarantees. */
+(function (root) {
+  'use strict';
+  const S = root.LOLSim;
+  const Rng = S.Rng, ROLES = S.ROLES, clamp = S.clamp, round = S.round;
+  const c100 = (x) => clamp(x, 0, 100);
+  const mean = (xs) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
+
+  // ---------- org identities (injected from packages/data at build) ----------
+  S.ORG_PACK = /*__ORGS__*/[];
+  S.ORG_NAME_PARTS = /*__ORGPARTS__*/{ prefixes: [], suffixes: [], standalone: [], qualifiers: [] };
+
+  // ---------- orgs ----------
+  S.TIER_WEIGHT = { 1: 1, 2: 0.45, 3: 0.18, 4: 0.05 };
+  const LEGACY_GAIN = 4.2, LEGACY_DECAY = 0.35, STANDING_RAMP = 0.34, FACILITY_DECAY = 1.1;
+
+  S.prestige = (o) => c100(0.62 * o.standing + 0.38 * o.legacy);
+  S.statureLabel = function (o) {
+    const p = S.prestige(o);
+    if (p >= 82) return o.legacy >= 60 ? 'Dynasty' : 'Superpower';
+    if (p >= 66) return o.legacy >= 45 ? 'Institution' : 'Contender';
+    if (p >= 48) return 'Established';
+    if (p >= 30) return o.seasons <= 3 ? 'Upstart' : 'Journeyman';
+    return o.seasons <= 2 ? 'Newcomer' : 'Minnow';
+  };
+  S.orgEffects = function (o) {
+    const env = 0.55 * o.facilities + 0.45 * o.coaching;
+    return {
+      coachQuality: round(o.coaching, 1),
+      patchFamiliarity: round(o.analytics, 1),
+      chemRampMult: round(0.85 + 0.4 * (o.facilities / 100), 3),
+      developmentMult: round(0.55 + 0.9 * (env / 100), 3),
+    };
+  };
+  S.tierWealth = (t) => ({ 1: 240, 2: 90, 3: 34, 4: 14 })[t];
+  S.accrueLegacy = (legacy, tier) => c100(legacy + LEGACY_GAIN * S.TIER_WEIGHT[tier] * (1 - legacy / 100) - LEGACY_DECAY);
+  S.standingTarget = function (tier, placeFraction) {
+    const ceil = { 1: 96, 2: 72, 3: 50, 4: 30 }[tier], floor = { 1: 56, 2: 36, 3: 20, 4: 6 }[tier];
+    return floor + (ceil - floor) * (1 - clamp(placeFraction, 0, 1));
+  };
+
+  S.seedOrg = function (rng, identity, tier, history) {
+    const seasons = Math.max(0, history);
+    let legacy = 0, best = tier;
+    const titles = { 1: 0, 2: 0, 3: 0, 4: 0 }, atTier = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    for (let s = 0; s < seasons; s++) {
+      const drift = rng.chance(0.22) ? (rng.chance(0.5) ? -1 : 1) : 0;
+      const t = clamp(tier + drift, 1, 4);
+      atTier[t]++; if (t < best) best = t;
+      legacy = S.accrueLegacy(legacy, t);
+      if (rng.chance(0.12 * S.TIER_WEIGHT[t] + 0.04)) titles[t]++;
+    }
+    const p = identity.personality;
+    const infra = (bias) => c100(rng.gaussian(30 + 52 * (1 - (tier - 1) / 3) + bias, 9));
+    const standing = c100(rng.gaussian(S.standingTarget(tier, 0.5), 7));
+    return {
+      id: identity.id, name: identity.name, tag: identity.tag, region: identity.region,
+      personality: p, blurb: identity.blurb,
+      founded: -seasons, seasons: seasons,
+      legacy: round(legacy, 2), standing: round(standing, 2),
+      facilities: infra(p === 'academy' ? 8 : 0),
+      coaching: infra(p === 'methodical' ? 10 : p === 'chaotic' ? -8 : 0),
+      analytics: infra(p === 'methodical' ? 12 : p === 'superteam' ? -4 : 0),
+      scouting: infra(p === 'academy' ? 12 : p === 'superteam' ? -6 : 0),
+      fanbase: c100(rng.gaussian(18 + 0.55 * legacy + 0.25 * standing, 8)),
+      cash: round(S.tierWealth(tier) * rng.range(0.7, 1.4), 1),
+      tier: tier,
+      history: { titles: titles, bestTier: best, seasonsAtTier: atTier, finishes: [] },
+      roster: { top: null, jungle: null, mid: null, bot: null, support: null },
+      contracts: {},
+    };
+  };
+
+  S.advanceOrgSeason = function (org, out) {
+    const pf = out.of <= 1 ? 0 : (out.place - 1) / (out.of - 1);
+    const standing = c100(org.standing + (S.standingTarget(out.tier, pf) - org.standing) * STANDING_RAMP);
+    let legacy = S.accrueLegacy(org.legacy, out.tier);
+    if (out.wonTitle) legacy = c100(legacy + 3.4 * S.TIER_WEIGHT[out.tier] + 0.6);
+    const spend = Math.max(0, out.investment || 0);
+    const lift = (v, share) => c100(v + 9 * (1 - v / 100) * Math.sqrt(Math.max(0, (spend * share) / 40)) - FACILITY_DECAY);
+    const titles = Object.assign({}, org.history.titles); if (out.wonTitle) titles[out.tier]++;
+    const atTier = Object.assign({}, org.history.seasonsAtTier); atTier[out.tier]++;
+    const nextPrestige = 0.62 * standing + 0.38 * legacy;
+    return Object.assign({}, org, {
+      seasons: org.seasons + 1,
+      standing: round(standing, 2), legacy: round(legacy, 2),
+      facilities: round(lift(org.facilities, 0.34), 2),
+      coaching: round(lift(org.coaching, 0.26), 2),
+      analytics: round(lift(org.analytics, 0.22), 2),
+      scouting: round(lift(org.scouting, 0.18), 2),
+      fanbase: round(c100(org.fanbase + (nextPrestige - org.fanbase) * 0.22 + (out.wonTitle ? 4 : 0) - 0.6), 2),
+      cash: round(org.cash + (out.netCash || 0) - spend, 1),
+      tier: out.tier,
+      history: {
+        titles: titles, bestTier: Math.min(org.history.bestTier, out.tier), seasonsAtTier: atTier,
+        finishes: [{ season: out.season, tier: out.tier, place: out.place, of: out.of }].concat(org.history.finishes).slice(0, 24),
+      },
+    });
+  };
+
+  S.investmentBudget = function (o) {
+    const rate = { superteam: 0.10, academy: 0.26, stable: 0.16, chaotic: 0.08, methodical: 0.24 }[o.personality];
+    return round(Math.max(0, (o.cash - S.tierWealth(o.tier) * 0.35) * rate), 1);
+  };
+
+  S.generateOrg = function (rng, id, region, tier, taken) {
+    const P = S.ORG_NAME_PARTS;
+    let name = '';
+    for (let i = 0; i < 40 && !name; i++) {
+      const stem = rng.chance(0.55) ? rng.pick(P.prefixes) + rng.pick(P.suffixes) : rng.pick(P.standalone);
+      const q = rng.pick(P.qualifiers);
+      const cand = q === '' ? stem : stem + ' ' + q;
+      if (!taken[cand]) name = cand;
+    }
+    if (!name) name = rng.pick(P.standalone) + ' ' + id.toUpperCase();
+    const letters = name.replace(/[^A-Za-z]/g, '').toUpperCase();
+    const personalities = ['superteam', 'academy', 'stable', 'chaotic', 'methodical'];
+    return S.seedOrg(rng, {
+      id: id, name: name, tag: letters.slice(0, 3) || 'NEW', region: region,
+      personality: rng.pick(personalities),
+      blurb: 'A new name in the scene. No history, no habits, nothing to lose.',
+    }, tier, 0);
+  };
+
+  // ---------- development ----------
+  const DEV_BASE = 0.085, FULL_SPEED_HEADROOM = 22;
+  S.LADDER_ENV = 22; S.LADDER_PLAYTIME = 25;
+  S.ladderContext = () => ({ environment: 22, playingTime: 25, mentorship: 0, success: 0.5, offRole: false });
+  S.driveScore = (a) => c100(0.45 * a.growth.growthRate + 0.30 * a.growth.learningRate + 0.25 * a.growth.workEthic);
+  S.supportScore = (ctx) => c100(0.5 * ctx.environment + 0.3 * ctx.playingTime + 0.2 * ctx.mentorship);
+  S.ageGrowthMult = function (age, peakAge) {
+    const t = clamp((age - 16) / Math.max(1, peakAge - 16), 0, 1);
+    return clamp(1.32 * (1 - t * t), 0.04, 1.32);
+  };
+  S.growthMix = function (age) {
+    if (age < 21) return { mechanical: 0.45, knowledge: 0.35, mental: 0.20 };
+    if (age < 25) return { mechanical: 0.30, knowledge: 0.45, mental: 0.25 };
+    return { mechanical: 0.10, knowledge: 0.55, mental: 0.35 };
+  };
+  const FAM_W = { mechanical: 0.44, knowledge: 0.34, mental: 0.22 };
+  const MECH_K = ['mechanics', 'laning', 'teamfighting', 'reflexes', 'positioning'];
+  const KNOW_K = ['mapAwareness', 'waveManagement', 'objectiveControl', 'visionControl', 'rotations', 'adaptability', 'shotcalling'];
+  const MENT_K = ['composure', 'consistency', 'focus', 'clutch', 'tiltResistance'];
+
+  S.developWeek = function (player, ctx, rng) {
+    const a = player.attributes, g = a.growth, age = player.age;
+    if (age >= g.declineStartAge) {
+      const rate = 0.0055 * (g.declineRate / 50) * (1 + 0.45 * (age - g.declineStartAge));
+      const resist = 0.75 + 0.5 * (1 - g.workEthic / 100);
+      return { delta: round(-rate * resist, 4), leap: false, declining: true };
+    }
+    const headroom = clamp((g.potential - S.currentAbility(a)) / FULL_SPEED_HEADROOM, 0, 1.15);
+    if (headroom <= 0) return { delta: 0, leap: false, declining: false };
+    const drive = 0.45 + 1.1 * (S.driveScore(a) / 100);
+    const support = 0.45 + 1.1 * (S.supportScore(ctx) / 100);
+    let delta = DEV_BASE * headroom * S.ageGrowthMult(age, g.peakAge) * drive * support
+      * (0.88 + 0.24 * clamp(ctx.success, 0, 1)) * (ctx.offRole ? 0.85 : 1);
+    const leapChance = age < 22 ? 0.018 * headroom * (S.supportScore(ctx) / 100) : 0;
+    const leap = leapChance > 0 && rng.chance(leapChance);
+    if (leap) delta *= 3.2;
+    return { delta: round(delta, 4), leap: leap, declining: false };
+  };
+
+  S.applyDevelopment = function (player, week, rng) {
+    if (!week.delta) return;
+    const a = player.attributes;
+    const ceiling = c100(a.growth.potential + 6);
+    const mix = week.declining
+      ? { mechanical: 0.75 + 0.25 * (a.growth.mechanicalDeclineBias / 100), knowledge: -0.18, mental: -0.05 }
+      : S.growthMix(player.age);
+    const bump = (obj, keys, fam) => {
+      if (!fam) return;
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i]; if (obj[k] === undefined) continue;
+        const next = obj[k] + fam * (0.7 + 0.6 * rng.float());
+        obj[k] = week.delta > 0 ? Math.min(c100(next), ceiling) : c100(next);
+      }
+    };
+    bump(a.mechanical, MECH_K, (week.delta * mix.mechanical) / FAM_W.mechanical);
+    bump(a.gameKnowledge, KNOW_K, (week.delta * mix.knowledge) / FAM_W.knowledge);
+    bump(a.mental, MENT_K, (week.delta * mix.mental) / FAM_W.mental);
+  };
+
+  S.developSeason = function (player, ctx, rng, weeks) {
+    const w = weeks || 40, before = S.currentAbility(player.attributes);
+    let leaps = 0;
+    for (let i = 0; i < w; i++) {
+      const week = S.developWeek(player, ctx, rng);
+      if (week.leap) leaps++;
+      S.applyDevelopment(player, week, rng);
+    }
+    player.age = round(player.age + w / 52, 2);
+    return { gained: round(S.currentAbility(player.attributes) - before, 2), leaps: leaps };
+  };
+
+  // ---------- contracts ----------
+  S.WAGE_BASE = 0.22; S.WAGE_CURVE = 1.068; S.SEASON_WEEKS = 40; S.ACCEPT_THRESHOLD = 0.72;
+  S.tierWageMult = (t) => ({ 1: 1.25, 2: 1, 3: 0.8, 4: 0.65 })[t];
+
+  S.wageDemand = function (player, tier, orgPrestige) {
+    const ca = S.currentAbility(player.attributes), g = player.attributes.growth, age = player.age;
+    const potentialPremium = Math.min(1.4, 1 + 0.011 * Math.max(0, g.potential - ca));
+    const ageFactor = age >= g.declineStartAge ? 0.85 : age <= 18 ? 0.92 : 1;
+    const prestigeDiscount = clamp(1.12 - 0.0022 * c100(orgPrestige), 0.9, 1.15);
+    const star = 1 + 0.0025 * player.attributes.brand.starPower;
+    return round(Math.max(0.05, S.WAGE_BASE * Math.pow(S.WAGE_CURVE, ca - 50)
+      * potentialPremium * ageFactor * S.tierWageMult(tier) * prestigeDiscount * star), 3);
+  };
+  S.defaultBuyout = (wage, weeks) => round(wage * weeks * 1.8 + wage * 12, 1);
+
+  S.evaluateOffer = function (player, org, offer, tier) {
+    const p = player.attributes.personality, pres = S.prestige(org);
+    const demand = S.wageDemand(player, tier, pres);
+    const wageRatio = clamp(offer.wage / Math.max(0.01, demand), 0, 1.6);
+    const prestigePull = (0.4 + 0.6 * (p.ambition / 100)) * (pres / 100);
+    const seat = clamp(offer.starterChance, 0, 1);
+    const loyalty = offer.renewal ? p.loyalty / 100 : 0;
+    const lengthFit = offer.weeks >= S.SEASON_WEEKS * 2 ? (p.ambition > 70 ? -0.03 : 0.04) : 0;
+    const utility = clamp(0.48 * wageRatio + 0.22 * prestigePull + 0.20 * seat + 0.10 * loyalty + lengthFit, 0, 1.6);
+    let reason;
+    if (wageRatio < 0.8) reason = 'the money is short';
+    else if (seat < 0.5) reason = 'no guarantee of a starting seat';
+    else if (prestigePull < 0.2 && p.ambition > 65) reason = 'the project is not ambitious enough';
+    else if (utility >= S.ACCEPT_THRESHOLD) reason = offer.renewal ? 'happy to stay' : 'a step up';
+    else reason = 'not convinced';
+    return { accepted: utility >= S.ACCEPT_THRESHOLD, utility: round(utility, 3), reason: reason };
+  };
+
+  S.offerToAccept = function (player, org, tier, starterChance, renewal) {
+    const p = player.attributes.personality, pres = S.prestige(org);
+    const demand = S.wageDemand(player, tier, pres);
+    const nonWage = 0.22 * (0.4 + 0.6 * (p.ambition / 100)) * (pres / 100)
+      + 0.20 * clamp(starterChance, 0, 1) + 0.10 * (renewal ? p.loyalty / 100 : 0);
+    return round(demand * clamp((S.ACCEPT_THRESHOLD - nonWage) / 0.48, 0, 1.6) * 1.02, 3);
+  };
+
+  S.wageBill = (contracts) => round(contracts.reduce((s, c) => s + c.wage, 0), 3);
+  S.runwayWeeks = function (org, contracts, weeklyIncome) {
+    const net = weeklyIncome - S.wageBill(contracts);
+    return net >= 0 ? Infinity : Math.max(0, Math.floor(org.cash / -net));
+  };
+  S.financialState = function (org, contracts, weeklyIncome) {
+    if (org.cash < 0) return 'insolvent';
+    const r = S.runwayWeeks(org, contracts, weeklyIncome);
+    if (r === Infinity) return 'healthy';
+    return r > S.SEASON_WEEKS / 2 ? 'tight' : 'critical';
+  };
+  S.attractsApproach = function (contract, player, rng) {
+    const ca = S.currentAbility(player.attributes);
+    if (ca < 55) return false;
+    const base = contract.weeksRemaining <= S.SEASON_WEEKS / 2 ? 0.05 : 0.012;
+    return rng.chance(base * (0.4 + clamp((ca - 55) / 40, 0, 1)));
+  };
+  /* An expiry is reported exactly once: an already-expired deal is left alone. */
+  S.tickContracts = function (contracts) {
+    const expired = [];
+    contracts.forEach((c) => {
+      if (c.weeksRemaining <= 0) return;
+      c.weeksRemaining--;
+      if (c.weeksRemaining <= 0) expired.push(c);
+    });
+    return expired;
+  };
+  S.bidInterest = function (org, player, opts) {
+    const ca = S.currentAbility(player.attributes);
+    const upgrade = (ca - opts.incumbentAbility) / 20;
+    if (upgrade <= 0 && org.personality !== 'academy') return 0;
+    const wage = S.wageDemand(player, opts.tier, S.prestige(org));
+    if (wage > opts.budgetPerWeek) return 0;
+    const youth = Math.max(0, player.attributes.growth.potential - ca) / 40;
+    const taste = {
+      superteam: { now: 1.15, later: 0.35 }, academy: { now: 0.5, later: 1.3 },
+      stable: { now: 0.9, later: 0.8 }, chaotic: { now: 1, later: 0.9 }, methodical: { now: 0.85, later: 1 },
+    }[org.personality];
+    const afford = clamp(1 - wage / Math.max(0.01, opts.budgetPerWeek), 0, 1);
+    return round(clamp(taste.now * clamp(upgrade, 0, 1.4) * 0.6 + taste.later * clamp(youth, 0, 1) * 0.4 + 0.15 * afford, 0, 1), 3);
+  };
+
+  // ---------- the visible ladder ----------
+  S.SHOW_CUTOFF = 2525; S.DEEP_FLOOR = 2050; S.DEEP_SCOUT_COST = 4;
+  S.BAND_DEFS = [
+    { key: 'onyxI', floor: 2525, qualityCenter: 66, potentialBonus: 0, ageRange: [16, 24], label: 'Onyx I' },
+    { key: 'ascendant', floor: 2600, qualityCenter: 71, potentialBonus: 2, ageRange: [16, 24], label: 'Ascendant' },
+    { key: 'paragon', floor: 2850, qualityCenter: 76, potentialBonus: 4, ageRange: [17, 25], label: 'Paragon' },
+    { key: 'apex', floor: 3050, qualityCenter: 81, potentialBonus: 7, ageRange: [17, 26], label: 'Apex' },
+  ];
+  S.BAND_BY_KEY = {}; S.BAND_DEFS.forEach((b) => (S.BAND_BY_KEY[b.key] = b));
+  S.bandFromMmr = function (mmr) {
+    if (mmr < S.SHOW_CUTOFF) return null;
+    let out = 'onyxI';
+    S.BAND_DEFS.forEach((b) => { if (mmr >= b.floor) out = b.key; });
+    return out;
+  };
+  S.onBoard = (mmr) => mmr >= 2850;
+  S.visibleOnLadder = (mmr) => mmr >= S.SHOW_CUTOFF;
+  S.deepScoutGemChance = (networkTier, analystScouting) =>
+    clamp(0.18 + 0.22 * (networkTier / 3) + 0.10 * ((c100(analystScouting) - 50) / 50), 0.10, 0.55);
+  S.deepScoutTargetMmr = (rng) => Math.round(rng.range(S.DEEP_FLOOR, S.SHOW_CUTOFF));
+  S.reentryMmr = (lastMmr, steady) => Math.round(0.55 * lastMmr + 0.45 * steady);
+  S.SOLO_PHASE_MULT = { preseason: 1.2, regular: 1, playoffs: 0.5, offseason: 1.8 };
+  S.soloGamesPerWeek = (workEthic, phase, contracted) =>
+    Math.round((contracted ? 6 : 6 * 3.4) * (0.7 + 0.6 * (c100(workEthic) / 100)) * S.SOLO_PHASE_MULT[phase]);
+
+  // ---------- fixtures & standings ----------
+  S.roundRobin = function (teams, legs) {
+    legs = legs || 1;
+    if (teams.length < 2) return [];
+    const BYE = ' bye';
+    const field = teams.length % 2 === 0 ? teams.slice() : teams.concat([BYE]);
+    const n = field.length, rounds = n - 1, half = n / 2;
+    const blue = {}; teams.forEach((t) => (blue[t] = 0));
+    const rot = field.slice(), leg1 = [];
+    for (let r = 0; r < rounds; r++) {
+      for (let i = 0; i < half; i++) {
+        const x = rot[i], y = rot[n - 1 - i];
+        if (x === BYE || y === BYE) continue;
+        const xFirst = blue[x] !== blue[y] ? blue[x] < blue[y] : (r % 2 === 0 ? x < y : x > y);
+        const a = xFirst ? x : y, b = xFirst ? y : x;
+        blue[a]++;
+        leg1.push({ round: r + 1, a: a, b: b });
+      }
+      const last = rot[n - 1];
+      for (let i = n - 1; i > 1; i--) rot[i] = rot[i - 1];
+      rot[1] = last;
+    }
+    const out = [];
+    for (let leg = 0; leg < legs; leg++) {
+      const off = leg * rounds, flip = leg % 2 === 1;
+      leg1.forEach((m) => out.push(flip ? { round: m.round + off, a: m.b, b: m.a } : { round: m.round + off, a: m.a, b: m.b }));
+    }
+    return out;
+  };
+
+  S.emptyRow = (orgId) => ({ orgId: orgId, wins: 0, losses: 0, gameWins: 0, gameLosses: 0, form: [], h2h: {} });
+  S.recordResult = function (table, winnerId, loserId, wg, lg, formWindow) {
+    const w = table[winnerId], l = table[loserId];
+    if (!w || !l) return;
+    const win = formWindow || 5;
+    w.wins++; l.losses++;
+    w.gameWins += wg; w.gameLosses += lg; l.gameWins += lg; l.gameLosses += wg;
+    w.h2h[loserId] = (w.h2h[loserId] || 0) + 1;
+    if (l.h2h[winnerId] === undefined) l.h2h[winnerId] = 0;
+    w.form.unshift(true); l.form.unshift(false);
+    if (w.form.length > win) w.form.length = win;
+    if (l.form.length > win) l.form.length = win;
+  };
+  /* Block-wise mini-table: head-to-head is not transitive, so it may never be
+     evaluated inside a pairwise comparator (see core/world/fixtures.ts). */
+  S.standings = function (rows) {
+    const canon = rows.slice().sort((x, y) => (x.orgId < y.orgId ? -1 : x.orgId > y.orgId ? 1 : 0));
+    const levels = [];
+    canon.forEach((r) => { if (levels.indexOf(r.wins) < 0) levels.push(r.wins); });
+    levels.sort((a, b) => b - a);
+    const out = [];
+    levels.forEach((w) => {
+      const block = canon.filter((r) => r.wins === w);
+      if (block.length === 1) { out.push(block[0]); return; }
+      const mini = {};
+      block.forEach((r) => {
+        let s = 0;
+        block.forEach((o) => { if (o.orgId !== r.orgId) s += r.h2h[o.orgId] || 0; });
+        mini[r.orgId] = s;
+      });
+      block.sort((x, y) => {
+        if (mini[x.orgId] !== mini[y.orgId]) return mini[y.orgId] - mini[x.orgId];
+        const dx = x.gameWins - x.gameLosses, dy = y.gameWins - y.gameLosses;
+        if (dx !== dy) return dy - dx;
+        if (x.gameWins !== y.gameWins) return y.gameWins - x.gameWins;
+        return x.orgId < y.orgId ? -1 : 1;
+      });
+      block.forEach((r) => out.push(r));
+    });
+    return out;
+  };
+
+  // ---------- fast resolution ----------
+  S.DRAFT_GAIN = 4; S.VAR_BASE = 3.2; S.MATCH_SCALE = 15;
+  S.resolveFastSeries = function (a, b, bestOf, rng, opts) {
+    opts = opts || {};
+    const draftMu = (S.DRAFT_GAIN * (a.drafting - b.drafting)) / 100 + (a.metaFit - b.metaFit);
+    const draftSigma = 1.9 - 0.85 * ((a.drafting + b.drafting) / 200);
+    const draftDelta = rng.gaussian(draftMu, draftSigma, -8, 8);
+    const noiseSigma = S.VAR_BASE * (1 - 0.4 * ((a.consistency + b.consistency) / 200));
+    const dayDelta = rng.gaussian(0, noiseSigma, -3 * noiseSigma, 3 * noiseSigma);
+    const gap = a.strength - b.strength + draftDelta + dayDelta;
+    const pA = 1 / (1 + Math.pow(10, -gap / S.MATCH_SCALE));
+    const need = Math.ceil((bestOf + 1) / 2), dom = Math.abs(pA - 0.5) * 2;
+    const games = []; let wa = 0, wb = 0;
+    while (wa < need && wb < need) {
+      const aWon = rng.chance(pA);
+      if (aWon) wa++; else wb++;
+      if (opts.games === false) continue;
+      const len = clamp(Math.round(rng.gaussian(34 - 6 * dom, 5)), 22, 52);
+      const total = Math.max(6, Math.round((24 * len) / 32 + rng.gaussian(0, 5)));
+      const wk = Math.round(total * (0.55 + 0.2 * dom));
+      games.push({ winnerIdx: aWon ? 0 : 1, lengthMin: len, killsA: aWon ? wk : total - wk, killsB: aWon ? total - wk : wk });
+    }
+    const winner = wa > wb ? 0 : 1, favA = pA >= 0.5, decisive = Math.abs(pA - 0.5) >= 0.15;
+    return {
+      winner: winner, score: [wa, wb], games: games, winProbA: round(pA, 3),
+      upset: decisive && ((favA && winner === 1) || (!favA && winner === 0)),
+      draftDelta: round(draftDelta, 2),
+    };
+  };
+  S.fastRating = (roleStrength, teamStrength, won, rng) =>
+    round(clamp(rng.gaussian(5.6 + (won ? 1.1 : -1.1) + (roleStrength - teamStrength) / 8, 0.85), 0, 10), 1);
+
+  // ---------- the calendar & the pyramid ----------
+  S.CALENDAR = (function () {
+    const w = [];
+    const add = (week, kind, window, note, split, tw) =>
+      w.push({ week: week, kind: kind, window: window, note: note, split: split || null, transferWindow: !!tw });
+    add(1, 'market', 'Preseason', 'Rosters lock at the end of the week.', null, true);
+    add(2, 'training', 'Preseason', 'Bootcamp. Set the training emphasis for the split.');
+    for (let i = 3; i <= 11; i++) add(i, 'match', 'Spring Split', 'Split 1, rounds ' + ((i - 3) * 2 + 1) + '–' + ((i - 3) * 2 + 2) + '.', 1);
+    add(12, 'training', 'Seeding', 'Tiebreakers, if you are in one. Otherwise, rest.', 1);
+    add(13, 'match', 'Spring Playoffs', 'Playoffs. Win the bracket and the split is yours.', 1);
+    add(14, 'match', 'Spring Playoffs', 'The Spring final.', 1);
+    add(15, 'market', 'Split break', 'The mid-season window opens.', null, true);
+    add(16, 'event', 'Mid-season', 'The Crucible: the champions of every region.', null, true);
+    add(17, 'event', 'Mid-season', 'The Crucible continues.', null, true);
+    add(18, 'event', 'Mid-season', 'The Crucible final.', null, true);
+    add(19, 'market', 'Split break', 'The mid-season window closes on Sunday.', null, true);
+    for (let i = 20; i <= 28; i++) add(i, 'match', 'Summer Split', 'Split 2, rounds ' + ((i - 20) * 2 + 1) + '–' + ((i - 20) * 2 + 2) + '.', 2);
+    add(29, 'training', 'Seeding', 'Tiebreakers and the last week of prep.', 2);
+    add(30, 'match', 'Summer Playoffs', 'Playoffs. The Summit seeds are decided here.', 2);
+    add(31, 'match', 'Summer Playoffs', 'The Summer final.', 2);
+    add(32, 'event', 'Seeding', 'Championship points reconciled; Summit seeds announced.');
+    add(33, 'match', 'Regional Finals', 'The gauntlet for the last seat at the Summit.');
+    add(34, 'match', 'Regional Finals', 'Regional finals conclude.');
+    add(35, 'training', 'Bootcamp', 'Travel and bootcamp, or a double scouting week.');
+    add(36, 'event', 'The Summit', 'The Summit: play-in.');
+    add(37, 'event', 'The Summit', 'The Summit: groups.');
+    add(38, 'event', 'The Summit', 'The Summit: groups conclude.');
+    add(39, 'event', 'The Summit', 'The Summit: quarters and semis.');
+    add(40, 'event', 'The Summit', 'The Summit final.');
+    add(41, 'event', 'Season review', 'Awards, and the legacy tick every org lives or dies by.');
+    add(42, 'match', 'Promotion', 'The promotion gauntlets. Seats change hands.');
+    add(43, 'match', 'Promotion', 'Gauntlets conclude; the pyramid is redrawn.');
+    add(44, 'event', 'Structure', 'Expansion review and any franchise conversion.');
+    add(45, 'market', 'Expiries', 'The contract expiry wave. Renew now or lose them.', null, true);
+    add(46, 'market', 'Free agency', 'Free agency opens. Rivals are bidding.', null, true);
+    add(47, 'market', 'Free agency', 'Free agency. The good ones go early.', null, true);
+    add(48, 'market', 'Free agency', 'Free agency closes on the best of them.', null, true);
+    add(49, 'event', 'Turnover', 'Retirements, new talent on the ladder, academy intake.', null, true);
+    add(50, 'event', 'Board', 'The awards show, and next season’s mandate from the board.', null, true);
+    add(51, 'event', 'Preseason patch', 'A big patch lands and the ladder season resets.', null, true);
+    add(52, 'training', 'Preseason', 'Scrims on the new patch. The roster deadline approaches.', null, true);
+    return w;
+  })();
+  S.weekDef = (week) => S.CALENDAR[(((week - 1) % 52) + 52) % 52];
+  S.phaseOfWeek = function (week) {
+    const d = S.weekDef(week);
+    if (d.window.indexOf('Playoffs') >= 0 || d.window === 'Promotion') return 'playoffs';
+    if (d.split !== null) return 'regular';
+    if (d.window === 'Preseason') return 'preseason';
+    return 'offseason';
+  };
+  S.matchWeeksOfSplit = (split) =>
+    S.CALENDAR.filter((d) => d.split === split && d.kind === 'match' && d.window.indexOf('Playoffs') < 0).map((d) => d.week);
+
+  S.PYRAMID = [
+    { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 6.5, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
+    { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 2.4, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
+    { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 0.7, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
+    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 0.15, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
+  ];
+  S.LEAGUE_BY_TIER = {}; S.PYRAMID.forEach((l) => (S.LEAGUE_BY_TIER[l.tier] = l));
+  S.prizeFor = function (cfg, place) {
+    const shares = [0.34, 0.21, 0.14, 0.10, 0.07, 0.05, 0.035, 0.025, 0.015, 0.01];
+    return round(cfg.prizePool * (shares[place - 1] !== undefined ? shares[place - 1] : 0.005), 1);
+  };
+  S.championshipPoints = function (cfg, place) {
+    if (cfg.tier !== 1) return 0;
+    const table = [90, 70, 55, 40, 25, 25, 12, 12, 4, 4];
+    return table[place - 1] || 0;
+  };
+  S.resolveBoundary = (upper, lower, autoSeats) => ({
+    relegated: upper.slice(Math.max(0, upper.length - autoSeats)),
+    promoted: lower.slice(0, autoSeats),
+  });
 })(typeof window !== 'undefined' ? window : globalThis);
