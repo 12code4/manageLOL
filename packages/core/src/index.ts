@@ -24,6 +24,7 @@ export * from './players/ratings.js';
 export * from './players/scouting.js';
 export * from './players/generate.js';
 export * from './players/meshing.js';
+export * from './players/development.js';
 
 // systems
 export * from './ladder/ladder.js';
