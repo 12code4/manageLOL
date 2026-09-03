@@ -11,6 +11,7 @@ export { Rng, RngSource } from './rng/rng.js';
 export * from './util/math.js';
 export * from './util/ids.js';
 export * from './world/clock.js';
+export * from './world/fixtures.js';
 
 // players
 export * from './players/types.js';
