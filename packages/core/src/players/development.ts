@@ -207,6 +207,32 @@ export function declineMix(bias: number): GrowthMix {
 }
 
 /**
+ * The chance a player hangs it up at the end of a season.
+ *
+ * Without this the world never turns over: rosters age a year every season
+ * and nothing replaces them, so a decade in you are watching forty-year-olds.
+ * Careers here are short by design — a pro is old at 25 and rare past 30 —
+ * and a player whose ability has already gone walks sooner than one still
+ * holding a starting seat.
+ */
+export function retirementChance(player: Player): number {
+  const age = player.identity.age;
+  if (age < 24) return 0;
+  const ca = currentAbility(player.attributes);
+  // The slide starts gently and steepens; nobody plays past the late thirties.
+  const base = clamp(0.06 + 0.14 * (age - 24), 0, 1);
+  // Still good enough to start? You get another year. Washed? You do not.
+  const quality = clamp((ca - 55) / 40, 0, 1);
+  const professional = player.attributes.personality.professionalism / 100;
+  return clamp(base * (1.35 - 0.55 * quality) * (1.1 - 0.2 * professional), 0, 1);
+}
+
+/** Whether this player retires now, drawn from the given stream. */
+export function retiresNow(player: Player, rng: Rng): boolean {
+  return rng.chance(retirementChance(player));
+}
+
+/**
  * Run a whole season of development in one call — used for background players
  * the UI never watches week by week. `weeks` defaults to a competitive season.
  */

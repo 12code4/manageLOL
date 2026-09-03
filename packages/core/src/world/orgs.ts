@@ -205,7 +205,14 @@ export function seedOrg(rng: Rng, o: OrgSeedOpts): Org {
 
   const standing = clamp100(rng.gaussian(standingTarget(tier, 0.5), 7));
   const wealth = tierWealth(tier);
-  const infra = (bias: number): number => clamp100(rng.gaussian(30 + 52 * (1 - (tier - 1) / 3) + bias, 9));
+  // Tier sets the baseline, but years at that tier are what actually built the
+  // place. Without this term a fold-replacement dropped into T3 would open
+  // with the same training room as a twelve-season institution, and "legacy
+  // teams are stronger" would reduce to a wage discount. A twenty-season side
+  // sits about eleven points above a debutant at the same level.
+  const built = clamp(0.55 * seasons, 0, 11);
+  const infra = (bias: number): number =>
+    clamp100(rng.gaussian(30 + 52 * (1 - (tier - 1) / 3) + bias + built, 9));
   const p = identity.personality;
 
   return {
@@ -221,7 +228,7 @@ export function seedOrg(rng: Rng, o: OrgSeedOpts): Org {
     facilities: infra(p === 'academy' ? 8 : 0),
     coaching: infra(p === 'methodical' ? 10 : p === 'chaotic' ? -8 : 0),
     analytics: infra(p === 'methodical' ? 12 : p === 'superteam' ? -4 : 0),
-    scouting: infra(p === 'academy' ? 12 : p === 'superteam' ? -6 : 0),
+    scouting: clamp100(infra(p === 'academy' ? 12 : p === 'superteam' ? -6 : 0) - built * 0.5),
     fanbase: clamp100(rng.gaussian(18 + 0.55 * legacy + 0.25 * standing, 8)),
     cash: round(wealth * rng.range(0.7, 1.4), 1),
     tier,
@@ -325,15 +332,21 @@ export function advanceOrgSeason(org: Org, out: SeasonOutcome): Org {
  * themselves on a training room.
  */
 export function investmentBudget(org: Org): number {
+  // These rates are deliberately high. Money that is never spent is money
+  // that stops mattering: with infrastructure capped at 100 and no other
+  // sink, a timid rate lets every org in the pyramid quietly accumulate a
+  // fortune, and by season ten the economy is decorative.
   const rate: Record<OrgPersonality, number> = {
-    superteam: 0.1,
-    academy: 0.26,
-    stable: 0.16,
-    chaotic: 0.08,
-    methodical: 0.24,
+    superteam: 0.45,
+    academy: 0.62,
+    stable: 0.5,
+    chaotic: 0.35,
+    methodical: 0.6,
   };
-  const reserve = tierWealth(org.tier) * 0.35;
-  return round(Math.max(0, (org.cash - reserve) * rate[org.personality]), 1);
+  const reserve = tierWealth(org.tier) * 0.5;
+  // A big name attracts better staff for the same money.
+  const pull = 0.85 + 0.004 * prestige(org);
+  return round(Math.max(0, (org.cash - reserve) * rate[org.personality] * pull), 1);
 }
 
 // ───────────────────────────── world population ─────────────────────────────
@@ -342,12 +355,19 @@ export function investmentBudget(org: Org): number {
  * An org that folded or was newly founded. Folding is rare and only ever
  * happens at the bottom of the pyramid, so the leagues stay populated.
  */
-export function shouldFold(org: Org, rng: Rng): boolean {
+export function shouldFold(org: Org, rng: Rng, placeFraction = 0.5): boolean {
   if (org.tier < 3) return false;
-  if (org.cash > 0) return false;
   // Even broke, an org with history hangs on: someone always bails out a name.
-  const survival = 0.35 + 0.6 * (org.legacy / 100);
-  return !rng.chance(survival);
+  if (org.cash <= 0) {
+    const survival = 0.35 + 0.6 * (org.legacy / 100);
+    return !rng.chance(survival);
+  }
+  // Solvent clubs at the amateur floor still disband. Nobody goes bankrupt —
+  // the five of them just stop turning up, which is how amateur scenes
+  // actually work, and it is the only door new names have when the economy is
+  // healthy. Gated on having no history worth preserving and a bad season.
+  if (org.tier !== 4 || org.legacy >= 8 || org.seasons < 1) return false;
+  return rng.chance(0.1 * clamp(placeFraction, 0, 1));
 }
 
 /**

@@ -116,6 +116,26 @@ export function matchWeeksOfSplit(split: 1 | 2): number[] {
   return CALENDAR.filter((d) => d.split === split && d.kind === 'match' && !d.window.includes('Playoffs')).map((d) => d.week);
 }
 
+/**
+ * Which rounds of a `totalRounds`-round league fall in a given match week.
+ *
+ * Naively taking `ceil(total / weeks)` rounds per week front-loads the split:
+ * an eleven-round league over nine weeks plays two a week for six weeks and
+ * then shows a match icon on three weeks with no fixture behind it. Spreading
+ * evenly instead gives a league with a remainder a mix of double and single
+ * weeks, and every week marked as a match week actually has one.
+ */
+export function roundsInWeek(totalRounds: number, split: 1 | 2, week: number): number[] {
+  const weeks = matchWeeksOfSplit(split);
+  const idx = weeks.indexOf(week);
+  if (idx < 0 || totalRounds <= 0) return [];
+  const out: number[] = [];
+  for (let r = 1; r <= totalRounds; r++) {
+    if (Math.floor(((r - 1) * weeks.length) / totalRounds) === idx) out.push(r);
+  }
+  return out;
+}
+
 // ────────────────────────────── the pyramid ──────────────────────────────
 
 export interface LeagueConfig {
@@ -142,6 +162,16 @@ export interface LeagueConfig {
    * hoard. Guarded by a test.
    */
   weeklyRevenue: number;
+  /**
+   * Credits a seat burns every week on everything that is not a player wage:
+   * staff, the building, travel, food, the analyst's second monitor.
+   *
+   * Without this line every org's cash grows without bound — infrastructure
+   * caps at 100, so once it is bought money has nowhere left to go and the
+   * whole economy stops meaning anything by season ten. Opex is what keeps a
+   * budget a budget.
+   */
+  operatingCost: number;
   /** Finishing at or above this place is promotion contention. */
   promotionLine: number;
   /** Finishing at or below this place is the relegation zone. */
@@ -167,6 +197,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffTeams: 6,
     prizePool: 300,
     weeklyRevenue: 12,
+    operatingCost: 5.5,
     promotionLine: 0,
     relegationLine: 10,
     blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.',
@@ -182,6 +213,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffTeams: 4,
     prizePool: 110,
     weeklyRevenue: 5,
+    operatingCost: 2.0,
     promotionLine: 3,
     relegationLine: 9,
     blurb: 'Semi-pro, and one gauntlet away from everything. Also one bad split from nothing.',
@@ -197,6 +229,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffTeams: 8,
     prizePool: 34,
     weeklyRevenue: 3.4,
+    operatingCost: 0.8,
     promotionLine: 3,
     relegationLine: 13,
     blurb: 'The widest band in the pyramid, and where most careers actually happen.',
@@ -211,7 +244,8 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffBestOf: 3,
     playoffTeams: 4,
     prizePool: 9,
-    weeklyRevenue: 2.4,
+    weeklyRevenue: 2.6,
+    operatingCost: 0.35,
     promotionLine: 2,
     relegationLine: 99,
     blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.',

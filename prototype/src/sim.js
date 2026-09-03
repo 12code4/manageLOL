@@ -779,7 +779,9 @@
       if (rng.chance(0.12 * S.TIER_WEIGHT[t] + 0.04)) titles[t]++;
     }
     const p = identity.personality;
-    const infra = (bias) => c100(rng.gaussian(30 + 52 * (1 - (tier - 1) / 3) + bias, 9));
+    // Years at a tier build the place; arriving at it does not.
+    const built = clamp(0.55 * seasons, 0, 11);
+    const infra = (bias) => c100(rng.gaussian(30 + 52 * (1 - (tier - 1) / 3) + bias + built, 9));
     const standing = c100(rng.gaussian(S.standingTarget(tier, 0.5), 7));
     return {
       id: identity.id, name: identity.name, tag: identity.tag, region: identity.region,
@@ -789,7 +791,7 @@
       facilities: infra(p === 'academy' ? 8 : 0),
       coaching: infra(p === 'methodical' ? 10 : p === 'chaotic' ? -8 : 0),
       analytics: infra(p === 'methodical' ? 12 : p === 'superteam' ? -4 : 0),
-      scouting: infra(p === 'academy' ? 12 : p === 'superteam' ? -6 : 0),
+      scouting: c100(infra(p === 'academy' ? 12 : p === 'superteam' ? -6 : 0) - built * 0.5),
       fanbase: c100(rng.gaussian(18 + 0.55 * legacy + 0.25 * standing, 8)),
       cash: round(S.tierWealth(tier) * rng.range(0.7, 1.4), 1),
       tier: tier,
@@ -829,9 +831,11 @@
     });
   };
 
+  /* Rates are high on purpose: money nothing drains stops meaning anything. */
   S.investmentBudget = function (o) {
-    const rate = { superteam: 0.10, academy: 0.26, stable: 0.16, chaotic: 0.08, methodical: 0.24 }[o.personality];
-    return round(Math.max(0, (o.cash - S.tierWealth(o.tier) * 0.35) * rate), 1);
+    const rate = { superteam: 0.45, academy: 0.62, stable: 0.50, chaotic: 0.35, methodical: 0.60 }[o.personality];
+    const pull = 0.85 + 0.004 * S.prestige(o);
+    return round(Math.max(0, (o.cash - S.tierWealth(o.tier) * 0.5) * rate * pull), 1);
   };
 
   S.generateOrg = function (rng, id, region, tier, taken) {
@@ -911,6 +915,20 @@
     bump(a.gameKnowledge, KNOW_K, (week.delta * mix.knowledge) / FAM_W.knowledge);
     bump(a.mental, MENT_K, (week.delta * mix.mental) / FAM_W.mental);
   };
+
+  /* Careers here are short: a pro is old at 25 and rare past 30. Without this
+     the world never turns over — rosters age a year a season and nothing
+     replaces them. */
+  S.retirementChance = function (player) {
+    const age = player.age;
+    if (age < 24) return 0;
+    const ca = S.currentAbility(player.attributes);
+    const base = clamp(0.06 + 0.14 * (age - 24), 0, 1);
+    const quality = clamp((ca - 55) / 40, 0, 1);
+    const professional = player.attributes.personality.professionalism / 100;
+    return clamp(base * (1.35 - 0.55 * quality) * (1.1 - 0.2 * professional), 0, 1);
+  };
+  S.retiresNow = (player, rng) => rng.chance(S.retirementChance(player));
 
   S.developSeason = function (player, ctx, rng, weeks) {
     const w = weeks || 40, before = S.currentAbility(player.attributes);
@@ -1189,12 +1207,24 @@
   };
   S.matchWeeksOfSplit = (split) =>
     S.CALENDAR.filter((d) => d.split === split && d.kind === 'match' && d.window.indexOf('Playoffs') < 0).map((d) => d.week);
+  /* Even spread, not ceil(): front-loading leaves match weeks with no fixture
+     behind them, and then the Season hub's week strip is lying. */
+  S.roundsInWeek = function (totalRounds, split, week) {
+    const weeks = S.matchWeeksOfSplit(split);
+    const idx = weeks.indexOf(week);
+    if (idx < 0 || totalRounds <= 0) return [];
+    const out = [];
+    for (let r = 1; r <= totalRounds; r++) {
+      if (Math.floor(((r - 1) * weeks.length) / totalRounds) === idx) out.push(r);
+    }
+    return out;
+  };
 
   S.PYRAMID = [
-    { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 12, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
-    { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 5, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
-    { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 3.4, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
-    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 2.4, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
+    { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 12, operatingCost: 5.5, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
+    { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 5, operatingCost: 2.0, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
+    { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 3.4, operatingCost: 0.8, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
+    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 2.6, operatingCost: 0.35, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
   ];
   S.LEAGUE_BY_TIER = {}; S.PYRAMID.forEach((l) => (S.LEAGUE_BY_TIER[l.tier] = l));
   S.prizeFor = function (cfg, place) {

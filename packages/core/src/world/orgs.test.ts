@@ -58,6 +58,26 @@ describe('org seeding', () => {
     expect(JSON.stringify(seed(2, 9, 'x'))).not.toBe(JSON.stringify(seed(2, 9, 'y')));
   });
 
+  it('years at a tier build a better place than arriving at it', () => {
+    // Otherwise a fold-replacement opens with the same training room as a
+    // twelve-season institution and "legacy teams are stronger" is only a
+    // wage discount.
+    // Averaged over seeds: the history backfill consumes its own draws, so a
+    // single pair is dominated by noise rather than by the effect.
+    const avg = (history: number, key: 'facilities' | 'coaching'): number => {
+      const xs = Array.from({ length: 60 }, (_, i) => seed(3, history, `inf${i}`)[key]);
+      return xs.reduce((a, b) => a + b, 0) / xs.length;
+    };
+    expect(avg(20, 'facilities')).toBeGreaterThan(avg(0, 'facilities') + 6);
+    expect(avg(20, 'coaching')).toBeGreaterThan(avg(0, 'coaching') + 6);
+
+    // ...but the edge all that buys is still only worth a sharper draft.
+    const veteran = { ...seed(3, 20, 'e1'), coaching: 90, analytics: 90 };
+    const debutant = { ...seed(3, 0, 'e1'), coaching: 45, analytics: 45 };
+    expect(Math.abs(orgEdgePoints(veteran, debutant))).toBeLessThanOrEqual(MAX_ORG_EDGE_POINTS);
+    expect(winProbFromDiff(orgEdgePoints(veteran, debutant), MATCH_SCALE)).toBeLessThan(0.56);
+  });
+
   it('higher tiers seed richer and better equipped', () => {
     const top = seed(1, 10, 'q');
     const bottom = seed(4, 10, 'q');
@@ -159,19 +179,28 @@ describe('population', () => {
   });
 
   it('only broke lower-tier orgs can fold, and history protects them', () => {
-    const folds = (o: Org): number =>
-      Array.from({ length: 400 }, (_, i) => shouldFold(o, new Rng('fold', `t${i}`))).filter(Boolean).length;
+    const folds = (o: Org, place = 1): number =>
+      Array.from({ length: 400 }, (_, i) => shouldFold(o, new Rng('fold', `t${i}`), place)).filter(Boolean).length;
 
     // A top-league org is never allowed to evaporate mid-pyramid, broke or not.
     expect(folds({ ...seed(1, 12, 'f'), cash: -50 })).toBe(0);
     expect(folds({ ...seed(2, 4, 'f'), cash: -50 })).toBe(0);
-    // Neither is a solvent one at the bottom.
-    expect(folds({ ...seed(4, 0, 'f'), cash: 12 })).toBe(0);
+    // A solvent tier-3 club is safe...
+    expect(folds({ ...seed(3, 2, 'f'), cash: 12 })).toBe(0);
+    // ...and so is an amateur one with any history behind it.
+    expect(folds({ ...seed(4, 6, 'f'), cash: 12, legacy: 20, seasons: 6 })).toBe(0);
 
     const rookie = { ...seed(4, 0, 'f'), cash: -10, legacy: 0 };
     const veteran = { ...seed(4, 0, 'f'), cash: -10, legacy: 90 };
     expect(folds(rookie)).toBeGreaterThan(0);
     expect(folds(rookie)).toBeGreaterThan(folds(veteran) * 2);
+
+    // Solvent amateurs with nothing to preserve still disband after a bad
+    // season — the only door new names have when the economy is healthy.
+    const nobody = { ...seed(4, 0, 'f'), cash: 20, legacy: 0, seasons: 2 };
+    expect(folds(nobody, 1)).toBeGreaterThan(15);
+    expect(folds(nobody, 1)).toBeLessThan(80);
+    expect(folds(nobody, 0)).toBe(0); // winning the circuit saves you
   });
 
   it('investment budgets respect a reserve and reflect personality', () => {

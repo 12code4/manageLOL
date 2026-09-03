@@ -8,6 +8,7 @@ import {
   championshipPoints,
   matchWeeksOfSplit,
   phaseOfWeek,
+  roundsInWeek,
   prizeFor,
   resolveBoundary,
   weekDef,
@@ -53,6 +54,21 @@ describe('the calendar', () => {
     const rounds = roundRobin(Array.from({ length: prime.slots }, (_, i) => `t${i}`), prime.legs);
     expect(new Set(rounds.map((f) => f.round)).size).toBe(18);
     expect(18 / matchWeeksOfSplit(1).length).toBe(2); // two rounds a week, exactly
+  });
+
+  it('spreads a league with a remainder across every match week', () => {
+    // The bug this guards: ceil(rounds/weeks) front-loads the split, so an
+    // eleven-round league played two a week finishes in six weeks and the
+    // Season hub then shows a match icon on three weeks with no fixture.
+    for (const total of [11, 15, 18, 9]) {
+      const weeks = matchWeeksOfSplit(1);
+      const perWeek = weeks.map((w) => roundsInWeek(total, 1, w));
+      expect(perWeek.flat()).toEqual(Array.from({ length: total }, (_, i) => i + 1));
+      for (const rounds of perWeek) expect(rounds.length).toBeGreaterThan(0);
+      const sizes = perWeek.map((r) => r.length);
+      expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(1);
+    }
+    expect(roundsInWeek(18, 1, 99)).toEqual([]);
   });
 
   it('the circuit single round-robin also tiles its nine weeks', () => {

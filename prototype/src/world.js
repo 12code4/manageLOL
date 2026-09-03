@@ -143,19 +143,12 @@
     G.champion = null;
   };
 
-  /** Rounds played in a given match week: two a week for the Bo3 tiers. */
+  /** Rounds played in a given match week, spread evenly across the split. */
   W.roundsThisWeek = function (league, week) {
-    const weeks = S.matchWeeksOfSplit(S.weekDef(week).split || 1);
-    const idx = weeks.indexOf(week);
-    if (idx < 0) return [];
-    const total = Math.max.apply(null, league.fixtures.map((f) => f.round));
-    const perWeek = Math.ceil(total / weeks.length);
-    const out = [];
-    for (let i = 0; i < perWeek; i++) {
-      const r = idx * perWeek + i + 1;
-      if (r <= total) out.push(r);
-    }
-    return out;
+    const d = S.weekDef(week);
+    if (d.kind !== 'match' || d.split === null) return [];
+    const total = league.fixtures.reduce((m, f) => Math.max(m, f.round), 0);
+    return S.roundsInWeek(total, d.split, week);
   };
 
   /** Your fixture this week, if any. */
@@ -345,7 +338,10 @@
     const sponsors = orgId === G.you
       ? G.sponsors.active.reduce((s, d) => s + d.weekly, 0)
       : round(0.6 + 0.05 * S.prestige(org) * (org.tier === 1 ? 1.4 : 1), 2);
-    return round(cfg.weeklyRevenue + merch + sponsors, 2);
+    // Opex is the drain that keeps a budget a budget: staff, the building,
+    // travel. Without it every org's cash grows forever and by season ten the
+    // economy is decorative.
+    return round(cfg.weeklyRevenue + merch + sponsors - cfg.operatingCost, 2);
   };
 
   W.contractsOf = function (org) {
@@ -421,6 +417,90 @@
 
   /* ─────────────────────────── season rollover ────────────────────────── */
 
+  /**
+   * Off-season turnover: careers end, seats are refilled, and clubs that ran
+   * out of money and history disappear so new names can take their place.
+   * Without this the world never turns over — the same forty-eight orgs field
+   * the same players a year older, forever.
+   */
+  W.turnover = function (G) {
+    const lines = [];
+    const yourRetirees = [];
+
+    Object.keys(G.orgs).sort().forEach((id) => {
+      const org = G.orgs[id];
+      ROLES.forEach((role) => {
+        const p = org.roster[role];
+        if (!p) return;
+        const rng = new S.Rng(G.seed, 'retire:' + G.season + ':' + p.id);
+        if (!S.retiresNow(p, rng)) return;
+        delete org.contracts[p.id];
+        org.roster[role] = null;
+        if (p.ladder) p.ladder.signed = false;
+        if (id === G.you) yourRetirees.push(p);
+        else W.refillSeat(G, org, role);
+        if (org.tier <= 2 && S.currentAbility(p.attributes) > 78) {
+          lines.push(p.name + ' retires after ' + Math.floor(p.age - 17) + ' years. ' + org.name + ' need a ' + role + '.');
+        }
+      });
+      if (org.roster.top || org.roster.mid) org.chem = S.reconcileChem(org.chem, W.lineupOf(org) || org.roster);
+    });
+    yourRetirees.forEach((p) => lines.push('<b>' + p.name + '</b> has retired. That seat is yours to fill.'));
+
+    // Clubs at the bottom that are broke and have no history behind them fold,
+    // and a new name takes the seat.
+    const taken = {};
+    Object.keys(G.orgs).forEach((k) => (taken[G.orgs[k].name] = 1));
+    Object.keys(G.orgs).sort().forEach((id) => {
+      if (id === G.you) return;
+      const org = G.orgs[id];
+      if (org.tier < 3) return;
+      const rng = new S.Rng(G.seed, 'fold:' + G.season + ':' + id);
+      const last = org.history.finishes[0];
+      const placeFraction = last && last.of > 1 ? (last.place - 1) / (last.of - 1) : 0.5;
+      if (org.cash <= 0) {
+        if (rng.chance(0.35 + 0.6 * (org.legacy / 100))) return;
+      } else {
+        // Solvent amateurs with no history still disband after a bad season.
+        if (org.tier !== 4 || org.legacy >= 8 || org.seasons < 1) return;
+        if (!rng.chance(0.10 * placeFraction)) return;
+      }
+      const seat = G.seats[org.tier].indexOf(id);
+      const fresh = S.generateOrg(new S.Rng(G.seed, 'new:' + G.season + ':' + id), 'new-' + G.season + '-' + id, org.region, org.tier, taken);
+      taken[fresh.name] = 1;
+      delete G.orgs[id];
+      G.orgs[fresh.id] = fresh;
+      if (seat >= 0) G.seats[org.tier][seat] = fresh.id;
+      W.stockOrg(G, fresh);
+      lines.push(org.name + ' have folded after ' + org.seasons + ' seasons. <b>' + fresh.name + '</b> take the seat.');
+    });
+    return lines;
+  };
+
+  /** Sign a replacement into one empty seat on an AI roster. */
+  W.refillSeat = function (G, org, role) {
+    const rng = new S.Rng(G.seed, 'refill:' + G.season + ':' + org.id + ':' + role);
+    const centre = ({ 1: 76, 2: 67, 3: 58, 4: 49 })[org.tier] + (S.prestige(org) - 50) * 0.12;
+    const p = S.genPlayer(rng, {
+      id: org.id + ':' + role + ':' + G.season,
+      region: org.region,
+      qualityCenter: clamp(rng.gaussian(centre, 4.5), 30, 94),
+      ageRange: [17, 22],
+      primaryRole: role,
+    });
+    org.roster[role] = p;
+    const wage = S.wageDemand(p, org.tier, S.prestige(org));
+    const term = S.SEASON_WEEKS * 2;
+    org.contracts[p.id] = { playerId: p.id, orgId: org.id, wage: wage, weeksRemaining: term,
+      termWeeks: term, signedSeason: G.season, buyout: S.defaultBuyout(wage, term), role: role };
+  };
+
+  W.stockOrg = function (G, org) {
+    ROLES.forEach((role) => W.refillSeat(G, org, role));
+    org.chem = S.initChem(org.roster);
+    for (let w = 0; w < 20; w++) S.rampWeek(org.chem, org.roster, 1);
+  };
+
   W.finishSeason = function (G) {
     const lines = [];
     const movements = {};
@@ -462,6 +542,11 @@
 
     G.season++;
     G.week = 1;
+    W.turnover(G).slice(0, 8).forEach((l) => lines.push(l));
+
+    // Seats may have changed hands during turnover, so rebuild the index.
+    G.seats = { 1: [], 2: [], 3: [], 4: [] };
+    Object.keys(G.orgs).sort().forEach((id) => G.seats[G.orgs[id].tier].push(id));
     W.startSeason(G);
     return lines;
   };
