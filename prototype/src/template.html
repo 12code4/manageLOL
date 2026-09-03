@@ -654,6 +654,10 @@ function newGame(seed){
   G.ladder=lad.board.concat(lad.pool);
   Object.defineProperty(G,'ladderState',{get:()=>({board:G.ladderBoard,pool:G.ladderPool,deep:G.ladderDeep,deepDraws:G.ladderDeepDraws}),configurable:true});
   G.patch=S.genPatch(new S.Rng(seed,'meta:0'),0);
+  // A career starts with one small deal already on the books — an amateur org
+  // that had no sponsor at all would be insolvent before its first match.
+  G.sponsors.active.push({id:'spo-start',nm:SPONSOR_TEMPLATES[0].nm,flav:SPONSOR_TEMPLATES[0].flav,
+    base:0,weekly:SPONSOR_TEMPLATES[0].weekly,clause:null,ob:SPONSOR_TEMPLATES[0].ob,tier:0});
   refreshSponsorOffers();
   pushLog('You take over '+yours.name+', bottom of the Open Circuit. Fill five seats and start climbing.','info');
   render();
@@ -712,6 +716,20 @@ function doScout(id){
   }
   render();
 }
+function doDeepScout(){
+  if(G.scoutPts<S.DEEP_SCOUT_COST){toast('Not enough analyst weeks.','bad');return;}
+  G.scoutPts-=S.DEEP_SCOUT_COST;
+  const found=window.LOLWorld.deepScout(G);
+  if(found){
+    G.ui.band='pool'; G.ui.selLad=found.id;
+    pushLog('Deep scout: your analysts came back with a name. <b>'+found.handle+'</b>, sitting well below the cutoff.','good');
+    toast('Deep scout — '+found.handle+' looks like something.','good');
+  } else {
+    pushLog('Deep scout: three weeks in Cobalt. Nothing worth a contract.','info');
+    toast('Deep scout found nothing this time.','');
+  }
+  render();
+}
 function doSign(id,role){
   const e=G.ladder.find(x=>x.id===id);if(!e||e.signed)return;
   role=role||e.roleGuess;
@@ -722,15 +740,60 @@ function doSign(id,role){
   const p=e.hidden.player; p.ladder=e; p.signedRole=role;
   if(!p.championPool||!Object.keys(p.championPool).length)S.seedPool(p,new S.Rng(G.seed,'pool:'+p.id));
   G.roster[role]=p; recomputeChem();
-  pushLog('Signed <b>'+e.handle+'</b> ('+ROLE_LABEL[role]+', '+TIER_NAME[e.tier]+') for '+fee+'◈.','good');
+  // Every signing is a contract: a wage every week and a date it runs out.
+  const org=you();
+  const wage=S.offerToAccept(p,org,org.tier,0.9,false);
+  const term=S.SEASON_WEEKS*2;
+  org.contracts[p.id]={playerId:p.id,orgId:G.you,wage:wage,weeksRemaining:term,termWeeks:term,
+    signedSeason:G.season,buyout:S.defaultBuyout(wage,term),role:role};
+  pushLog('Signed <b>'+e.handle+'</b> ('+ROLE_LABEL[role]+', '+TIER_NAME[e.tier]+') — '+fee+'◈ up front, '+wage.toFixed(1)+'◈/wk for two seasons.','good');
   toast('Signed <b>'+e.handle+'</b> as your '+ROLE_LABEL[role]+'.','good');
+  render();
+}
+function bidsPanel(){
+  const card=el('div','card');
+  card.innerHTML='<div class="seclabel"><span class="section-label" style="margin:0">Approaches</span><span class="secsub mono">'+G.pendingBids.length+' open</span></div>';
+  G.pendingBids.slice(0,4).forEach((b,i)=>{
+    const p=G.roster[b.role];
+    const row=el('div','oread wide');
+    row.style.cssText='display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line-soft);font-size:12px';
+    row.innerHTML='<span>'+b.text+' <span class="mono" style="color:var(--faint)">'+b.wage.toFixed(1)+'◈/wk to him · '+b.fee.toFixed(0)+'◈ to us</span></span>';
+    const yes=el('button','btn ghost');yes.style.cssText='font-size:11px;padding:4px 9px';yes.textContent='Accept '+b.fee.toFixed(0)+'◈';
+    yes.onclick=()=>{
+      if(p){ you().cash=you().cash+b.fee; delete you().contracts[p.id]; you().roster[b.role]=null; recomputeChem();
+        pushLog('Sold '+p.name+' to '+G.orgs[b.orgId].name+' for '+b.fee.toFixed(0)+'◈.','info'); }
+      G.pendingBids.splice(i,1);render();
+    };
+    const no=el('button','btn ghost');no.style.cssText='font-size:11px;padding:4px 9px';no.textContent='Reject';
+    no.onclick=()=>{ pushLog('You turned down '+G.orgs[b.orgId].name+'’s approach for '+(p?p.name:'a player')+'.','info'); G.pendingBids.splice(i,1);render(); };
+    row.appendChild(yes);row.appendChild(no);
+    card.appendChild(row);
+  });
+  return card;
+}
+function doResign(role){
+  const p=G.roster[role];if(!p)return;
+  const org=you();
+  const wage=S.offerToAccept(p,org,org.tier,0.9,true);
+  const v=S.evaluateOffer(p,org,{wage:wage,weeks:S.SEASON_WEEKS*2,starterChance:0.9,renewal:true},org.tier);
+  if(!v.accepted){ toast(p.name+' says no — '+v.reason+'.','bad'); pushLog(p.name+' turned down a renewal: '+v.reason+'.','bad'); render(); return; }
+  const c=org.contracts[p.id]||{playerId:p.id,orgId:G.you,role:role};
+  c.wage=wage;c.weeksRemaining=S.SEASON_WEEKS*2;c.termWeeks=S.SEASON_WEEKS*2;
+  c.buyout=S.defaultBuyout(wage,c.termWeeks);
+  org.contracts[p.id]=c;
+  pushLog('Re-signed <b>'+p.name+'</b> — '+wage.toFixed(1)+'◈/wk for two seasons. '+cap(v.reason)+'.','good');
+  toast(p.name+' re-signs.','good');
   render();
 }
 function doRelease(role){
   const p=G.roster[role];if(!p)return;
-  if(p.ladder)p.ladder.signed=false;
-  G.roster[role]=null;recomputeChem();
-  pushLog('Released the '+ROLE_LABEL[role]+', '+p.name+'.','info');render();
+  if(!confirm('Release '+p.name+'? Chemistry on every pair they touched resets.'))return;
+  delete you().contracts[p.id];
+  if(p.ladder){ p.ladder.signed=false; }
+  G.roster[role]=null; recomputeChem();
+  pushLog('Released '+p.name+'. They are back on the ladder, and someone is watching.','bad');
+  toast('Released '+p.name+'.','bad');
+  render();
 }
 function advanceWeek(){
   const W=window.LOLWorld;
@@ -916,26 +979,46 @@ function renderPyramid(){
 /* ---------- scout ---------- */
 function renderScout(main){
   const head=el('div','screen-head');
-  head.innerHTML='<p class="eyebrow">Talent discovery</p><h1 class="title cond">Scout the Ladder</h1>'+
-    '<p class="sub">Rank is public; true skill is not. Spend scouting to narrow the fog and surface the flags — a smurf hiding in Jade is the bargain of the season; a boosted Ascendant is the trap.</p>';
+  head.innerHTML='<p class="eyebrow">The market</p><h1 class="title cond">Recruit</h1>'+
+    '<p class="sub">Orgs do not sign out of Gold. The board below starts at Onyx I — our Diamond 1 — and everything under it is invisible from here. That is the honest constraint, and the reason Deep Scout exists: four analyst weeks buys one file out of the badlands beneath the cutoff, and sometimes it is the best player you will ever sign.</p>';
   main.appendChild(head);
 
   const grid=el('div','scout-grid');
-  // left: table + toolbar
   const left=el('div');
   const bar=el('div','toolbar');
-  bar.innerHTML='<span class="section-label" style="margin:0">Home &amp; reachable ladders</span>';
+  const tabs=el('div','bandtabs');
+  [['board','Leaderboard'],['pool','The pool'],['mine','Watched']].forEach(([k,lab])=>{
+    const b=el('button',(G.ui.band||'board')===k?'on':'');b.textContent=lab;
+    b.onclick=()=>{G.ui.band=k;render();};tabs.appendChild(b);
+  });
+  bar.appendChild(tabs);
   const spacer=el('span');spacer.style.flex='1';bar.appendChild(spacer);
   const roleSel=el('select');roleSel.innerHTML='<option value="">All roles</option>'+ROLE_ORDER.map(r=>'<option value="'+r+'">'+ROLE_LABEL[r]+'</option>').join('');
   roleSel.value=G.ui.scoutRole||'';roleSel.onchange=()=>{G.ui.scoutRole=roleSel.value;render();};
   bar.appendChild(roleSel);
+  const deep=el('button','btn');
+  deep.innerHTML='⌖ Deep scout <span class="mono" style="opacity:.7;margin-left:5px">−'+S.DEEP_SCOUT_COST+'</span>';
+  deep.title='Send your analysts below the visible cutoff, into Cobalt and lower Onyx. Most weeks they find nothing. Occasionally they find a career.';
+  deep.disabled=G.scoutPts<S.DEEP_SCOUT_COST;
+  deep.onclick=doDeepScout;
+  bar.appendChild(deep);
   left.appendChild(bar);
+  const count=el('div','laddercount');
+  const above=Math.round(5200*1.0);
+  count.innerHTML=fmt(above)+' accounts above the Onyx I cutoff in Meridia · <b style="color:var(--muted)">'+G.ladder.length+'</b> files open · '+
+    G.ladder.filter(e=>e.scout.conf>0).length+' of them yours to watch';
+  left.appendChild(count);
 
   const cardT=el('div','card');cardT.style.overflow='hidden';cardT.style.padding='6px 8px 8px';
   const tbl=el('table','ladder');
   tbl.innerHTML='<thead><tr><th>Prospect</th><th>Rank</th><th>Role</th><th>Age</th><th>Games</th><th>WR</th><th>Read</th></tr></thead>';
   const tb=el('tbody');
+  const band=G.ui.band||'board';
   let rows=G.ladder.filter(e=>!G.ui.scoutRole||e.roleGuess===G.ui.scoutRole);
+  if(band==='board')rows=rows.filter(e=>S.onBoard(e.mmr));
+  else if(band==='pool')rows=rows.filter(e=>!S.onBoard(e.mmr));
+  else rows=rows.filter(e=>e.scout.conf>0||e.signed);
+  rows=rows.slice(0,40);
   rows.forEach(e=>{
     const tr=el('tr');if(e.id===G.ui.selLad)tr.classList.add('sel');if(e.signed)tr.classList.add('signed');
     tr.onclick=()=>{G.ui.selLad=e.id;render();};
@@ -1020,11 +1103,47 @@ function renderScoutDetail(det,e){
 }
 
 /* ---------- squad ---------- */
+function ledgerStrip(){
+  const W=window.LOLWorld;
+  const cs=W.contractsOf(you());
+  const bill=S.wageBill(cs), inc=W.weeklyIncome(G,G.you), net=inc-bill;
+  const state=S.financialState(you(),cs,inc);
+  const runway=S.runwayWeeks(you(),cs,inc);
+  const strip=el('div','wagestrip '+state);
+  strip.innerHTML=
+    '<span>Wage bill <b>'+bill.toFixed(1)+'◈/wk</b></span>'+
+    '<span class="bar"><i style="width:'+Math.min(100,inc>0?(bill/inc)*100:100).toFixed(0)+'%"></i></span>'+
+    '<span>Income <b>'+inc.toFixed(1)+'</b></span>'+
+    '<span>Net <b style="color:'+(net>=0?'var(--gel)':'var(--toxic)')+'">'+(net>=0?'+':'')+net.toFixed(1)+'</b></span>'+
+    '<span>Runway <b>'+(runway===Infinity?'∞':runway+'w')+'</b></span>'+
+    '<span class="state" style="color:'+(state==='healthy'?'var(--gel)':state==='tight'?'var(--warn)':'var(--toxic)')+'">'+state+'</span>';
+  if(state!=='healthy'){
+    const note=el('div');note.style.cssText='flex:1 0 100%;color:var(--warn);font-size:11.5px;margin-top:2px';
+    note.textContent=state==='insolvent'
+      ? 'You are spending money you do not have. Sell someone, or the board will.'
+      : 'The wage bill outruns the income. You have '+(runway===Infinity?'time':runway+' weeks')+' before something has to give.';
+    strip.appendChild(note);
+  }
+  return strip;
+}
+function contractLane(p){
+  const c=you().contracts[p.id];
+  if(!c)return el('div','contractlane','<span>No contract on file</span>');
+  const pct=Math.max(4,Math.min(100,(c.weeksRemaining/(c.termWeeks||120))*100));
+  const hot=c.weeksRemaining<=6?'crit':c.weeksRemaining<=12?'warn':'';
+  const lane=el('div','contractlane');
+  lane.innerHTML='<span class="termbar '+hot+'"><i style="width:'+pct.toFixed(0)+'%"></i></span>'+
+    '<span class="mono">'+c.wage.toFixed(1)+'◈/wk · '+c.weeksRemaining+'w</span>';
+  lane.title='Signed for '+(c.termWeeks||'—')+' weeks · buyout '+c.buyout.toFixed(0)+'◈';
+  return lane;
+}
 function renderSquad(main){
   const head=el('div','screen-head');
-  head.innerHTML='<p class="eyebrow">Roster · chemistry</p><h1 class="title cond">Squad &amp; Chemistry</h1>'+
-    '<p class="sub">Five players are not a team. Chemistry builds every week you keep a lineup together and resets on the pairs a new signing touches — a superstar can make you worse the day they arrive.</p>';
+  head.innerHTML='<p class="eyebrow">Roster · contracts · chemistry</p><h1 class="title cond">Squad</h1>'+
+    '<p class="sub">Five players are not a team. Chemistry builds every week you keep a lineup together and resets on the pairs a new signing touches — a superstar can make you worse the day they arrive. And every one of them is paid on Friday.</p>';
   main.appendChild(head);
+  main.appendChild(ledgerStrip());
+  if(G.pendingBids&&G.pendingBids.length)main.appendChild(bidsPanel());
 
   const grid=el('div','squad-grid');
   // left: slots
@@ -1046,8 +1165,17 @@ function renderSquad(main){
         '<div class="mini-bars">'+bars.map(([k,v])=>'<span class="mb">'+k+' <b>'+Math.round(v)+'</b></span>').join('')+'</div>'+
         '<div class="state-chips"><span class="chip">Form '+p.state.form+'</span><span class="chip">Fatigue '+p.state.fatigue+'</span><span class="chip">Sharp '+p.state.sharpness+'</span></div></div>'+
         '<div><div class="ov" style="color:'+ovColor(ov)+'">'+ov+'<small>OVERALL</small></div></div>';
-      const rel=el('button','btn ghost');rel.style.cssText='margin-top:8px;font-size:11px;padding:4px 8px';rel.textContent='Release';rel.onclick=()=>doRelease(role);
-      c.querySelector('div:nth-child(2)').appendChild(rel);
+      const mid=c.querySelector('div:nth-child(2)');
+      mid.appendChild(contractLane(p));
+      const cx=you().contracts[p.id];
+      const acts=el('div');acts.style.cssText='display:flex;gap:6px;margin-top:7px';
+      if(cx&&cx.weeksRemaining<=12){
+        const re=el('button','btn ghost');re.style.cssText='font-size:11px;padding:4px 8px';
+        re.textContent='Re-sign ▸';re.onclick=()=>doResign(role);acts.appendChild(re);
+      }
+      const rel=el('button','btn ghost');rel.style.cssText='font-size:11px;padding:4px 8px';rel.textContent='Release';rel.onclick=()=>doRelease(role);
+      acts.appendChild(rel);
+      mid.appendChild(acts);
       slots.appendChild(c);
     }
   });

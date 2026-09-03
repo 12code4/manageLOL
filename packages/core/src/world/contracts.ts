@@ -48,7 +48,7 @@ export interface Contract {
 
 /** Wage expectations scale with the level a player is being asked to play at. */
 export function tierWageMult(tier: PyramidTier): number {
-  return { 1: 1.25, 2: 1, 3: 0.8, 4: 0.65 }[tier];
+  return { 1: 1.25, 2: 1, 3: 0.75, 4: 0.5 }[tier];
 }
 
 /**

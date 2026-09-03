@@ -131,7 +131,16 @@ export interface LeagueConfig {
   playoffTeams: number;
   /** Prize pool for one split, in credits, before the placement split. */
   prizePool: number;
-  /** Credits a seat pays every week just for being in the league. */
+  /**
+   * Credits a seat pays every week just for being in the league.
+   *
+   * Calibrated against the wage curve *and the ladder cutoff*, which is the
+   * subtler constraint: the only players a manager can sign are Onyx I and
+   * above, so even an amateur org pays elite-ladder wages for its five. A
+   * tier's revenue plus a modest sponsor has to cover that floor, or a career
+   * is insolvent before its first playoff — while still leaving no room to
+   * hoard. Guarded by a test.
+   */
   weeklyRevenue: number;
   /** Finishing at or above this place is promotion contention. */
   promotionLine: number;
@@ -157,7 +166,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffBestOf: 5,
     playoffTeams: 6,
     prizePool: 300,
-    weeklyRevenue: 6.5,
+    weeklyRevenue: 12,
     promotionLine: 0,
     relegationLine: 10,
     blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.',
@@ -172,7 +181,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffBestOf: 5,
     playoffTeams: 4,
     prizePool: 110,
-    weeklyRevenue: 2.4,
+    weeklyRevenue: 5,
     promotionLine: 3,
     relegationLine: 9,
     blurb: 'Semi-pro, and one gauntlet away from everything. Also one bad split from nothing.',
@@ -187,7 +196,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffBestOf: 3,
     playoffTeams: 8,
     prizePool: 34,
-    weeklyRevenue: 0.7,
+    weeklyRevenue: 3.4,
     promotionLine: 3,
     relegationLine: 13,
     blurb: 'The widest band in the pyramid, and where most careers actually happen.',
@@ -202,7 +211,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffBestOf: 3,
     playoffTeams: 4,
     prizePool: 9,
-    weeklyRevenue: 0.15,
+    weeklyRevenue: 2.4,
     promotionLine: 2,
     relegationLine: 99,
     blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.',

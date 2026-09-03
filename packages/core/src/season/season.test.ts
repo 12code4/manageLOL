@@ -13,6 +13,11 @@ import {
   weekDef,
 } from './calendar.js';
 import { DRAFT_GAIN, VAR_BASE, fastRating, resolveFastSeries, type FastSide } from './fast.js';
+import { generatePlayer } from '../players/generate.js';
+import { wageDemand } from '../world/contracts.js';
+import type { PlayerId } from '../util/ids.js';
+import type { RegionId } from '../players/types.js';
+import type { PyramidTier } from '../world/orgs.js';
 
 const rng = (s: string): Rng => new Rng('season-test', s);
 
@@ -88,7 +93,10 @@ describe('the pyramid', () => {
     expect(t1!.prizePool).toBeGreaterThan(t2!.prizePool * 2);
     expect(t2!.prizePool).toBeGreaterThan(t3!.prizePool * 2);
     expect(t3!.prizePool).toBeGreaterThan(t4!.prizePool * 2);
-    expect(t1!.weeklyRevenue).toBeGreaterThan(t4!.weeklyRevenue * 20);
+    // Revenue compresses far less than prize money does: the ladder cutoff
+    // puts a floor under every wage bill, so no tier can be starved.
+    expect(t1!.weeklyRevenue).toBeGreaterThan(t4!.weeklyRevenue * 4);
+    expect(t1!.weeklyRevenue).toBeGreaterThan(t2!.weeklyRevenue * 2);
     // Relegation from the top changes the money, not the weekly shape.
     expect(t2!.legs).toBe(t1!.legs);
     expect(t2!.regularBestOf).toBe(t1!.regularBestOf);
@@ -101,6 +109,40 @@ describe('the pyramid', () => {
     expect(prizeFor(prime, 1)).toBeGreaterThan(prizeFor(prime, 10) * 20);
     const total = Array.from({ length: prime.slots }, (_, i) => prizeFor(prime, i + 1)).reduce((a, b) => a + b, 0);
     expect(total).toBeLessThanOrEqual(prime.prizePool);
+  });
+
+  it('every tier can pay the roster it is actually able to sign', () => {
+    // The bug this guards: a fresh career was insolvent by mid-season. The
+    // trap is that a tier's *own* quality is not what its roster costs — the
+    // ladder cutoff means the cheapest player anyone can sign is an Onyx I
+    // account, so even an amateur org pays elite-ladder wages for five.
+    const LADDER_FLOOR_QUALITY = 66;
+    const centres: Record<number, number> = { 1: 76, 2: 67, 3: 58, 4: 49 };
+    const sponsor: Record<number, number> = { 1: 6, 2: 3, 3: 1.4, 4: 0.6 };
+    const billFor = (tier: PyramidTier, quality: number): number =>
+      [0, 1, 2, 3, 4].reduce(
+        (sum, i) =>
+          sum +
+          wageDemand(
+            generatePlayer(rng(`aff${tier}:${quality}:${i}`), {
+              id: `p${i}` as PlayerId,
+              region: 'mer' as RegionId,
+              qualityCenter: quality,
+              ageRange: [20, 25],
+              spread: 3,
+            }),
+            tier,
+            45,
+          ),
+        0,
+      );
+
+    for (const cfg of PYRAMID) {
+      const realistic = Math.max(billFor(cfg.tier, centres[cfg.tier]!), billFor(cfg.tier, LADDER_FLOOR_QUALITY));
+      const income = cfg.weeklyRevenue + sponsor[cfg.tier]!;
+      expect(income).toBeGreaterThan(realistic); // solvent...
+      expect(income).toBeLessThan(realistic * 2.6); // ...but never comfortable
+    }
   });
 
   it('awards championship points only at the top tier', () => {
