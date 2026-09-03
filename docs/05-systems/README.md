@@ -20,3 +20,4 @@ The four new systems (ladder, meshing, pyramid, sponsorships) plus the attribute
 ## The determinism contract
 
 Every formula here is a pure function of stored state + a seeded RNG stream. No system reads `Math.random()` or wall-clock time. The worked examples are reproduced exactly by unit tests, so balance drift and accidental determinism breaks are caught (see `CLAUDE.md`).
+- [orgs-and-season.md](orgs-and-season.md) — persistent organizations, the season calendar and pyramid, contracts and the market, and the talent pipeline. The decision record for the persistent-world round.

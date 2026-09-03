@@ -358,7 +358,20 @@ export function shouldFold(org: Org, rng: Rng): boolean {
  */
 export function generateOrg(
   rng: Rng,
-  opts: { id: string; region: string; tier: PyramidTier; season: number; taken: ReadonlySet<string> },
+  opts: {
+    id: string;
+    region: string;
+    tier: PyramidTier;
+    season: number;
+    taken: ReadonlySet<string>;
+    /**
+     * Seasons of backstory to give the new name. Zero — the default — is right
+     * for a club replacing one that just folded. Filling a seat in an
+     * established tier at world creation should pass a real number, or the
+     * league ends up full of orgs with no past.
+     */
+    seasonsOfHistory?: number;
+  },
 ): Org {
   const { prefixes, suffixes, standalone, qualifiers } = ORG_NAME_PARTS;
   let name = '';
@@ -387,7 +400,7 @@ export function generateOrg(
       blurb: 'A new name in the scene. No history, no habits, nothing to lose.',
     },
     tier: opts.tier,
-    seasonsOfHistory: 0,
+    seasonsOfHistory: opts.seasonsOfHistory ?? 0,
   });
 }
 

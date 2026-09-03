@@ -4,10 +4,10 @@ A single-player LoL-esports team-management game (Football Manager for League of
 
 ## Layout
 
-- `packages/core` — the simulation engine. **Pure TypeScript, no DOM, no I/O.** Everything the game *is* lives here.
+- `packages/core` — the simulation engine. **Pure TypeScript, no DOM, no I/O.** Everything the game *is* lives here. Roughly: `players/` (attributes, ratings, meshing, scouting, development), `ladder/` (solo-queue model and the Onyx I visibility cutoff), `draft/`, `match/` (full resolution and 30s ticks), `world/` (orgs, contracts, fixtures and standings, the clock), `season/` (the calendar, the pyramid, and the fast path that resolves everything the player is not watching).
 - `packages/data` — content packs (fictional, moddable) + their schemas. Champions, archetypes, name pools, sponsor/event templates.
 - `packages/devtools` — headless CLI: generate a world, simulate seasons, print balance reports.
-- `apps/web` — React UI (later). For now the playable prototype is a self-contained Artifact; `docs/` tracks the plan for the real app.
+- `apps/web` — React UI (later). For now the playable prototype is a self-contained Artifact built from `prototype/src/` (`sim.js` ports core, `world.js` runs the persistent world, `season.js` and `matchday.js` are the big screens, `template.html` is the shell); `pnpm proto:build` assembles them. `docs/` tracks the plan for the real app.
 
 `core` and `data` must never import from `apps/`.
 
@@ -35,6 +35,7 @@ pnpm test             # vitest run (all packages)
 pnpm test:watch
 pnpm typecheck        # tsc -b across the workspace
 pnpm sim              # headless season runner (devtools)
+pnpm proto:build      # rebuild prototype/index.html from prototype/src/
 ```
 
 ## IP stance

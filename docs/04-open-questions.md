@@ -52,6 +52,19 @@ Provisional: v1 you own the org (one failure state: bankruptcy; board = investor
 - **Champion images are deferred**; cards/feeds are built to take them. Art brief (48 descriptions + exact sizes) is a later deliverable.
 - **Wireframe formats:** both piloted (in-doc sketches in [`06-ui-architecture.md`](06-ui-architecture.md) + an editable design canvas); user to pick the standard.
 
+### Decisions from the persistent-world round (user-confirmed)
+
+- **Persistent rival orgs per tier.** 48 orgs hold 48 conserved seats across a four-tier pyramid, forever. New names appear when one folds or a seat is expanded; folding is confined to the bottom two tiers and a long history protects a club from it. ([orgs-and-season.md](05-systems/orgs-and-season.md) §3–4)
+- **Org strength is longevity plus results, and it never touches a match directly.** `prestige = 0.62·standing + 0.38·legacy`, where legacy accrues per season at a tier-weighted rate and bleeds slowly. What it buys is off the pitch — cheaper wages, better staff, deeper scouting — so a dynasty is strong because of the roster it can assemble. The one direct channel, a sharper draft, is capped at 2.6 team-strength points (≈59.8% odds). Upsets survive by construction, and a test pins the bound. (`core/src/world/orgs.ts`)
+- **The visible ladder starts at Onyx I (2525) — our Diamond 1.** Nothing below is listed. The cutoff falls out of the existing tier bands rather than being a display filter. ([ranked-ladder.md](05-systems/ranked-ladder.md), `core/src/ladder/bands.ts`)
+- **Deep Scout is the door beneath the cutoff.** Four analyst weeks for one account from the Cobalt badlands; a gem 18% of the time for an amateur, 45% for a well-networked org. Everyone can buy a ticket, only a good org buys a repeatable edge.
+- **Development is headroom × environment, never rank.** A good org roughly doubles the solo-queue rate, so a 17-year-old Onyx I signing reaches ~88 CA in four or five seasons and ~74 if left alone. Potential is a hard wall. (`core/src/players/development.ts`)
+- **Contracts price on an exponential wage curve** (`0.22 × 1.068^(CA−50)`), so the last five ability points cost as much as the first thirty — which is what makes developing a prospect the smart play rather than the sentimental one. Prestige is the discount that converts history into strength.
+- **League revenue is calibrated against the ladder cutoff, not against tier quality** — the cheapest signable player is an Onyx I account, so even an amateur org pays elite-ladder wages for five. A test pins that every tier can afford the roster it can actually sign, and cannot afford it twice over.
+- **The season is a shared 52-week calendar** where every week has a kind (match / training / market / event), nine regular match weeks a split tiling an 18-round double round-robin exactly. (`core/src/season/calendar.ts`)
+- **Everything the manager is not watching resolves through `resolveFastSeries`** — the draft sampled in one Gaussian, day form drawn once per series. Twenty thousand series in well under a second. (`core/src/season/fast.ts`)
+- **Season is the home screen**, Compete is gone as a nav entry (match day is a takeover launched from the fixture), Scout became Recruit, and the inbox became a topbar drawer. Net −1 rail entry while the game roughly tripled in surface area. ([orgs-and-season.md](05-systems/orgs-and-season.md) §11)
+
 ## Parking lot (ideas noted, deliberately not planned)
 
 Academy/second roster management · playing as other regions' minor leagues · in-game "solo queue ladder" browser with generated drama · co-streaming/media minigames · multiplayer online leagues · other esports titles under one org umbrella · real-data import tooling (community-side only).

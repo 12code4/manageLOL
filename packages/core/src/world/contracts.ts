@@ -30,8 +30,13 @@ import { prestige, type Org, type PyramidTier } from './orgs.js';
 export const WAGE_BASE = 0.22;
 /** Each point of ability multiplies the wage by this. */
 export const WAGE_CURVE = 1.068;
-/** Weeks in a standard contract term. */
-export const SEASON_WEEKS = 40;
+/**
+ * Weeks in one contract year. This is the calendar year from
+ * `world/clock.ts`, not the ~43 weeks of it that carry competition — a deal
+ * runs through the off-season, so "two seasons" has to mean two actual years
+ * or every term on the squad screen reads short.
+ */
+export const SEASON_WEEKS = 52;
 
 export interface Contract {
   playerId: string;

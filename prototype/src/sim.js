@@ -794,6 +794,9 @@
       cash: round(S.tierWealth(tier) * rng.range(0.7, 1.4), 1),
       tier: tier,
       history: { titles: titles, bestTier: best, seasonsAtTier: atTier, finishes: [] },
+      // Divergence from core, on purpose: core keeps rosters and contracts in
+      // their own stores, but the prototype has one G object and no indices,
+      // so an org carries its own five and their deals.
       roster: { top: null, jungle: null, mid: null, bot: null, support: null },
       contracts: {},
     };
@@ -922,7 +925,7 @@
   };
 
   // ---------- contracts ----------
-  S.WAGE_BASE = 0.22; S.WAGE_CURVE = 1.068; S.SEASON_WEEKS = 40; S.ACCEPT_THRESHOLD = 0.72;
+  S.WAGE_BASE = 0.22; S.WAGE_CURVE = 1.068; S.SEASON_WEEKS = 52; S.ACCEPT_THRESHOLD = 0.72;
   S.tierWageMult = (t) => ({ 1: 1.25, 2: 1, 3: 0.75, 4: 0.5 })[t];
 
   S.wageDemand = function (player, tier, orgPrestige) {
