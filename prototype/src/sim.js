@@ -1236,6 +1236,98 @@
     const table = [90, 70, 55, 40, 25, 25, 12, 12, 4, 4];
     return table[place - 1] || 0;
   };
+  /* ---------- playoff brackets & the promotion gauntlet ---------- */
+  S.seedOrder = function (size) {
+    let order = [1];
+    while (order.length < size) {
+      const n = order.length * 2, next = [];
+      order.forEach((sd) => { next.push(sd); next.push(n + 1 - sd); });
+      order = next;
+    }
+    return order;
+  };
+  S.bracketSize = function (n) { let p = 1; while (p < n) p *= 2; return p; };
+
+  /* Single elimination with byes: byes are resolved at construction, so the
+     match list holds only series that will actually be played (teams − 1). */
+  S.buildBracket = function (teams, bestOf) {
+    const n = teams.length;
+    if (n < 2) return { teams: teams.slice(), bestOf: bestOf, matches: [], champion: teams[0] || null, rounds: 0 };
+    const size = S.bracketSize(n), rounds = Math.round(Math.log(size) / Math.log(2));
+    const order = S.seedOrder(size);
+    const teamOfSeed = (sd) => (sd - 1 < n ? teams[sd - 1] : null);
+    const matches = [], byId = {};
+    for (let r = 1; r <= rounds; r++) {
+      const count = size / Math.pow(2, r);
+      for (let m = 0; m < count; m++) {
+        const match = {
+          id: 'r' + r + 'm' + m, round: r, a: null, b: null, seedA: 0, seedB: 0,
+          winner: null, score: null,
+          feedsInto: r === rounds ? null : 'r' + (r + 1) + 'm' + Math.floor(m / 2),
+          feedsSlot: m % 2 === 0 ? 'a' : 'b',
+        };
+        matches.push(match); byId[match.id] = match;
+      }
+    }
+    const first = matches.filter((m) => m.round === 1);
+    first.forEach((m, i) => {
+      m.seedA = order[i * 2]; m.seedB = order[i * 2 + 1];
+      m.a = teamOfSeed(m.seedA); m.b = teamOfSeed(m.seedB);
+    });
+    const drop = {};
+    first.forEach((m) => {
+      if (m.a !== null && m.b !== null) return;
+      const through = m.a !== null ? m.a : m.b;
+      const seed = m.a !== null ? m.seedA : m.seedB;
+      drop[m.id] = 1;
+      if (through === null || !m.feedsInto) return;
+      const next = byId[m.feedsInto];
+      if (m.feedsSlot === 'a') { next.a = through; next.seedA = seed; }
+      else { next.b = through; next.seedB = seed; }
+    });
+    const live = matches.filter((m) => !drop[m.id] && (m.round > 1 || (m.a !== null && m.b !== null)));
+    return { teams: teams.slice(), bestOf: bestOf, matches: live, champion: null, rounds: rounds };
+  };
+
+  S.pendingMatches = (b) => b.matches.filter((m) => m.winner === null && m.a !== null && m.b !== null);
+  S.nextMatchFor = (b, orgId) => S.pendingMatches(b).filter((m) => m.a === orgId || m.b === orgId)[0] || null;
+  S.recordBracketResult = function (b, matchId, winner, score) {
+    const m = b.matches.filter((x) => x.id === matchId)[0];
+    if (!m || m.winner !== null) return;
+    m.winner = winner; m.score = score;
+    const seed = winner === m.a ? m.seedA : m.seedB;
+    if (!m.feedsInto) { b.champion = winner; return; }
+    const next = b.matches.filter((x) => x.id === m.feedsInto)[0];
+    if (!next) { b.champion = winner; return; }
+    if (m.feedsSlot === 'a') { next.a = winner; next.seedA = seed; }
+    else { next.b = winner; next.seedB = seed; }
+  };
+  S.playBracket = function (b, resolve, rng, skip) {
+    const played = [];
+    for (let guard = 0; guard < b.matches.length + 2; guard++) {
+      const ready = S.pendingMatches(b).filter((m) => skip === undefined || (m.a !== skip && m.b !== skip));
+      if (!ready.length) break;
+      ready.sort((x, y) => (x.id < y.id ? -1 : 1));
+      ready.forEach((m) => {
+        const out = resolve(m, rng);
+        S.recordBracketResult(b, m.id, out.winner, out.score);
+        played.push(m);
+      });
+    }
+    return played;
+  };
+  S.bracketPlacings = function (b) {
+    const out = [];
+    if (b.champion) out.push(b.champion);
+    b.matches.filter((m) => m.winner !== null)
+      .slice().sort((x, y) => (y.round !== x.round ? y.round - x.round : x.seedA - y.seedA))
+      .forEach((m) => { const l = m.winner === m.a ? m.b : m.a; if (l !== null && out.indexOf(l) < 0) out.push(l); });
+    b.teams.forEach((t) => { if (out.indexOf(t) < 0) out.push(t); });
+    return out;
+  };
+  S.buildGauntlet = (defender, challenger) => ({ defender: defender, challenger: challenger, bestOf: 5, winner: null, score: null });
+  S.gauntletPromoted = (g) => g.winner !== null && g.winner === g.challenger;
+
   S.resolveBoundary = (upper, lower, autoSeats) => ({
     relegated: upper.slice(Math.max(0, upper.length - autoSeats)),
     promoted: lower.slice(0, autoSeats),

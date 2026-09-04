@@ -260,6 +260,30 @@ on fold:  contracts void → players become free agents with reentryMmr (§7.4)
 
 ---
 
+## 4b. Playoffs and the gauntlet (shipped)
+
+Single elimination with byes at all four tiers, one generic builder
+(`core/src/season/bracket.ts`). Seeding is the reflected order, so the top two
+seeds meet only in the final and every first-round pairing sums to the field
+size plus one. Byes are resolved at construction — a pairing against an absent
+seed is never created as a match, and its team is seated directly in round
+two — so the match list holds exactly `teams − 1` series: **5 at tier 1, 3 at
+tier 2, 7 at tier 3, 3 at tier 4**.
+
+`playBracket` takes a resolver, so the same bracket runs through the fast path
+for leagues the manager is not in and the full match-day takeover for the one
+they are; `skip` leaves their own series unplayed and the rest of the bracket
+carries on around it.
+
+The promotion gauntlet is **one Bo5 per boundary**: the club just above the
+automatic relegation line defends against the best challenger that did not go
+up automatically. A ladder was considered and rejected — the drama of
+promotion is a night, not a tournament.
+
+Titles are the playoff champion, not the top of the table. That gap is most of
+what a season is about: the regular season you can grind, the bracket you have
+to win.
+
 ## 5. The season
 
 ### 5.1 The calendar — shipped

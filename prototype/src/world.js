@@ -141,6 +141,110 @@
     G.leagues = {};
     S.PYRAMID.forEach((cfg) => (G.leagues[cfg.tier] = W.newLeagueState(G, cfg.tier)));
     G.champion = null;
+    G.playoffs = null;
+    G.gauntlet = null;
+    G.lastSeason = null;
+  };
+
+  /* ─────────────────────────── playoffs ─────────────────────────── */
+
+  /** Seed the brackets from the regular-season tables. Idempotent. */
+  W.startPlayoffs = function (G) {
+    if (G.playoffs) return G.playoffs;
+    G.playoffs = {};
+    S.PYRAMID.forEach((cfg) => {
+      const order = W.orderOf(G.leagues[cfg.tier]);
+      G.playoffs[cfg.tier] = S.buildBracket(order.slice(0, cfg.playoffTeams), cfg.playoffBestOf);
+    });
+    return G.playoffs;
+  };
+
+  /** Your playoff series this week, if you made it and it is ready. */
+  W.yourPlayoffMatch = function (G) {
+    if (!G.playoffs) return null;
+    const b = G.playoffs[G.orgs[G.you].tier];
+    return b ? S.nextMatchFor(b, G.you) : null;
+  };
+
+  /** Resolve one bracket series through the fast path. */
+  W.fastBracketResolver = function (G, tier, label) {
+    const cfg = S.LEAGUE_BY_TIER[tier];
+    return (m) => {
+      const rng = new S.Rng(G.seed, label + ':' + G.season + ':' + tier + ':' + m.id);
+      const res = S.resolveFastSeries(W.fastSide(G, m.a), W.fastSide(G, m.b), cfg.playoffBestOf, rng, { games: false });
+      const winner = res.winner === 0 ? m.a : m.b;
+      const hi = Math.max(res.score[0], res.score[1]), lo = Math.min(res.score[0], res.score[1]);
+      return { winner: winner, score: [hi, lo] };
+    };
+  };
+
+  /** Play every bracket, optionally leaving your own series for the takeover. */
+  W.playPlayoffWeek = function (G, skipYours) {
+    W.startPlayoffs(G);
+    const lines = [];
+    S.PYRAMID.forEach((cfg) => {
+      const b = G.playoffs[cfg.tier];
+      const skip = skipYours && cfg.tier === G.orgs[G.you].tier ? G.you : undefined;
+      S.playBracket(b, W.fastBracketResolver(G, cfg.tier, 'po'), new S.Rng(G.seed, 'po:' + G.season + ':' + cfg.tier), skip);
+      if (b.champion && !b.announced) {
+        b.announced = true;
+        lines.push(G.orgs[b.champion].name + ' win ' + cfg.name + '.');
+      }
+    });
+    return lines;
+  };
+
+  /* ──────────────────────── the promotion gauntlet ──────────────────────── */
+
+  /**
+   * One contested seat per boundary: the club just above the automatic
+   * relegation line defends against the best challenger that did not go up
+   * automatically. One Bo5, everything on it.
+   */
+  W.startGauntlets = function (G) {
+    if (G.gauntlet) return G.gauntlet;
+    G.gauntlet = {};
+    for (let t = 1; t < 4; t++) {
+      const upper = W.orderOf(G.leagues[t]);
+      const lower = W.orderOf(G.leagues[t + 1]);
+      const auto = t === 3 ? 2 : 1;
+      const defender = upper[upper.length - auto - 1];
+      const challenger = lower[auto];
+      if (!defender || !challenger) continue;
+      G.gauntlet[t] = S.buildGauntlet(defender, challenger);
+    }
+    return G.gauntlet;
+  };
+
+  W.yourGauntlet = function (G) {
+    if (!G.gauntlet) return null;
+    const keys = Object.keys(G.gauntlet);
+    for (let i = 0; i < keys.length; i++) {
+      const g = G.gauntlet[keys[i]];
+      if (g.winner === null && (g.defender === G.you || g.challenger === G.you)) return { tier: Number(keys[i]), g: g };
+    }
+    return null;
+  };
+
+  W.playGauntlets = function (G, skipYours) {
+    W.startGauntlets(G);
+    const lines = [];
+    Object.keys(G.gauntlet).sort().forEach((t) => {
+      const g = G.gauntlet[t];
+      if (g.winner !== null) return;
+      if (skipYours && (g.defender === G.you || g.challenger === G.you)) return;
+      const rng = new S.Rng(G.seed, 'gaunt:' + G.season + ':' + t);
+      const cfgTier = Number(t);
+      const res = S.resolveFastSeries(W.fastSide(G, g.defender), W.fastSide(G, g.challenger), 5, rng, { games: false });
+      g.winner = res.winner === 0 ? g.defender : g.challenger;
+      g.score = [Math.max(res.score[0], res.score[1]), Math.min(res.score[0], res.score[1])];
+      if (S.gauntletPromoted(g)) {
+        lines.push(G.orgs[g.challenger].name + ' take ' + G.orgs[g.defender].name + '’s seat in ' + S.LEAGUE_BY_TIER[cfgTier].name + '.');
+      } else {
+        lines.push(G.orgs[g.defender].name + ' survive the gauntlet ' + g.score[0] + '–' + g.score[1] + '.');
+      }
+    });
+    return lines;
   };
 
   /** Rounds played in a given match week, spread evenly across the split. */
@@ -511,26 +615,38 @@
       movements[cfg.tier] = W.orderOf(league);
     });
 
+    // The table decides who is good; the bracket decides who lifts the
+    // trophy, so a title is the playoff champion, not the top of the table.
+    const champions = {};
+    if (G.playoffs) S.PYRAMID.forEach((cfg) => { if (G.playoffs[cfg.tier]) champions[cfg.tier] = G.playoffs[cfg.tier].champion; });
+
     S.PYRAMID.forEach((cfg) => {
       const order = movements[cfg.tier];
       order.forEach((id, i) => {
         const org = G.orgs[id];
         const place = i + 1;
         const prize = S.prizeFor(cfg, place);
-        const wonTitle = place === 1;
+        const wonTitle = champions[cfg.tier] ? champions[cfg.tier] === id : place === 1;
         const invest = S.investmentBudget(org);
         G.orgs[id] = S.advanceOrgSeason(org, {
           season: G.season, tier: cfg.tier, place: place, of: order.length,
           wonTitle: wonTitle, netCash: prize, investment: invest,
         });
-        if (wonTitle) lines.push(cfg.name + ': ' + org.name + ' are champions.');
+        if (wonTitle) lines.push(cfg.name + ': <b>' + org.name + '</b> are champions.');
       });
     });
 
-    // Seats change hands, both directions committed together.
+    // Seats change hands, both directions committed together. The automatic
+    // places come from the table; one more per boundary was settled in the
+    // gauntlet, and that one only moves if the challenger actually won it.
     for (let t = 1; t < 4; t++) {
       const auto = t === 3 ? 2 : 1;
       const move = S.resolveBoundary(movements[t], movements[t + 1], auto);
+      const g = G.gauntlet ? G.gauntlet[t] : null;
+      if (g && S.gauntletPromoted(g)) {
+        move.relegated.push(g.defender);
+        move.promoted.push(g.challenger);
+      }
       move.relegated.forEach((id) => { G.orgs[id].tier = t + 1; });
       move.promoted.forEach((id) => { G.orgs[id].tier = t; });
       move.promoted.forEach((id) => lines.push(G.orgs[id].name + ' are promoted to ' + S.LEAGUE_BY_TIER[t].name + '.'));

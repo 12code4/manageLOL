@@ -16,11 +16,11 @@ function clearTimers(){ const m=G.match; if(!m)return; clearTimeout(m.actT); cle
 
 /* -------- series lifecycle -------- */
 function startSeries(){
-  if(rosterCount()<5){toast('You need all five roles filled to compete.','bad');return;}
+  if(rosterCount()<5){toast('You need all five roles filled to compete.','bad');G.ui.screen='squad';render();return;}
   ensurePools();
   const opp=G.matchOpp||(G.matchOpp=makeOpponent()); ensureOppPools(opp);
   G.match={opp:opp, gameIndex:0, games:[], phase:'draft', crowd:[], comms:[], hype:30, timer:30, beatT:[],
-    chatRng:new S.Rng(G.seed,'chat:'+G.week+':'+G.stageWins), commsRng:new S.Rng(G.seed,'comms:'+G.week+':'+G.stageWins)};
+    chatRng:new S.Rng(G.seed,'chat:'+G.season+':'+G.week), commsRng:new S.Rng(G.seed,'comms:'+G.season+':'+G.week)};
   beginDraft();
 }
 function beginDraft(){
@@ -163,17 +163,40 @@ function nextGame(){
 }
 function concludeSeries(yw,ow){
   const m=G.match; clearTimers(); const won=yw>ow; const opp=m.opp; const cfg=S.LEAGUE_BY_TIER[you().tier];
+  const ko=G.ui.knockout;
   G.ui.match={series:{scoreA:yw,scoreB:ow,games:m.games,winner:won?'a':'b',bestOf:3},opp:opp,won:won};
-  // The result goes into the table this week; the rest of the pyramid plays too.
+  // The result goes into the table (or the bracket) and the rest of the
+  // pyramid plays the same week.
   window.commitYourSeries(yw,ow);
-  const order=window.LOLWorld.orderOf(G.leagues[you().tier]);
-  const place=order.indexOf(G.you)+1;
-  if(won){
-    pushLog('Beat <b>'+opp.name+'</b> '+yw+'–'+ow+'. You are '+window.seasonOrd(place)+' in '+cfg.name+'.','good');
-    toast('Series won vs '+opp.name+' — '+yw+'–'+ow+'.','good');
+  if(ko){
+    // A knockout has no league position to report — it has a consequence.
+    const b=G.playoffs?G.playoffs[you().tier]:null;
+    const stillIn=b?!!window.LOLWorld.yourPlayoffMatch(G):false;
+    const title=b&&b.champion===G.you;
+    if(ko.kind==='gauntlet'){
+      pushLog(won?'You held the gauntlet against <b>'+opp.name+'</b> '+yw+'–'+ow+'. The seat is yours.'
+                 :'Lost the gauntlet to '+opp.name+' '+ow+'–'+yw+'. The seat goes with it.',won?'good':'bad');
+      toast(won?'Seat held.':'Seat lost.',won?'good':'bad');
+    } else if(title){
+      pushLog('★ <b>'+cfg.name+' champions.</b> You beat '+opp.name+' '+yw+'–'+ow+' in the final.','good');
+      toast('★ '+cfg.name+' champions.','good');
+    } else if(won){
+      pushLog('Through. Beat <b>'+opp.name+'</b> '+yw+'–'+ow+(stillIn?' — one more to play.':'.'),'good');
+      toast('Through — '+yw+'–'+ow+' vs '+opp.name+'.','good');
+    } else {
+      pushLog('Knocked out by '+opp.name+' '+ow+'–'+yw+'. The season ends here.','bad');
+      toast('Knocked out by '+opp.name+'.','bad');
+    }
   } else {
-    pushLog('Lost to '+opp.name+' '+ow+'–'+yw+'. '+window.seasonOrd(place)+' in '+cfg.name+'.','bad');
-    toast('Series lost vs '+opp.name+'.','bad');
+    const order=window.LOLWorld.orderOf(G.leagues[you().tier]);
+    const place=order.indexOf(G.you)+1;
+    if(won){
+      pushLog('Beat <b>'+opp.name+'</b> '+yw+'–'+ow+'. You are '+window.seasonOrd(place)+' in '+cfg.name+'.','good');
+      toast('Series won vs '+opp.name+' — '+yw+'–'+ow+'.','good');
+    } else {
+      pushLog('Lost to '+opp.name+' '+ow+'–'+yw+'. '+window.seasonOrd(place)+' in '+cfg.name+'.','bad');
+      toast('Series lost vs '+opp.name+'.','bad');
+    }
   }
   m.phase='series'; G.patchFamiliarity=Math.min(100,G.patchFamiliarity+6);
   advanceWeekQuiet(); render();

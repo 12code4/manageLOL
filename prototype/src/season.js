@@ -141,13 +141,130 @@
   const maxRound = (league) => league.fixtures.reduce((m, f) => Math.max(m, f.round), 0);
   const totalTitles = (org) => [1, 2, 3, 4].reduce((s, t) => s + (org.history.titles[t] || 0), 0);
 
+  /* ───────────────────────────── the bracket ──────────────────────────── */
+
+  function roundLabel(b, round) {
+    const left = b.rounds - round;
+    if (left === 0) return 'Final';
+    if (left === 1) return 'Semi-finals';
+    if (left === 2) return 'Quarter-finals';
+    return 'Round ' + round;
+  }
+
+  /**
+   * The bracket, drawn as columns of series rather than as a tree with elbow
+   * connectors. A tree needs absolute positioning and breaks the moment a bye
+   * removes a node; columns stay honest at any field size and read fine at
+   * four teams, which is most of the pyramid.
+   */
+  function bracketCard(G, tier) {
+    const b = G.playoffs && G.playoffs[tier];
+    if (!b) return null;
+    const card = el('div', 'card bracketcard');
+    card.appendChild(sectionLabel('Playoffs', b.champion ? 'decided' : 'in progress'));
+
+    const rounds = [];
+    b.matches.forEach((m) => {
+      if (!rounds[m.round]) rounds[m.round] = [];
+      rounds[m.round].push(m);
+    });
+
+    const cols = el('div', 'bracketcols');
+    for (let r = 1; r <= b.rounds; r++) {
+      const list = (rounds[r] || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1));
+      if (!list.length) continue;
+      const col = el('div', 'bcol');
+      col.appendChild(el('div', 'bcolhead', roundLabel(b, r)));
+      list.forEach((m) => col.appendChild(seriesCell(G, m)));
+      cols.appendChild(col);
+    }
+    card.appendChild(cols);
+
+    if (b.champion) {
+      const win = el('div', 'bchamp');
+      win.innerHTML = '<span class="otag mono">' + G.orgs[b.champion].tag + '</span>' +
+        '<span>' + G.orgs[b.champion].name + '</span><span class="btrophy">champions</span>';
+      card.appendChild(win);
+    }
+    return card;
+  }
+
+  function seriesCell(G, m) {
+    const cell = el('div', 'bmatch' + (m.winner ? ' done' : '') + (m.a === G.you || m.b === G.you ? ' mine' : ''));
+    const sideRow = (orgId, seed, score, won) => {
+      if (orgId === null) return '<div class="bside tbd"><span class="bname">—</span></div>';
+      const org = G.orgs[orgId];
+      return '<div class="bside' + (won ? ' won' : '') + (orgId === G.you ? ' you' : '') + '">' +
+        '<span class="bseed mono">' + (seed || '') + '</span>' +
+        '<span class="bname">' + org.tag + '</span>' +
+        '<span class="bscore mono">' + (score === null ? '' : score) + '</span></div>';
+    };
+    const sa = m.score ? (m.winner === m.a ? m.score[0] : m.score[1]) : null;
+    const sb = m.score ? (m.winner === m.b ? m.score[0] : m.score[1]) : null;
+    cell.innerHTML = sideRow(m.a, m.seedA, sa, m.winner === m.a) + sideRow(m.b, m.seedB, sb, m.winner === m.b);
+    return cell;
+  }
+
+  /** The one contested seat between two tiers, when it is live. */
+  function gauntletCard(G) {
+    if (!G.gauntlet) return null;
+    const keys = Object.keys(G.gauntlet);
+    if (!keys.length) return null;
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('The gauntlet', 'one seat per boundary'));
+    const list = el('div', 'gauntlist');
+    keys.sort().forEach((t) => {
+      const g = G.gauntlet[t];
+      const row = el('div', 'gaunt' + (g.defender === G.you || g.challenger === G.you ? ' mine' : ''));
+      const won = g.winner;
+      row.innerHTML =
+        '<span class="mono gtier">T' + t + '</span>' +
+        '<span class="gside' + (won === g.defender ? ' won' : '') + '">' + G.orgs[g.defender].tag + '</span>' +
+        '<span class="gvs mono">' + (g.score ? g.score[0] + '–' + g.score[1] : 'vs') + '</span>' +
+        '<span class="gside' + (won === g.challenger ? ' won' : '') + '">' + G.orgs[g.challenger].tag + '</span>' +
+        '<span class="gnote">' + (won ? (S.gauntletPromoted(g) ? 'seat taken' : 'seat held') : 'defends') + '</span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
   /* ─────────────────────────── the fixture card ───────────────────────── */
 
   function fixtureCard(G) {
     const d = S.weekDef(G.week);
     const card = el('div', 'card fixture');
-    const fx = W.yourFixture(G);
 
+    // A knockout week outranks everything: your season is on the line.
+    if (d.window.indexOf('Playoffs') >= 0) {
+      W.startPlayoffs(G);
+      const m = W.yourPlayoffMatch(G);
+      if (m) return knockoutCard(G, 'playoff', m, G.orgs[m.a === G.you ? m.b : m.a],
+        roundLabel(G.playoffs[G.orgs[G.you].tier], m.round), 'Win and you go through. Lose and the season is over.');
+      const b = G.playoffs[G.orgs[G.you].tier];
+      const out = b && b.teams.indexOf(G.you) < 0;
+      card.appendChild(sectionLabel('Playoffs', out ? 'you did not qualify' : 'your run is over'));
+      card.appendChild(el('div', 'weekbody', '<p class="wknote">' +
+        (out ? 'You finished outside the playoff places. Watch, and plan the off-season.'
+             : 'You are out of the bracket. It is somebody else’s trophy this year.') + '</p>'));
+      const btn = el('button', 'btn primary wide', '▶  Watch it out');
+      btn.onclick = () => window.advanceWeek();
+      card.appendChild(btn);
+      return card;
+    }
+    if (d.window === 'Promotion') {
+      W.startGauntlets(G);
+      const g = W.yourGauntlet(G);
+      if (g) {
+        const opp = G.orgs[g.g.defender === G.you ? g.g.challenger : g.g.defender];
+        const defending = g.g.defender === G.you;
+        return knockoutCard(G, 'gauntlet', g, opp, 'The gauntlet',
+          defending ? 'Your seat in this league is what is on the table.'
+                    : 'Win this and you are promoted. There is no second chance this year.');
+      }
+    }
+
+    const fx = W.yourFixture(G);
     if (d.kind === 'match' && fx) {
       const oppId = fx.a === G.you ? fx.b : fx.a;
       const opp = G.orgs[oppId];
@@ -193,6 +310,49 @@
     card.appendChild(body);
     const btn = el('button', 'btn primary wide', continueLabel(G));
     btn.onclick = () => window.advanceWeek();
+    card.appendChild(btn);
+    return card;
+  }
+
+  /** A one-series, everything-on-it card. Same shape as a league fixture. */
+  function knockoutCard(G, kind, payload, opp, title, stake) {
+    const card = el('div', 'card fixture knockout');
+    const you = G.orgs[G.you];
+    const mine = W.fastSide(G, G.you);
+    const theirs = W.fastSide(G, opp.id);
+    const p = 1 / (1 + Math.pow(10, -(mine.strength - theirs.strength) / 15));
+
+    card.appendChild(sectionLabel(title, 'Bo' + (kind === 'gauntlet' ? 5 : S.LEAGUE_BY_TIER[you.tier].playoffBestOf)));
+    const vs = el('div', 'fxvs');
+    vs.innerHTML =
+      '<div class="fxside"><span class="otag mono big">' + you.tag + '</span></div>' +
+      '<div class="fxmid"><span class="fxname">' + opp.name + '</span>' +
+      '<span class="fxstat">' + S.statureLabel(opp) + ' · legacy ' + Math.round(opp.legacy) + (opp.legacy >= 55 ? ' ⚜' : '') + '</span></div>' +
+      '<div class="fxside r"><span class="otag mono big">' + opp.tag + '</span></div>';
+    card.appendChild(vs);
+
+    const bar = el('div', 'wpsplit');
+    bar.innerHTML = '<i style="width:' + (p * 100).toFixed(1) + '%"></i>';
+    card.appendChild(bar);
+    const pct = el('div', 'wplabels');
+    pct.innerHTML = '<span class="mono">' + Math.round(p * 100) + '% you</span><span class="mono">' + Math.round((1 - p) * 100) + '% ' + opp.tag + '</span>';
+    card.appendChild(pct);
+
+    const st = el('div', 'stake');
+    st.textContent = stake;
+    card.appendChild(st);
+
+    // A knockout is exactly the wrong place to discover you are a player short.
+    const warn = matchWarnings(G, you);
+    if (warn) card.appendChild(warn);
+
+    const btn = el('button', 'btn primary wide', '▶  Play the series');
+    if (!W.lineupOf(you)) {
+      btn.disabled = true;
+      btn.textContent = 'Fill all five seats first';
+    } else {
+      btn.onclick = () => window.startKnockout(kind, payload);
+    }
     card.appendChild(btn);
     return card;
   }
@@ -440,9 +600,18 @@
 
     main.appendChild(runStrip(G));
 
+    const d = S.weekDef(G.week);
     const grid = el('div', 'hub');
     const left = el('div', 'hubcol');
     left.appendChild(fixtureCard(G));
+    if (d.window.indexOf('Playoffs') >= 0 || (G.playoffs && G.playoffs[you.tier] && G.playoffs[you.tier].champion)) {
+      const bc = bracketCard(G, you.tier);
+      if (bc) left.appendChild(bc);
+    }
+    if (d.window === 'Promotion') {
+      const gc = gauntletCard(G);
+      if (gc) left.appendChild(gc);
+    }
     left.appendChild(standingsTable(G, you.tier));
     const right = el('div', 'hubcol');
     right.appendChild(formCard(G));
