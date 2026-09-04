@@ -13,11 +13,12 @@
  *   Contenders Cup — monthly. Real money, real fields, a real name to make.
  *   The Gateway    — twice a year. The prize is a seat in the pyramid.
  *
- * The gate is reputation, and reputation is deliberately hard to farm: every
- * rung has a ceiling, and gains shrink as you approach it. Winning weekend
- * opens forever plateaus you at about 20 — enough to unlock the Cup and
- * nothing more. You cannot grind the bottom rung into a league seat; you have
- * to keep climbing, and each rung asks a better team than the last.
+ * The gate is reputation, and reputation is deliberately hard to farm. Every
+ * rung has a ceiling and gains shrink as you approach it, and the ceilings are
+ * set so each rung carries you to the *next* door and no further: win every
+ * weekend open forever and you plateau at 18, which opens the Cup and will
+ * never open the Gateway. You cannot grind the bottom of the circuit into a
+ * league seat. You have to keep climbing, and each rung asks a better team.
  *
  * Everything here is pure. Brackets come from `bracket.ts`, results from
  * whatever resolver the caller supplies, so one implementation serves both
@@ -85,7 +86,7 @@ export const CIRCUIT: readonly CircuitEvent[] = [
     bestOf: 1,
     finalBestOf: 3,
     repGate: 0,
-    repCap: 25,
+    repCap: 18,
     purse: { winner: 6, finalist: 2.5, semi: 1, quarter: 0.4, entered: 0 },
     points: { winner: 100, finalist: 60, semi: 35, quarter: 18, entered: 6 },
     repBase: { winner: 3, finalist: 1.6, semi: 0.8, quarter: 0.35, entered: 0.1 },
@@ -101,7 +102,7 @@ export const CIRCUIT: readonly CircuitEvent[] = [
     bestOf: 1,
     finalBestOf: 3,
     repGate: 12,
-    repCap: 45,
+    repCap: 38,
     purse: { winner: 22, finalist: 10, semi: 4.5, quarter: 2, entered: 0 },
     points: { winner: 260, finalist: 150, semi: 85, quarter: 42, entered: 12 },
     repBase: { winner: 10, finalist: 5.5, semi: 2.6, quarter: 1.2, entered: 0.35 },
@@ -116,7 +117,7 @@ export const CIRCUIT: readonly CircuitEvent[] = [
     fieldSize: 16,
     bestOf: 3,
     finalBestOf: 5,
-    repGate: 30,
+    repGate: 36,
     repCap: 68,
     purse: { winner: 40, finalist: 18, semi: 8, quarter: 3, entered: 0 },
     points: { winner: 500, finalist: 300, semi: 170, quarter: 85, entered: 25 },
@@ -272,5 +273,13 @@ export const GRASSROOTS_STIPEND = 0.5;
 /** Amateur players cost amateur money. Below tier 4's 0.5. */
 export const OPEN_WAGE_MULT = 0.4;
 
-/** Quality centre for the floating pool's rosters. */
-export const OPEN_QUALITY_CENTRE = 52;
+/**
+ * Quality centre for the floating pool's rosters.
+ *
+ * Deliberately high — higher than the tier-3 league's own centre. The Open's
+ * clubs sign off exactly the same Onyx-I-and-above ladder the manager does,
+ * so an amateur scene full of 50-rated players would be a fiction, and worse,
+ * a pushover: a manager who spends their seed money on good players would
+ * walk the circuit in one season and the whole climb would evaporate.
+ */
+export const OPEN_QUALITY_CENTRE = 62;

@@ -529,6 +529,46 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 .drawer h3{margin:0 0 3px;font-family:"Barlow Condensed";font-size:21px}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55}
 
+/* the Open: the tournament board */
+.board{padding:14px 16px 10px}
+.evrow{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;
+  padding:12px 0;border-top:1px solid var(--line-soft)}
+.evrow:first-of-type{border-top:0}
+.evmain{min-width:0}
+.evname{display:block;font-family:"Barlow Condensed";font-size:19px;letter-spacing:.02em;color:var(--ink);line-height:1.15}
+.evlock{font-size:11px;opacity:.55;vertical-align:2px}
+.evblurb{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.evfacts{display:flex;flex-direction:column;gap:2px;text-align:right;font-size:10px;color:var(--faint);white-space:nowrap}
+.evfacts .evprize{color:var(--gold)}
+.evact{min-width:118px;text-align:right}
+.evact .btn{font-size:12px;padding:7px 12px}
+.evgate,.evwhen{font-size:10px;color:var(--faint);line-height:1.5;display:inline-block}
+.evgate b{color:var(--gold);font-size:11px}
+/* Locked reads as distant, never as broken: the name and the prize stay fully
+   legible, because that rung is the thing being climbed toward. */
+.evrow.locked .evname{color:var(--muted)}
+.evrow.locked .evblurb{opacity:.6}
+.evrow.locked .evfacts{opacity:.55}
+.evrow.live{background:linear-gradient(90deg,var(--gold-ghost),transparent 60%);
+  margin:0 -16px;padding-left:16px;padding-right:16px}
+
+/* the reputation meter */
+.repcard{padding:14px 16px 12px}
+.repbar{position:relative;height:9px;border-radius:6px;background:var(--surface-3);overflow:visible;margin:2px 0 6px}
+.repbar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+.repbar b{position:absolute;top:-4px;width:2px;height:17px;background:var(--line);border-radius:1px}
+.repbar b.open{background:var(--gel)}
+.repscale{position:relative;height:22px;font-size:9px;color:var(--faint)}
+.repscale span{position:absolute;top:2px;transform:translateX(-50%);white-space:nowrap;letter-spacing:.06em}
+.repscale span:first-child{position:static;display:inline-block;transform:none;color:var(--gold);font-size:13px}
+.repscale span.open{color:var(--gel)}
+.repnote{font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line-soft);padding-top:9px;margin-top:2px}
+
+.circuitrow{grid-template-columns:26px 14px 1fr auto}
+.circuitrow .evsm{color:var(--muted)}
+.circuitrow .res.w{color:var(--gold)}
+.seatoffer{border-color:color-mix(in srgb,var(--gold) 40%,var(--line))}
+
 /* the playoff bracket */
 .bracketcard{padding:14px 16px}
 .bracketcols{display:flex;gap:14px;overflow-x:auto;padding-bottom:4px}
@@ -656,18 +696,22 @@ function newGame(seed){
   const W=window.LOLWorld;
   const built=W.buildOrgs(seed);
   // Your org takes the last seat at the bottom of the pyramid.
+  // You start outside the pyramid entirely: no seat, no fixtures, no table,
+  // no reputation and no revenue except what you can win.
   const yours=S.seedOrg(new S.Rng(seed,'you'),{id:'you',name:'Ashgrove Collective',tag:'ASH',region:'mer',
     personality:'academy',blurb:'A garage org with a whiteboard, a spreadsheet, and you.'},4,0);
   yours.cash=100; yours.facilities=32; yours.coaching=45; yours.analytics=60; yours.scouting=38;
+  yours.standing=3; yours.legacy=0; yours.fanbase=6;
   yours.roster={top:null,jungle:null,mid:null,bot:null,support:null}; yours.contracts={};
   built.orgs['you']=yours; built.seats[4].push('you');
 
   G={
     seed:seed, season:1, week:1, you:'you',
-    orgs:built.orgs, seats:built.seats, leagues:null,
+    orgs:built.orgs, seats:built.seats, pool:built.pool, leagues:null, circuit:null,
     scoutPts:6, scoutBudget:6,
     ladder:[], sponsors:{active:[],offers:[]}, inbox:[], weekResults:{},
     ui:{screen:'season',selLad:null,match:null,orgSheet:null,drawer:false,band:'board'},
+    seatOffer:null,
     orgName:yours.name, matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
     pendingBids:[],
   };
@@ -692,7 +736,7 @@ function newGame(seed){
   G.sponsors.active.push({id:'spo-start',nm:SPONSOR_TEMPLATES[0].nm,flav:SPONSOR_TEMPLATES[0].flav,
     base:0,weekly:SPONSOR_TEMPLATES[0].weekly,clause:null,ob:SPONSOR_TEMPLATES[0].ob,tier:0});
   refreshSponsorOffers();
-  pushLog('You take over '+yours.name+', bottom of the Open Circuit. Fill five seats and start climbing.','info');
+  pushLog('You take over '+yours.name+' — five empty seats, a hundred credits, and no league that will have you. Sign a team and start entering weekend opens.','info');
   render();
 }
 function you(){return G.orgs[G.you];}
@@ -859,6 +903,14 @@ function advanceWeek(){
   const isPlayoff=d.window.indexOf('Playoffs')>=0;
   const isGauntlet=d.window==='Promotion';
 
+  // The Open: a tournament you have entered has to be played out before the
+  // week can turn, and the rest of the circuit runs whether you enter or not.
+  if(W.unaffiliated(G)){
+    if(W.yourCircuitMatch(G)){ toast('You are still in a bracket this week.','bad'); G.ui.screen='season'; render(); return; }
+    W.runCircuitWeek(G,false).forEach(l=>pushLog(l,'good'));
+    W.runShadowCircuit(G).forEach(l=>pushLog(l,'info'));
+  }
+
   // Anything you are personally in must be played, not skipped.
   const fx=W.yourFixture(G);
   if(d.kind==='match'&&!isPlayoff&&!isGauntlet&&fx){ toast('You have a series to play this week.','bad'); G.ui.screen='season'; render(); return; }
@@ -871,7 +923,7 @@ function advanceWeek(){
     if(W.yourGauntlet(G)){ toast('Your seat is on the line this week.','bad'); G.ui.screen='season'; render(); return; }
     W.playGauntlets(G,false).forEach(l=>pushLog(l,'info'));
   } else if(d.kind==='match'){
-    S.PYRAMID.forEach(cfg=>W.playLeagueWeek(G,cfg.tier,true));
+    S.LEAGUES.forEach(cfg=>W.playLeagueWeek(G,cfg.tier,true));
   }
 
   // Chemistry, development, money, contracts, rivals.
@@ -918,6 +970,35 @@ function makeOpponent(){
   let ch=S.initChem(lu);const wk=Math.round(rng.range(6,26));for(let i=0;i<wk;i++)S.rampWeek(ch,lu,1);
   return {name:'Scrim Partners',tag:'SCR',orgId:null,lineup:lu,chem:ch};
 }
+window.enterCircuitEvent=function(rungId){
+  const W=window.LOLWorld;
+  const event=S.EVENT_BY_RUNG[rungId];
+  const check=W.enterEvent(G,event);
+  if(!check.allowed){
+    toast(check.reason==='roster'?'You need five players first.'
+      :check.reason==='reputation'?'You need '+check.repShort.toFixed(1)+' more reputation.'
+      :'You cannot afford the entry fee.','bad');
+    return;
+  }
+  pushLog('Entered the <b>'+event.name+'</b> — '+event.entryFee+'◈ down, '+event.fieldSize+' teams in.','info');
+  // Play the rounds that do not involve you, so your first match is waiting.
+  W.runCircuitWeek(G,true);
+  render();
+};
+window.buySeat=function(){
+  const offer=G.seatOffer; if(!offer)return;
+  const you=G.orgs[G.you];
+  const check=S.canBuySeat(offer,{reputation:S.prestige(you),cash:you.cash});
+  if(!check.allowed)return;
+  if(!confirm('Buy '+offer.vacatedBy+'’s seat in '+S.LEAGUE_BY_TIER[offer.tier].name+' for '+offer.cost+'◈?\n\nYou will be in the league from next season.'))return;
+  you.cash=you.cash-offer.cost;
+  you.tier=offer.tier;
+  window.LOLWorld.reindexSeats(G);
+  G.seatOffer=null;
+  pushLog('★ You bought '+offer.vacatedBy+'’s seat. <b>'+S.LEAGUE_BY_TIER[offer.tier].name+'</b> next season.','good');
+  toast('★ You are in the league.','good');
+  render();
+};
 window.startFixture=function(fx){
   G.ui.fixture=fx; G.ui.knockout=null; G.matchOpp=null; G.ui.screen='compete'; G.ui.orgSheet=null;
   render();
@@ -925,10 +1006,13 @@ window.startFixture=function(fx){
 /* A playoff series or a gauntlet: same takeover, different bookkeeping. */
 window.startKnockout=function(kind,payload){
   const W=window.LOLWorld;
-  const opp = kind==='playoff'
-    ? (payload.a===G.you?payload.b:payload.a)
-    : (payload.g.defender===G.you?payload.g.challenger:payload.g.defender);
-  G.ui.knockout={kind:kind, payload:payload, oppId:opp};
+  // A playoff series and a circuit bracket are both plain bracket matches;
+  // only the gauntlet carries its own two-sided shape.
+  const opp = kind==='gauntlet'
+    ? (payload.g.defender===G.you?payload.g.challenger:payload.g.defender)
+    : (payload.a===G.you?payload.b:payload.a);
+  G.ui.knockout={kind:kind, payload:payload, oppId:opp,
+    rung:kind==='circuit'&&G.circuit&&G.circuit.live?G.circuit.live.rung:null};
   G.ui.fixture={round:0, a:G.you, b:opp, knockout:true};
   G.matchOpp=null; G.ui.screen='compete'; G.ui.orgSheet=null;
   render();
@@ -937,6 +1021,17 @@ window.startKnockout=function(kind,payload){
 window.commitYourSeries=function(yw,ow){
   const W=window.LOLWorld;
   const ko=G.ui.knockout;
+  if(ko&&ko.kind==='circuit'){
+    const live=G.circuit.live;
+    const won=yw>ow;
+    S.recordBracketResult(live.bracket,ko.payload.id,won?G.you:ko.oppId,[Math.max(yw,ow),Math.min(yw,ow)]);
+    if(!won)live.exits[G.you]=ko.payload.round;
+    else live.exits[ko.oppId]=ko.payload.round;
+    W.runCircuitWeek(G,true).forEach(l=>pushLog(l,'good'));
+    G.weekResults[G.season+':'+G.week]=won?'w':'l';
+    G.ui.knockout=null; G.ui.fixture=null;
+    return;
+  }
   if(ko){
     const won=yw>ow;
     const score=[Math.max(yw,ow),Math.min(yw,ow)];
@@ -1006,6 +1101,28 @@ function renderContinue(){
   const W=window.LOLWorld;
   const d=S.weekDef(G.week);
   const v=$('#continueVerb'),sub=$('#continueSub');
+  const setInbox=()=>{const u=G.inbox.filter(x=>!x.read).length;const c=$('#inboxCount');c.textContent=u;c.style.display=u?'flex':'none';};
+  if(W.unaffiliated(G)){
+    const m=W.yourCircuitMatch(G);
+    if(m){
+      const opp=G.orgs[m.a===G.you?m.b:m.a];
+      const live=G.circuit.live;
+      v.textContent='▶ Play · '+circuitRoundName(live.bracket,m);
+      sub.textContent=S.EVENT_BY_RUNG[live.rung].name+' · vs '+opp.tag;
+      $('#continueBtn').onclick=()=>window.startKnockout('circuit',m);
+      setInbox(); return;
+    }
+    const evs=W.eventsThisWeek(G);
+    if(evs.length){
+      v.textContent='▶ Advance · '+(G.circuit.live?'finish the bracket':'skip the '+evs[0].name.toLowerCase());
+      sub.textContent='week '+G.week+' · the Open';
+    } else {
+      v.textContent='▶ Advance';
+      sub.textContent='week '+G.week+' · '+d.window.toLowerCase();
+    }
+    $('#continueBtn').onclick=()=>advanceWeek();
+    setInbox(); return;
+  }
   if(d.window.indexOf('Playoffs')>=0){
     W.startPlayoffs(G);
     const m=W.yourPlayoffMatch(G);
@@ -1043,6 +1160,13 @@ function renderContinue(){
   }
   const unread=G.inbox.filter(m=>!m.read).length;
   const c=$('#inboxCount'); c.textContent=unread; c.style.display=unread?'flex':'none';
+}
+function circuitRoundName(b,m){
+  const left=b.rounds-m.round;
+  if(left===0)return 'the final';
+  if(left===1)return 'the semi-final';
+  if(left===2)return 'the quarter-final';
+  return 'round '+m.round;
 }
 function roundName(b,m){
   const left=b.rounds-m.round;
@@ -1090,8 +1214,13 @@ function renderNav(){
   $('#nb-scout').textContent=G.ladder.filter(e=>!e.signed&&e.scout.conf>0).length||'0';
   $('#nb-squad').textContent=rosterCount()+'/5';
   $('#nb-sponsors').textContent=G.sponsors.offers.length||'0';
-  const order=G.leagues?window.LOLWorld.orderOf(G.leagues[you().tier]):[];
-  $('#nb-season').textContent=order.length?(order.indexOf(G.you)+1)+'/'+order.length:'—';
+  const W=window.LOLWorld;
+  if(W.unaffiliated(G)){
+    $('#nb-season').textContent=Math.round(S.prestige(you()))+' rep';
+  } else {
+    const order=G.leagues?W.orderOf(G.leagues[you().tier]):[];
+    $('#nb-season').textContent=order.length?(order.indexOf(G.you)+1)+'/'+order.length:'—';
+  }
 }
 function renderPyramid(){
   const p=$('#pyr');p.innerHTML='';

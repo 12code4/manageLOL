@@ -22,7 +22,10 @@
     const rng = new S.Rng(seed, 'world:orgs');
     const pack = S.ORG_PACK.filter((o) => o.region === HOME || o.region === 'wilds');
     const foreign = S.ORG_PACK.filter((o) => o.region !== HOME && o.region !== 'wilds');
-    const need = S.PYRAMID.reduce((n, l) => n + l.slots, 0);
+    // Seats for the three leagues, plus a floating pool of unaffiliated orgs
+    // for The Open. The player is one of the floaters, and starts with nothing.
+    const POOL_SIZE = 21;
+    const need = S.LEAGUES.reduce((n, l) => n + l.slots, 0) + POOL_SIZE;
 
     const identities = pack.slice();
     // A few clubs from abroad have relocated into the region — cheap colour,
@@ -46,13 +49,11 @@
     keyed.sort((a, b) => (a.k !== b.k ? a.k - b.k : a.idn.id < b.idn.id ? -1 : 1));
 
     const orgs = {};
-    const seats = {};
+    const seats = { 1: [], 2: [], 3: [], 4: [] };
+    const pool = [];
     let cursor = 0;
-    S.PYRAMID.forEach((cfg) => {
-      seats[cfg.tier] = [];
-      // The player takes one seat at the bottom; the rest are filled.
-      const fill = cfg.tier === 4 ? cfg.slots - 1 : cfg.slots;
-      for (let i = 0; i < fill; i++) {
+    S.LEAGUES.forEach((cfg) => {
+      for (let i = 0; i < cfg.slots; i++) {
         const idn = keyed[cursor++].idn;
         const r = new S.Rng(seed, 'org:' + idn.id);
         // Deeper history the higher the seat: institutions live at the top.
@@ -62,7 +63,17 @@
         seats[cfg.tier].push(org.id);
       }
     });
-    return { orgs: orgs, seats: seats };
+    // The Open. Amateur clubs: little history, little money, no seat. Some of
+    // them have been grinding this circuit for years and never got out.
+    for (let i = 0; i < POOL_SIZE; i++) {
+      const idn = keyed[cursor++].idn;
+      const r = new S.Rng(seed, 'org:' + idn.id);
+      const org = S.seedOrg(r, idn, 4, Math.round(r.range(0, 6)));
+      org.cash = round(r.range(25, 70), 1);
+      orgs[org.id] = org;
+      pool.push(org.id);
+    }
+    return { orgs: orgs, seats: seats, pool: pool };
   };
 
   /** Stock every AI org with five players sized to its tier and prestige. */
@@ -71,7 +82,8 @@
       const org = G.orgs[id];
       if (id === G.you) return;
       const rng = new S.Rng(G.seed, 'roster:' + id);
-      const centre = { 1: 76, 2: 67, 3: 58, 4: 49 }[org.tier] + (S.prestige(org) - 50) * 0.12;
+      const centre = (S.isLeagueTier(org.tier) ? { 1: 76, 2: 67, 3: 58 }[org.tier] : S.OPEN_QUALITY_CENTRE)
+        + (S.prestige(org) - 50) * 0.12;
       ROLES.forEach((role, i) => {
         const p = S.genPlayer(rng, {
           id: id + ':' + role,
@@ -139,11 +151,25 @@
 
   W.startSeason = function (G) {
     G.leagues = {};
-    S.PYRAMID.forEach((cfg) => (G.leagues[cfg.tier] = W.newLeagueState(G, cfg.tier)));
+    S.LEAGUES.forEach((cfg) => (G.leagues[cfg.tier] = W.newLeagueState(G, cfg.tier)));
     G.champion = null;
     G.playoffs = null;
     G.gauntlet = null;
     G.lastSeason = null;
+    // The Open runs a points table across the year instead of a league table.
+    G.circuit = { points: {}, results: [], live: null, entered: {}, seatWinners: [] };
+    G.pool.forEach((id) => (G.circuit.points[id] = 0));
+    G.circuit.points[G.you] = 0;
+  };
+
+  /** True when the player holds no league seat and lives on the circuit. */
+  W.unaffiliated = (G) => !S.isLeagueTier(G.orgs[G.you].tier);
+
+  /** Everyone competing in The Open, the player included, in a stable order. */
+  W.openField = function (G) {
+    const ids = G.pool.slice();
+    if (W.unaffiliated(G) && ids.indexOf(G.you) < 0) ids.push(G.you);
+    return ids.sort();
   };
 
   /* ─────────────────────────── playoffs ─────────────────────────── */
@@ -152,7 +178,7 @@
   W.startPlayoffs = function (G) {
     if (G.playoffs) return G.playoffs;
     G.playoffs = {};
-    S.PYRAMID.forEach((cfg) => {
+    S.LEAGUES.forEach((cfg) => {
       const order = W.orderOf(G.leagues[cfg.tier]);
       G.playoffs[cfg.tier] = S.buildBracket(order.slice(0, cfg.playoffTeams), cfg.playoffBestOf);
     });
@@ -161,7 +187,7 @@
 
   /** Your playoff series this week, if you made it and it is ready. */
   W.yourPlayoffMatch = function (G) {
-    if (!G.playoffs) return null;
+    if (!G.playoffs || W.unaffiliated(G)) return null;
     const b = G.playoffs[G.orgs[G.you].tier];
     return b ? S.nextMatchFor(b, G.you) : null;
   };
@@ -182,7 +208,7 @@
   W.playPlayoffWeek = function (G, skipYours) {
     W.startPlayoffs(G);
     const lines = [];
-    S.PYRAMID.forEach((cfg) => {
+    S.LEAGUES.forEach((cfg) => {
       const b = G.playoffs[cfg.tier];
       const skip = skipYours && cfg.tier === G.orgs[G.you].tier ? G.you : undefined;
       S.playBracket(b, W.fastBracketResolver(G, cfg.tier, 'po'), new S.Rng(G.seed, 'po:' + G.season + ':' + cfg.tier), skip);
@@ -204,7 +230,7 @@
   W.startGauntlets = function (G) {
     if (G.gauntlet) return G.gauntlet;
     G.gauntlet = {};
-    for (let t = 1; t < 4; t++) {
+    for (let t = 1; t < 3; t++) {
       const upper = W.orderOf(G.leagues[t]);
       const lower = W.orderOf(G.leagues[t + 1]);
       const auto = t === 3 ? 2 : 1;
@@ -257,6 +283,7 @@
 
   /** Your fixture this week, if any. */
   W.yourFixture = function (G) {
+    if (W.unaffiliated(G)) return null;
     const league = G.leagues[G.orgs[G.you].tier];
     if (!league) return null;
     const rounds = W.roundsThisWeek(league, G.week);
@@ -441,14 +468,19 @@
   W.weeklyIncome = function (G, orgId) {
     const org = G.orgs[orgId];
     const cfg = S.LEAGUE_BY_TIER[org.tier];
+    const seated = S.isLeagueTier(org.tier);
+    // A league seat pays you every week just for holding it. Without one there
+    // is a grassroots trickle and nothing else — which is the whole squeeze of
+    // The Open: you are losing money every week you do not win something.
+    const base = seated ? cfg.weeklyRevenue : S.GRASSROOTS_STIPEND;
     const merch = 0.02 * org.fanbase * (org.tier === 1 ? 1.6 : org.tier === 2 ? 1 : 0.5);
     const sponsors = orgId === G.you
       ? G.sponsors.active.reduce((s, d) => s + d.weekly, 0)
-      : round(0.6 + 0.05 * S.prestige(org) * (org.tier === 1 ? 1.4 : 1), 2);
+      : round((seated ? 0.6 : 0.15) + 0.05 * S.prestige(org) * (org.tier === 1 ? 1.4 : 1), 2);
     // Opex is the drain that keeps a budget a budget: staff, the building,
     // travel. Without it every org's cash grows forever and by season ten the
     // economy is decorative.
-    return round(cfg.weeklyRevenue + merch + sponsors - cfg.operatingCost, 2);
+    return round(base + merch + sponsors - cfg.operatingCost, 2);
   };
 
   W.contractsOf = function (org) {
@@ -608,22 +640,198 @@
     for (let w = 0; w < 20; w++) S.rampWeek(org.chem, org.roster, 1);
   };
 
+  /* ──────────────────────────── The Open ───────────────────────────── */
+
+  W.reindexSeats = function (G) {
+    G.seats = { 1: [], 2: [], 3: [], 4: [] };
+    G.pool = [];
+    Object.keys(G.orgs).sort().forEach((id) => {
+      const t = G.orgs[id].tier;
+      G.seats[t].push(id);
+      if (!S.isLeagueTier(t) && id !== G.you) G.pool.push(id);
+    });
+  };
+
+  /** The circuit's season table, best first. Points, then a stable id. */
+  W.circuitStandings = function (G) {
+    const pts = G.circuit ? G.circuit.points : {};
+    return Object.keys(pts).sort()
+      .map((id) => ({ orgId: id, points: pts[id] || 0 }))
+      .sort((a, b) => (b.points !== a.points ? b.points - a.points : a.orgId < b.orgId ? -1 : 1));
+  };
+
+  /** Which events run this week, for an org sitting in The Open. */
+  W.eventsThisWeek = function (G) {
+    const d = S.weekDef(G.week);
+    if (d.kind !== 'match' && d.fixedGateway !== true) {
+      // The Gateway also runs on its own fixed weeks, whatever their kind.
+      const fixed = S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0);
+      return fixed;
+    }
+    const weeks = S.matchWeeksOfSplit(d.split || 1);
+    const idx = weeks.indexOf(G.week);
+    return S.eventsForMatchWeek(idx < 0 ? 0 : idx, G.week);
+  };
+
+  /**
+   * Draw a field for one event. The player is seated first when they entered;
+   * the rest come from the pool, ordered by circuit points so the good
+   * amateurs keep turning up and the field has some continuity — then by a
+   * seeded shuffle so it is never the same sixteen every time.
+   */
+  W.drawField = function (G, event, includeYou) {
+    const rng = new S.Rng(G.seed, 'field:' + G.season + ':' + G.week + ':' + event.id);
+    const eligible = G.pool.filter((id) => {
+      const org = G.orgs[id];
+      return W.lineupOf(org) && S.prestige(org) >= event.repGate * 0.8 && org.cash >= event.entryFee;
+    });
+    const ranked = W.circuitStandings(G).map((r) => r.orgId).filter((id) => eligible.indexOf(id) >= 0);
+    const rest = eligible.filter((id) => ranked.indexOf(id) < 0);
+    const keyed = rest.map((id) => ({ id: id, k: rng.float() }));
+    keyed.sort((a, b) => (a.k !== b.k ? a.k - b.k : a.id < b.id ? -1 : 1));
+    const ordered = ranked.concat(keyed.map((k) => k.id));
+    const field = includeYou ? [G.you] : [];
+    for (let i = 0; field.length < event.fieldSize && i < ordered.length; i++) field.push(ordered[i]);
+    return field;
+  };
+
+  /** Enter an event: pay the fee, draw the field, build the bracket. */
+  W.enterEvent = function (G, event) {
+    const you = G.orgs[G.you];
+    const check = S.canEnter(event, { reputation: S.prestige(you), cash: you.cash, rosterFilled: !!W.lineupOf(you) });
+    if (!check.allowed) return check;
+    you.cash = round(you.cash - event.entryFee, 2);
+    const field = W.drawField(G, event, true);
+    G.circuit.live = {
+      rung: event.id,
+      bracket: S.buildBracket(field, event.bestOf),
+      exits: {},
+      week: G.week,
+    };
+    G.circuit.entered[G.season + ':' + G.week + ':' + event.id] = true;
+    return check;
+  };
+
+  /** A resolver that records who went out in which round. */
+  W.circuitResolver = function (G, event, live) {
+    return (m) => {
+      const rng = new S.Rng(G.seed, 'circ:' + G.season + ':' + G.week + ':' + event.id + ':' + m.id);
+      const isFinal = m.feedsInto === null;
+      const bestOf = isFinal ? event.finalBestOf : event.bestOf;
+      const res = S.resolveFastSeries(W.fastSide(G, m.a), W.fastSide(G, m.b), bestOf, rng, { games: false });
+      const winner = res.winner === 0 ? m.a : m.b;
+      const loser = res.winner === 0 ? m.b : m.a;
+      live.exits[loser] = m.round;
+      const hi = Math.max(res.score[0], res.score[1]), lo = Math.min(res.score[0], res.score[1]);
+      return { winner: winner, score: [hi, lo] };
+    };
+  };
+
+  /** Pay out a finished bracket to everyone in it. */
+  W.settleEvent = function (G, event, live) {
+    const b = live.bracket;
+    const lines = [];
+    b.teams.forEach((id) => {
+      const org = G.orgs[id];
+      if (!org) return;
+      const won = b.champion === id;
+      const place = S.placementOf(b.rounds, live.exits[id] || 1, won);
+      const reward = S.rewardFor(event, place, S.prestige(org));
+      // rewardFor already nets the entry fee off the purse. The player paid
+      // theirs when they entered, so give it back to them here; the AI never
+      // paid, so the netted figure is exactly right for them.
+      org.cash = round(org.cash + reward.cash + (id === G.you ? event.entryFee : 0), 2);
+      // Reputation is what the player sees as prestige, and prestige is
+      // 0.62*standing + 0.38*legacy — so a rep point has to arrive as more
+      // than one point of standing to actually move the number by that much.
+      org.standing = S.clamp(org.standing + reward.reputation / 0.62, 0, 100);
+      G.circuit.points[id] = (G.circuit.points[id] || 0) + reward.points;
+      if (won) {
+        lines.push(event.name + ': <b>' + org.name + '</b> take it.');
+        if (event.id === 'gateway') {
+          G.circuit.seatWinners.push(id);
+          lines.push('★ ' + org.name + ' have won a seat in ' + S.LEAGUE_BY_TIER[S.GATEWAY_PRIZE_TIER].name + ' for next season.');
+        }
+      }
+    });
+    G.circuit.results.push({
+      season: G.season, week: G.week, rung: event.id,
+      champion: b.champion, runnerUp: W.runnerUpOf(b),
+      yours: b.teams.indexOf(G.you) >= 0
+        ? S.placementOf(b.rounds, live.exits[G.you] || 1, b.champion === G.you)
+        : null,
+    });
+    return lines;
+  };
+
+  W.runnerUpOf = function (b) {
+    const final = b.matches.filter((m) => m.feedsInto === null)[0];
+    if (!final || !final.winner) return null;
+    return final.winner === final.a ? final.b : final.a;
+  };
+
+  /** Your live circuit match, if you are in a bracket with a series ready. */
+  W.yourCircuitMatch = function (G) {
+    const live = G.circuit && G.circuit.live;
+    if (!live) return null;
+    return S.nextMatchFor(live.bracket, G.you);
+  };
+
+  /** Resolve the running event around you, or entirely if you are not in it. */
+  W.runCircuitWeek = function (G, skipYours) {
+    const live = G.circuit && G.circuit.live;
+    if (!live) return [];
+    const event = S.EVENT_BY_RUNG[live.rung];
+    S.playBracket(live.bracket, W.circuitResolver(G, event, live),
+      new S.Rng(G.seed, 'circw:' + G.season + ':' + G.week + ':' + live.rung),
+      skipYours && live.bracket.teams.indexOf(G.you) >= 0 ? G.you : undefined);
+    if (live.bracket.champion === null) return [];
+    const lines = W.settleEvent(G, event, live);
+    G.circuit.live = null;
+    return lines;
+  };
+
+  /**
+   * Everything in The Open that the manager is not in. AI amateurs run their
+   * own weekend brackets so the circuit's points table moves whether or not
+   * the player shows up.
+   */
+  W.runShadowCircuit = function (G) {
+    const events = W.eventsThisWeek(G);
+    const lines = [];
+    events.forEach((event) => {
+      const key = G.season + ':' + G.week + ':' + event.id + ':shadow';
+      if (G.circuit.entered[key]) return;
+      G.circuit.entered[key] = true;
+      const inYours = G.circuit.live && G.circuit.live.rung === event.id;
+      if (inYours) return; // the player's own bracket already covers this one
+      const field = W.drawField(G, event, false);
+      if (field.length < 4) return;
+      const shadow = { rung: event.id, bracket: S.buildBracket(field, event.bestOf), exits: {}, week: G.week };
+      S.playBracket(shadow.bracket, W.circuitResolver(G, event, shadow),
+        new S.Rng(G.seed, 'shadow:' + G.season + ':' + G.week + ':' + event.id));
+      W.settleEvent(G, event, shadow).forEach((l) => {
+        if (event.id !== 'weekend') lines.push(l);
+      });
+    });
+    return lines;
+  };
+
   W.finishSeason = function (G) {
     const lines = [];
     const movements = {};
     // Every table is read before anything is applied, so promotion cannot
     // depend on which tier happens to be processed first.
-    S.PYRAMID.forEach((cfg) => {
-      const league = G.leagues[cfg.tier];
-      movements[cfg.tier] = W.orderOf(league);
+    S.LEAGUES.forEach((cfg) => {
+      movements[cfg.tier] = W.orderOf(G.leagues[cfg.tier]);
     });
 
     // The table decides who is good; the bracket decides who lifts the
     // trophy, so a title is the playoff champion, not the top of the table.
     const champions = {};
-    if (G.playoffs) S.PYRAMID.forEach((cfg) => { if (G.playoffs[cfg.tier]) champions[cfg.tier] = G.playoffs[cfg.tier].champion; });
+    if (G.playoffs) S.LEAGUES.forEach((cfg) => { if (G.playoffs[cfg.tier]) champions[cfg.tier] = G.playoffs[cfg.tier].champion; });
 
-    S.PYRAMID.forEach((cfg) => {
+    S.LEAGUES.forEach((cfg) => {
       const order = movements[cfg.tier];
       order.forEach((id, i) => {
         const org = G.orgs[id];
@@ -639,12 +847,11 @@
       });
     });
 
-    // Seats change hands, both directions committed together. The automatic
-    // places come from the table; one more per boundary was settled in the
-    // gauntlet, and that one only moves if the challenger actually won it.
-    for (let t = 1; t < 4; t++) {
-      const auto = t === 3 ? 2 : 1;
-      const move = S.resolveBoundary(movements[t], movements[t + 1], auto);
+    // League-to-league boundaries: the automatic places come from the table,
+    // one more per boundary was settled in the gauntlet, and both directions
+    // commit together so the result cannot depend on processing order.
+    for (let t = 1; t < 3; t++) {
+      const move = S.resolveBoundary(movements[t], movements[t + 1], 1);
       const g = G.gauntlet ? G.gauntlet[t] : null;
       if (g && S.gauntletPromoted(g)) {
         move.relegated.push(g.defender);
@@ -652,20 +859,46 @@
       }
       move.relegated.forEach((id) => { G.orgs[id].tier = t + 1; });
       move.promoted.forEach((id) => { G.orgs[id].tier = t; });
-      move.promoted.forEach((id) => lines.push(G.orgs[id].name + ' are promoted to ' + S.LEAGUE_BY_TIER[t].name + '.'));
+      move.promoted.forEach((id) => lines.push('<b>' + G.orgs[id].name + '</b> are promoted to ' + S.LEAGUE_BY_TIER[t].name + '.'));
       move.relegated.forEach((id) => lines.push(G.orgs[id].name + ' are relegated from ' + S.LEAGUE_BY_TIER[t].name + '.'));
     }
 
-    G.seats = { 1: [], 2: [], 3: [], 4: [] };
-    Object.keys(G.orgs).sort().forEach((id) => G.seats[G.orgs[id].tier].push(id));
+    // The bottom boundary is different: there is no league below tier 3 to be
+    // promoted *from*, only The Open. Two clubs drop into the circuit and the
+    // two Gateway winners take their seats — which is the whole reason the
+    // Gateway exists, and the only way in that does not cost money.
+    const bottom = S.LEAGUES[S.LEAGUES.length - 1].tier;
+    const relegated = movements[bottom].slice(-2);
+    const risers = (G.circuit.seatWinners || []).slice(0, relegated.length);
+    relegated.forEach((id) => {
+      G.orgs[id].tier = 4;
+      lines.push(G.orgs[id].name + ' drop out of ' + S.LEAGUE_BY_TIER[bottom].name + ' and into The Open.');
+    });
+    risers.forEach((id) => {
+      G.orgs[id].tier = bottom;
+      lines.push('★ <b>' + G.orgs[id].name + '</b> win their way into ' + S.LEAGUE_BY_TIER[bottom].name + '.');
+    });
+    // Any seat the Gateway did not fill goes to the circuit's points leader —
+    // a league cannot run a man short.
+    if (risers.length < relegated.length) {
+      const standings = W.circuitStandings(G).map((r) => r.orgId).filter((id) => risers.indexOf(id) < 0);
+      for (let i = 0; risers.length < relegated.length && i < standings.length; i++) {
+        const id = standings[i];
+        if (G.orgs[id].tier !== 4) continue;
+        G.orgs[id].tier = bottom;
+        risers.push(id);
+        lines.push('<b>' + G.orgs[id].name + '</b> are invited up on Circuit Points.');
+      }
+    }
+
+    W.reindexSeats(G);
 
     G.season++;
     G.week = 1;
     W.turnover(G).slice(0, 8).forEach((l) => lines.push(l));
 
     // Seats may have changed hands during turnover, so rebuild the index.
-    G.seats = { 1: [], 2: [], 3: [], 4: [] };
-    Object.keys(G.orgs).sort().forEach((id) => G.seats[G.orgs[id].tier].push(id));
+    W.reindexSeats(G);
     W.startSeason(G);
     return lines;
   };

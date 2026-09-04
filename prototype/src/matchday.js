@@ -168,7 +168,28 @@ function concludeSeries(yw,ow){
   // The result goes into the table (or the bracket) and the rest of the
   // pyramid plays the same week.
   window.commitYourSeries(yw,ow);
-  if(ko){
+  if(ko&&ko.kind==='circuit'){
+    const live=G.circuit.live;
+    const event=S.EVENT_BY_RUNG[ko.rung||(live&&live.rung)||'weekend'];
+    const bracket=live?live.bracket:null;
+    const tookIt=!live || live.bracket.champion===G.you;
+    if(won&&tookIt){
+      if(event.id==='gateway'){
+        pushLog('★★ <b>You have won The Gateway.</b> A seat in '+S.LEAGUE_BY_TIER[S.GATEWAY_PRIZE_TIER].name+' is yours next season.','good');
+        toast('★★ You are going up.','good');
+      } else {
+        pushLog('★ <b>'+event.name+' champions.</b> You beat '+opp.name+' '+yw+'–'+ow+' in the final.','good');
+        toast('★ You won the '+event.name+'.','good');
+      }
+    } else if(won){
+      pushLog('Through. Beat <b>'+opp.name+'</b> '+yw+'–'+ow+' — still in the '+event.name+'.','good');
+      toast('Through — '+yw+'–'+ow+'.','good');
+    } else {
+      pushLog('Out of the '+event.name+', beaten '+ow+'–'+yw+' by '+opp.name+'. The entry fee is gone.','bad');
+      toast('Knocked out by '+opp.name+'.','bad');
+    }
+    void bracket;
+  } else if(ko){
     // A knockout has no league position to report — it has a consequence.
     const b=G.playoffs?G.playoffs[you().tier]:null;
     const stillIn=b?!!window.LOLWorld.yourPlayoffMatch(G):false;

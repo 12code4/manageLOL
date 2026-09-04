@@ -229,6 +229,235 @@
     return card;
   }
 
+  /* ═══════════════════════════ THE OPEN ═══════════════════════════════ */
+
+  /**
+   * The tournament board: what is running, what it costs, and — the detail
+   * that matters most — what is still locked and how far away it is. A locked
+   * rung is not an error state, it is the thing the manager is climbing
+   * toward, so it stays fully legible from the first week: name, prize, and
+   * the exact reputation still owed.
+   */
+  function tournamentBoard(G) {
+    const you = G.orgs[G.you];
+    const rep = S.prestige(you);
+    const running = W.eventsThisWeek(G).map((e) => e.id);
+    const card = el('div', 'card board');
+    card.appendChild(sectionLabel('The circuit', 'week ' + G.week));
+
+    S.CIRCUIT.forEach((event) => {
+      const check = S.canEnter(event, { reputation: rep, cash: you.cash, rosterFilled: !!W.lineupOf(you) });
+      const isRunning = running.indexOf(event.id) >= 0;
+      const locked = check.reason === 'reputation';
+      const row = el('div', 'evrow' + (locked ? ' locked' : '') + (isRunning && check.allowed ? ' live' : ''));
+
+      const prize = event.id === 'gateway'
+        ? 'a seat in ' + S.LEAGUE_BY_TIER[S.GATEWAY_PRIZE_TIER].name
+        : event.purse.winner + '◈ to the winner';
+
+      row.innerHTML =
+        '<div class="evmain">' +
+        '<span class="evname">' + event.name + (locked ? ' <span class="evlock">🔒</span>' : '') + '</span>' +
+        '<span class="evblurb">' + event.blurb + '</span>' +
+        '</div>' +
+        '<div class="evfacts mono">' +
+        '<span>' + event.fieldSize + ' teams</span>' +
+        '<span>' + event.entryFee + '◈ entry</span>' +
+        '<span class="evprize">' + prize + '</span>' +
+        '</div>';
+
+      const act = el('div', 'evact');
+      if (locked) {
+        act.innerHTML = '<span class="evgate mono">needs ' + event.repGate + ' rep<br><b>' +
+          check.repShort.toFixed(1) + ' to go</b></span>';
+      } else if (!isRunning) {
+        act.innerHTML = '<span class="evwhen mono">' + nextRunLabel(G, event) + '</span>';
+      } else if (check.reason === 'roster') {
+        act.innerHTML = '<span class="evgate mono">field five first</span>';
+      } else if (check.reason === 'money') {
+        act.innerHTML = '<span class="evgate mono">' + event.entryFee + '◈ short</span>';
+      } else if (G.circuit.live) {
+        act.innerHTML = '<span class="evwhen mono">in progress</span>';
+      } else {
+        const b = el('button', 'btn' + (event.id === 'gateway' ? ' primary' : ''), 'Enter · ' + event.entryFee + '◈');
+        b.onclick = () => window.enterCircuitEvent(event.id);
+        act.appendChild(b);
+      }
+      row.appendChild(act);
+      card.appendChild(row);
+    });
+    return card;
+  }
+
+  function nextRunLabel(G, event) {
+    if (event.fixedWeeks.length) {
+      const next = event.fixedWeeks.filter((w) => w >= G.week)[0];
+      return next ? 'week ' + next : 'week ' + event.fixedWeeks[0] + ' next year';
+    }
+    for (let w = G.week + 1; w < G.week + 10; w++) {
+      const d = S.weekDef(w);
+      if (d.kind !== 'match' || d.split === null) continue;
+      const weeks = S.matchWeeksOfSplit(d.split);
+      const idx = weeks.indexOf(w);
+      if (idx >= 0 && S.eventsForMatchWeek(idx, w).some((e) => e.id === event.id)) return 'week ' + w;
+    }
+    return 'next split';
+  }
+
+  /**
+   * One bar, three marks. The whole climb in a strip: where you are, what the
+   * next door costs, and how far the road goes. This is the answer to "what
+   * am I working toward" and it is on screen every single week.
+   */
+  function reputationMeter(G) {
+    const you = G.orgs[G.you];
+    const rep = S.prestige(you);
+    const next = S.nextUnlock(rep);
+    const max = 45;
+    const card = el('div', 'card repcard');
+    card.appendChild(sectionLabel('Reputation', next ? next.short.toFixed(1) + ' to ' + next.event.name : 'every door open'));
+
+    const bar = el('div', 'repbar');
+    bar.innerHTML = '<i style="width:' + Math.min(100, (rep / max) * 100).toFixed(1) + '%"></i>' +
+      S.CIRCUIT.filter((e) => e.repGate > 0).map((e) =>
+        '<b class="' + (rep >= e.repGate ? 'open' : '') + '" style="left:' + ((e.repGate / max) * 100).toFixed(1) + '%"' +
+        ' title="' + e.name + ' · needs ' + e.repGate + '"></b>').join('');
+    card.appendChild(bar);
+
+    const scale = el('div', 'repscale mono');
+    scale.innerHTML = '<span>' + rep.toFixed(1) + '</span>' +
+      S.CIRCUIT.filter((e) => e.repGate > 0).map((e) =>
+        '<span class="' + (rep >= e.repGate ? 'open' : '') + '" style="left:' + ((e.repGate / max) * 100).toFixed(1) + '%">' +
+        e.name.split(' ')[e.name.split(' ').length - 1] + '</span>').join('');
+    card.appendChild(scale);
+
+    const note = el('div', 'repnote');
+    note.textContent = next
+      ? 'Reputation comes from placing in tournaments, and every rung has a ceiling — the weekend circuit alone will never carry you to the Gateway.'
+      : 'The Gateway is open. Win it and you take a seat in the pyramid.';
+    card.appendChild(note);
+    return card;
+  }
+
+  /** The live bracket you are standing in, with your own path picked out. */
+  function liveEventCard(G) {
+    const live = G.circuit && G.circuit.live;
+    if (!live) return null;
+    const event = S.EVENT_BY_RUNG[live.rung];
+    const b = live.bracket;
+    const card = el('div', 'card bracketcard');
+    const left = b.teams.filter((t) => {
+      if (b.champion === t) return true;
+      return live.exits[t] === undefined;
+    }).length;
+    card.appendChild(sectionLabel(event.name, b.champion ? 'decided' : left + ' teams left'));
+
+    const rounds = [];
+    b.matches.forEach((m) => { (rounds[m.round] = rounds[m.round] || []).push(m); });
+    const cols = el('div', 'bracketcols');
+    for (let r = 1; r <= b.rounds; r++) {
+      const list = (rounds[r] || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1));
+      if (!list.length) continue;
+      const col = el('div', 'bcol');
+      col.appendChild(el('div', 'bcolhead', roundLabel(b, r)));
+      list.forEach((m) => col.appendChild(seriesCell(G, m)));
+      cols.appendChild(col);
+    }
+    card.appendChild(cols);
+    return card;
+  }
+
+  /** The Open's season table: points, not wins. */
+  function circuitStandings(G) {
+    const rows = W.circuitStandings(G).slice(0, 14);
+    const wrap = el('div', 'card table-card');
+    const head = el('div', 'tablehead');
+    head.innerHTML = '<div><h3>Circuit Points</h3><p class="sub">Everyone grinding The Open this season. ' +
+      'Finish top and the league invites you up when a seat falls open.</p></div>' +
+      '<span class="roundchip mono">S' + G.season + '</span>';
+    wrap.appendChild(head);
+
+    const t = el('table', 'standings');
+    t.innerHTML =
+      '<colgroup><col style="width:34px"><col><col style="width:64px"><col style="width:58px"></colgroup>' +
+      '<thead><tr><th>Pos</th><th>Org</th><th class="r">Rep</th><th class="r">Points</th></tr></thead>';
+    const body = el('tbody');
+    rows.forEach((row, i) => {
+      const org = G.orgs[row.orgId];
+      if (!org) return;
+      const tr = el('tr', row.orgId === G.you ? 'you' : '');
+      tr.dataset.org = row.orgId;
+      tr.innerHTML =
+        '<td class="mono pos">' + (i + 1) + '</td>' +
+        '<td class="orgcell"><span class="otag mono">' + org.tag + '</span><span class="oname">' + org.name + '</span></td>' +
+        '<td class="mono r">' + Math.round(S.prestige(org)) + '</td>' +
+        '<td class="mono r wr">' + row.points + '</td>';
+      body.appendChild(tr);
+    });
+    t.appendChild(body);
+    body.onclick = (e) => {
+      const tr = e.target.closest && e.target.closest('tr[data-org]');
+      if (tr) window.openOrgSheet(tr.dataset.org);
+    };
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  /** Recent results on the circuit — the form guide of an unaffiliated org. */
+  function circuitForm(G) {
+    const mine = (G.circuit.results || []).filter((r) => r.yours !== null).slice(-6).reverse();
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('Your run', mine.length ? 'last ' + mine.length : 'nothing yet'));
+    if (!mine.length) {
+      card.appendChild(el('div', 'empty-note', 'You have not entered anything. The board is on the left.'));
+      return card;
+    }
+    const list = el('div', 'formlist');
+    const LABEL = { winner: 'WON IT', finalist: 'final', semi: 'semi', quarter: 'quarter', entered: 'out early' };
+    mine.forEach((r) => {
+      const good = r.yours === 'winner' || r.yours === 'finalist';
+      const row = el('div', 'formrow circuitrow');
+      row.innerHTML =
+        '<span class="mono rnd">w' + r.week + '</span>' +
+        '<span class="res ' + (good ? 'w' : 'l') + '">' + (r.yours === 'winner' ? '★' : good ? '▲' : '▼') + '</span>' +
+        '<span class="evsm">' + S.EVENT_BY_RUNG[r.rung].name + '</span>' +
+        '<span class="score">' + LABEL[r.yours] + '</span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
+  /** A seat has fallen vacant and you can buy it. The other door, made real. */
+  function seatOfferCard(G) {
+    const offer = G.seatOffer;
+    if (!offer || offer.expiresWeek < G.week) return null;
+    const you = G.orgs[G.you];
+    const check = S.canBuySeat(offer, { reputation: S.prestige(you), cash: you.cash });
+    const card = el('div', 'card seatoffer');
+    card.appendChild(sectionLabel('A seat is for sale', 'expires week ' + offer.expiresWeek));
+    card.appendChild(el('div', 'weekbody',
+      '<p class="wknote"><b>' + offer.vacatedBy + '</b> have folded, and their seat in ' +
+      S.LEAGUE_BY_TIER[offer.tier].name + ' is going to whoever can take it on. ' +
+      'The league will not sell to a complete unknown.</p>' +
+      '<div class="kv"><span>Price</span><b class="mono">' + offer.cost + '◈</b></div>' +
+      '<div class="kv"><span>Reputation required</span><b class="mono">' + offer.repRequired + '</b></div>' +
+      '<div class="kv"><span>You have</span><b class="mono">' + you.cash.toFixed(0) + '◈ · ' +
+      Math.round(S.prestige(you)) + ' rep</b></div>'));
+    const btn = el('button', 'btn primary wide');
+    if (check.allowed) {
+      btn.textContent = '▶  Buy the seat · ' + offer.cost + '◈';
+      btn.onclick = () => window.buySeat();
+    } else {
+      btn.disabled = true;
+      btn.textContent = check.reason === 'reputation'
+        ? 'Not established enough — ' + check.repShort.toFixed(1) + ' more reputation'
+        : 'You cannot afford it — ' + (offer.cost - you.cash).toFixed(0) + '◈ short';
+    }
+    card.appendChild(btn);
+    return card;
+  }
+
   /* ─────────────────────────── the fixture card ───────────────────────── */
 
   function fixtureCard(G) {
@@ -593,9 +822,21 @@
   window.renderSeasonHub = function (G, main) {
     const you = G.orgs[G.you];
     const head = el('div', 'screen-head');
-    head.innerHTML =
-      '<h2>' + S.LEAGUE_BY_TIER[you.tier].name + '</h2>' +
-      '<p class="sub">' + S.LEAGUE_BY_TIER[you.tier].blurb + '</p>';
+    if (W.unaffiliated(G)) {
+      const next = S.nextUnlock(S.prestige(you));
+      head.innerHTML =
+        '<p class="eyebrow">Unaffiliated · season ' + G.season + '</p>' +
+        '<h2>The Open</h2>' +
+        '<p class="sub">No seat, no fixtures, no table — and no revenue but what you win. ' +
+        (next
+          ? 'Place in enough tournaments and <b>' + next.event.name + '</b> opens up.'
+          : 'The Gateway is open. One tournament stands between you and the pyramid.') +
+        '</p>';
+    } else {
+      head.innerHTML =
+        '<h2>' + S.LEAGUE_BY_TIER[you.tier].name + '</h2>' +
+        '<p class="sub">' + S.LEAGUE_BY_TIER[you.tier].blurb + '</p>';
+    }
     main.appendChild(head);
 
     main.appendChild(runStrip(G));
@@ -603,6 +844,25 @@
     const d = S.weekDef(G.week);
     const grid = el('div', 'hub');
     const left = el('div', 'hubcol');
+
+    if (W.unaffiliated(G)) {
+      const offer = seatOfferCard(G);
+      if (offer) left.appendChild(offer);
+      const live = liveEventCard(G);
+      if (live) left.appendChild(live);
+      left.appendChild(tournamentBoard(G));
+      left.appendChild(circuitStandings(G));
+      const right = el('div', 'hubcol');
+      right.appendChild(reputationMeter(G));
+      right.appendChild(circuitForm(G));
+      right.appendChild(pyramidCard(G));
+      right.appendChild(deskCard(G));
+      grid.appendChild(left);
+      grid.appendChild(right);
+      main.appendChild(grid);
+      return;
+    }
+
     left.appendChild(fixtureCard(G));
     if (d.window.indexOf('Playoffs') >= 0 || (G.playoffs && G.playoffs[you.tier] && G.playoffs[you.tier].champion)) {
       const bc = bracketCard(G, you.tier);

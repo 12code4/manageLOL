@@ -529,6 +529,46 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 .drawer h3{margin:0 0 3px;font-family:"Barlow Condensed";font-size:21px}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55}
 
+/* the Open: the tournament board */
+.board{padding:14px 16px 10px}
+.evrow{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;
+  padding:12px 0;border-top:1px solid var(--line-soft)}
+.evrow:first-of-type{border-top:0}
+.evmain{min-width:0}
+.evname{display:block;font-family:"Barlow Condensed";font-size:19px;letter-spacing:.02em;color:var(--ink);line-height:1.15}
+.evlock{font-size:11px;opacity:.55;vertical-align:2px}
+.evblurb{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.evfacts{display:flex;flex-direction:column;gap:2px;text-align:right;font-size:10px;color:var(--faint);white-space:nowrap}
+.evfacts .evprize{color:var(--gold)}
+.evact{min-width:118px;text-align:right}
+.evact .btn{font-size:12px;padding:7px 12px}
+.evgate,.evwhen{font-size:10px;color:var(--faint);line-height:1.5;display:inline-block}
+.evgate b{color:var(--gold);font-size:11px}
+/* Locked reads as distant, never as broken: the name and the prize stay fully
+   legible, because that rung is the thing being climbed toward. */
+.evrow.locked .evname{color:var(--muted)}
+.evrow.locked .evblurb{opacity:.6}
+.evrow.locked .evfacts{opacity:.55}
+.evrow.live{background:linear-gradient(90deg,var(--gold-ghost),transparent 60%);
+  margin:0 -16px;padding-left:16px;padding-right:16px}
+
+/* the reputation meter */
+.repcard{padding:14px 16px 12px}
+.repbar{position:relative;height:9px;border-radius:6px;background:var(--surface-3);overflow:visible;margin:2px 0 6px}
+.repbar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+.repbar b{position:absolute;top:-4px;width:2px;height:17px;background:var(--line);border-radius:1px}
+.repbar b.open{background:var(--gel)}
+.repscale{position:relative;height:22px;font-size:9px;color:var(--faint)}
+.repscale span{position:absolute;top:2px;transform:translateX(-50%);white-space:nowrap;letter-spacing:.06em}
+.repscale span:first-child{position:static;display:inline-block;transform:none;color:var(--gold);font-size:13px}
+.repscale span.open{color:var(--gel)}
+.repnote{font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line-soft);padding-top:9px;margin-top:2px}
+
+.circuitrow{grid-template-columns:26px 14px 1fr auto}
+.circuitrow .evsm{color:var(--muted)}
+.circuitrow .res.w{color:var(--gold)}
+.seatoffer{border-color:color-mix(in srgb,var(--gold) 40%,var(--line))}
+
 /* the playoff bracket */
 .bracketcard{padding:14px 16px}
 .bracketcols{display:flex;gap:14px;overflow-x:auto;padding-bottom:4px}
@@ -1550,7 +1590,6 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 
   // ---------- contracts ----------
   S.WAGE_BASE = 0.22; S.WAGE_CURVE = 1.068; S.SEASON_WEEKS = 52; S.ACCEPT_THRESHOLD = 0.72;
-  S.tierWageMult = (t) => ({ 1: 1.25, 2: 1, 3: 0.75, 4: 0.5 })[t];
 
   S.wageDemand = function (player, tier, orgPrestige) {
     const ca = S.currentAbility(player.attributes), g = player.attributes.growth, age = player.age;
@@ -1830,9 +1869,14 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 12, winPurse: 5, operatingCost: 5.5, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
     { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 5, winPurse: 2.5, operatingCost: 2.0, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
     { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 3.4, winPurse: 1.2, operatingCost: 0.8, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
-    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 2.6, winPurse: 0.6, operatingCost: 0.35, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
+    { id: 'open', name: 'The Open', tier: 4, slots: 0, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 0, weeklyRevenue: 0, winPurse: 0, operatingCost: 0.35, promotionLine: 0, relegationLine: 99, blurb: 'No seats, no table — just entry fees and weekend brackets. Everyone starts here.' },
   ];
   S.LEAGUE_BY_TIER = {}; S.PYRAMID.forEach((l) => (S.LEAGUE_BY_TIER[l.tier] = l));
+  /* Iterate LEAGUES for anything that runs a season. PYRAMID still holds The
+     Open, which is a price band with no seats behind it. */
+  S.LEAGUES = S.PYRAMID.filter((l) => l.slots > 0);
+  S.isLeagueTier = (t) => S.LEAGUE_BY_TIER[t].slots > 0;
+  S.OPEN_TIER = 4;
   S.prizeFor = function (cfg, place) {
     const shares = [0.34, 0.21, 0.14, 0.10, 0.07, 0.05, 0.035, 0.025, 0.015, 0.01];
     return round(cfg.prizePool * (shares[place - 1] !== undefined ? shares[place - 1] : 0.005), 1);
@@ -1934,6 +1978,85 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   S.buildGauntlet = (defender, challenger) => ({ defender: defender, challenger: challenger, bestOf: 5, winner: null, score: null });
   S.gauntletPromoted = (g) => g.winner !== null && g.winner === g.challenger;
 
+  /* ---------- The Open: the amateur circuit ---------- */
+  S.CIRCUIT = [
+    { id: 'weekend', name: 'Weekend Open', entryFee: 1, fieldSize: 8, bestOf: 1, finalBestOf: 3,
+      repGate: 0, repCap: 18,
+      purse: { winner: 6, finalist: 2.5, semi: 1, quarter: 0.4, entered: 0 },
+      points: { winner: 100, finalist: 60, semi: 35, quarter: 18, entered: 6 },
+      repBase: { winner: 3, finalist: 1.6, semi: 0.8, quarter: 0.35, entered: 0.1 },
+      everyNMatchWeeks: 1, fixedWeeks: [],
+      blurb: 'Eight teams, one Saturday, one game a round. Everyone starts here.' },
+    { id: 'contenders', name: 'Contenders Cup', entryFee: 3, fieldSize: 16, bestOf: 1, finalBestOf: 3,
+      repGate: 12, repCap: 38,
+      purse: { winner: 22, finalist: 10, semi: 4.5, quarter: 2, entered: 0 },
+      points: { winner: 260, finalist: 150, semi: 85, quarter: 42, entered: 12 },
+      repBase: { winner: 10, finalist: 5.5, semi: 2.6, quarter: 1.2, entered: 0.35 },
+      everyNMatchWeeks: 4, fixedWeeks: [],
+      blurb: 'Sixteen teams and a month of bragging rights. Where a name gets made.' },
+    { id: 'gateway', name: 'The Gateway', entryFee: 5, fieldSize: 16, bestOf: 3, finalBestOf: 5,
+      repGate: 36, repCap: 68,
+      purse: { winner: 40, finalist: 18, semi: 8, quarter: 3, entered: 0 },
+      points: { winner: 500, finalist: 300, semi: 170, quarter: 85, entered: 25 },
+      repBase: { winner: 13, finalist: 7, semi: 3.5, quarter: 1.5, entered: 0.4 },
+      everyNMatchWeeks: 0, fixedWeeks: [12, 41],
+      blurb: 'Sixteen teams. The winner takes a seat in the Regional Circuit.' },
+  ];
+  S.EVENT_BY_RUNG = {}; S.CIRCUIT.forEach((e) => (S.EVENT_BY_RUNG[e.id] = e));
+  S.GATEWAY_PRIZE_TIER = 3;
+  S.GRASSROOTS_STIPEND = 0.5;
+  S.OPEN_WAGE_MULT = 0.4;
+  S.OPEN_QUALITY_CENTRE = 62;
+  S.SEAT_BUY_IN_COST = 140;
+  S.SEAT_BUY_IN_REP = 20;
+
+  S.repGain = (event, place, rep) => round(event.repBase[place] * clamp(1 - rep / event.repCap, 0, 1), 3);
+  S.canEnter = function (event, o) {
+    if (!o.rosterFilled) return { allowed: false, reason: 'roster', repShort: 0 };
+    if (o.reputation < event.repGate) return { allowed: false, reason: 'reputation', repShort: round(event.repGate - o.reputation, 1) };
+    if (o.cash < event.entryFee) return { allowed: false, reason: 'money', repShort: 0 };
+    return { allowed: true, reason: 'ok', repShort: 0 };
+  };
+  S.nextUnlock = function (rep) {
+    for (let i = 0; i < S.CIRCUIT.length; i++) {
+      if (rep < S.CIRCUIT[i].repGate) return { event: S.CIRCUIT[i], short: round(S.CIRCUIT[i].repGate - rep, 1) };
+    }
+    return null;
+  };
+  S.eventsForMatchWeek = function (idx, week) {
+    const out = [];
+    S.CIRCUIT.forEach((e) => {
+      if (e.fixedWeeks.indexOf(week) >= 0) { out.push(e); return; }
+      if (e.everyNMatchWeeks > 0 && idx % e.everyNMatchWeeks === 0) out.push(e);
+    });
+    return out.sort((a, b) => S.CIRCUIT.indexOf(b) - S.CIRCUIT.indexOf(a));
+  };
+  S.placementOf = function (rounds, exitRound, won) {
+    if (won) return 'winner';
+    const fromEnd = rounds - exitRound;
+    if (fromEnd === 0) return 'finalist';
+    if (fromEnd === 1) return 'semi';
+    if (fromEnd === 2) return 'quarter';
+    return 'entered';
+  };
+  S.rewardFor = (event, place, rep) => ({
+    cash: round(event.purse[place] - event.entryFee, 2),
+    points: event.points[place],
+    reputation: S.repGain(event, place, rep),
+  });
+  S.seatOfferFor = function (tier, vacatedBy, week) {
+    const mult = ({ 1: 4, 2: 2.2, 3: 1, 4: 1 })[tier];
+    return { tier: tier, vacatedBy: vacatedBy, cost: round(S.SEAT_BUY_IN_COST * mult, 0),
+      repRequired: round(S.SEAT_BUY_IN_REP * mult, 0), expiresWeek: week + 3 };
+  };
+  S.canBuySeat = function (offer, o) {
+    if (o.reputation < offer.repRequired) return { allowed: false, reason: 'reputation', repShort: round(offer.repRequired - o.reputation, 1) };
+    if (o.cash < offer.cost) return { allowed: false, reason: 'money', repShort: 0 };
+    return { allowed: true, reason: 'ok', repShort: 0 };
+  };
+  /* Amateur players cost amateur money. */
+  S.tierWageMult = (t) => ({ 1: 1.25, 2: 1, 3: 0.75, 4: S.OPEN_WAGE_MULT })[t];
+
   S.resolveBoundary = (upper, lower, autoSeats) => ({
     relegated: upper.slice(Math.max(0, upper.length - autoSeats)),
     promoted: lower.slice(0, autoSeats),
@@ -1966,7 +2089,10 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     const rng = new S.Rng(seed, 'world:orgs');
     const pack = S.ORG_PACK.filter((o) => o.region === HOME || o.region === 'wilds');
     const foreign = S.ORG_PACK.filter((o) => o.region !== HOME && o.region !== 'wilds');
-    const need = S.PYRAMID.reduce((n, l) => n + l.slots, 0);
+    // Seats for the three leagues, plus a floating pool of unaffiliated orgs
+    // for The Open. The player is one of the floaters, and starts with nothing.
+    const POOL_SIZE = 21;
+    const need = S.LEAGUES.reduce((n, l) => n + l.slots, 0) + POOL_SIZE;
 
     const identities = pack.slice();
     // A few clubs from abroad have relocated into the region — cheap colour,
@@ -1990,13 +2116,11 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     keyed.sort((a, b) => (a.k !== b.k ? a.k - b.k : a.idn.id < b.idn.id ? -1 : 1));
 
     const orgs = {};
-    const seats = {};
+    const seats = { 1: [], 2: [], 3: [], 4: [] };
+    const pool = [];
     let cursor = 0;
-    S.PYRAMID.forEach((cfg) => {
-      seats[cfg.tier] = [];
-      // The player takes one seat at the bottom; the rest are filled.
-      const fill = cfg.tier === 4 ? cfg.slots - 1 : cfg.slots;
-      for (let i = 0; i < fill; i++) {
+    S.LEAGUES.forEach((cfg) => {
+      for (let i = 0; i < cfg.slots; i++) {
         const idn = keyed[cursor++].idn;
         const r = new S.Rng(seed, 'org:' + idn.id);
         // Deeper history the higher the seat: institutions live at the top.
@@ -2006,7 +2130,17 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
         seats[cfg.tier].push(org.id);
       }
     });
-    return { orgs: orgs, seats: seats };
+    // The Open. Amateur clubs: little history, little money, no seat. Some of
+    // them have been grinding this circuit for years and never got out.
+    for (let i = 0; i < POOL_SIZE; i++) {
+      const idn = keyed[cursor++].idn;
+      const r = new S.Rng(seed, 'org:' + idn.id);
+      const org = S.seedOrg(r, idn, 4, Math.round(r.range(0, 6)));
+      org.cash = round(r.range(25, 70), 1);
+      orgs[org.id] = org;
+      pool.push(org.id);
+    }
+    return { orgs: orgs, seats: seats, pool: pool };
   };
 
   /** Stock every AI org with five players sized to its tier and prestige. */
@@ -2015,7 +2149,8 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
       const org = G.orgs[id];
       if (id === G.you) return;
       const rng = new S.Rng(G.seed, 'roster:' + id);
-      const centre = { 1: 76, 2: 67, 3: 58, 4: 49 }[org.tier] + (S.prestige(org) - 50) * 0.12;
+      const centre = (S.isLeagueTier(org.tier) ? { 1: 76, 2: 67, 3: 58 }[org.tier] : S.OPEN_QUALITY_CENTRE)
+        + (S.prestige(org) - 50) * 0.12;
       ROLES.forEach((role, i) => {
         const p = S.genPlayer(rng, {
           id: id + ':' + role,
@@ -2083,11 +2218,25 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 
   W.startSeason = function (G) {
     G.leagues = {};
-    S.PYRAMID.forEach((cfg) => (G.leagues[cfg.tier] = W.newLeagueState(G, cfg.tier)));
+    S.LEAGUES.forEach((cfg) => (G.leagues[cfg.tier] = W.newLeagueState(G, cfg.tier)));
     G.champion = null;
     G.playoffs = null;
     G.gauntlet = null;
     G.lastSeason = null;
+    // The Open runs a points table across the year instead of a league table.
+    G.circuit = { points: {}, results: [], live: null, entered: {}, seatWinners: [] };
+    G.pool.forEach((id) => (G.circuit.points[id] = 0));
+    G.circuit.points[G.you] = 0;
+  };
+
+  /** True when the player holds no league seat and lives on the circuit. */
+  W.unaffiliated = (G) => !S.isLeagueTier(G.orgs[G.you].tier);
+
+  /** Everyone competing in The Open, the player included, in a stable order. */
+  W.openField = function (G) {
+    const ids = G.pool.slice();
+    if (W.unaffiliated(G) && ids.indexOf(G.you) < 0) ids.push(G.you);
+    return ids.sort();
   };
 
   /* ─────────────────────────── playoffs ─────────────────────────── */
@@ -2096,7 +2245,7 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   W.startPlayoffs = function (G) {
     if (G.playoffs) return G.playoffs;
     G.playoffs = {};
-    S.PYRAMID.forEach((cfg) => {
+    S.LEAGUES.forEach((cfg) => {
       const order = W.orderOf(G.leagues[cfg.tier]);
       G.playoffs[cfg.tier] = S.buildBracket(order.slice(0, cfg.playoffTeams), cfg.playoffBestOf);
     });
@@ -2105,7 +2254,7 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 
   /** Your playoff series this week, if you made it and it is ready. */
   W.yourPlayoffMatch = function (G) {
-    if (!G.playoffs) return null;
+    if (!G.playoffs || W.unaffiliated(G)) return null;
     const b = G.playoffs[G.orgs[G.you].tier];
     return b ? S.nextMatchFor(b, G.you) : null;
   };
@@ -2126,7 +2275,7 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   W.playPlayoffWeek = function (G, skipYours) {
     W.startPlayoffs(G);
     const lines = [];
-    S.PYRAMID.forEach((cfg) => {
+    S.LEAGUES.forEach((cfg) => {
       const b = G.playoffs[cfg.tier];
       const skip = skipYours && cfg.tier === G.orgs[G.you].tier ? G.you : undefined;
       S.playBracket(b, W.fastBracketResolver(G, cfg.tier, 'po'), new S.Rng(G.seed, 'po:' + G.season + ':' + cfg.tier), skip);
@@ -2148,7 +2297,7 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   W.startGauntlets = function (G) {
     if (G.gauntlet) return G.gauntlet;
     G.gauntlet = {};
-    for (let t = 1; t < 4; t++) {
+    for (let t = 1; t < 3; t++) {
       const upper = W.orderOf(G.leagues[t]);
       const lower = W.orderOf(G.leagues[t + 1]);
       const auto = t === 3 ? 2 : 1;
@@ -2201,6 +2350,7 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 
   /** Your fixture this week, if any. */
   W.yourFixture = function (G) {
+    if (W.unaffiliated(G)) return null;
     const league = G.leagues[G.orgs[G.you].tier];
     if (!league) return null;
     const rounds = W.roundsThisWeek(league, G.week);
@@ -2385,14 +2535,19 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   W.weeklyIncome = function (G, orgId) {
     const org = G.orgs[orgId];
     const cfg = S.LEAGUE_BY_TIER[org.tier];
+    const seated = S.isLeagueTier(org.tier);
+    // A league seat pays you every week just for holding it. Without one there
+    // is a grassroots trickle and nothing else — which is the whole squeeze of
+    // The Open: you are losing money every week you do not win something.
+    const base = seated ? cfg.weeklyRevenue : S.GRASSROOTS_STIPEND;
     const merch = 0.02 * org.fanbase * (org.tier === 1 ? 1.6 : org.tier === 2 ? 1 : 0.5);
     const sponsors = orgId === G.you
       ? G.sponsors.active.reduce((s, d) => s + d.weekly, 0)
-      : round(0.6 + 0.05 * S.prestige(org) * (org.tier === 1 ? 1.4 : 1), 2);
+      : round((seated ? 0.6 : 0.15) + 0.05 * S.prestige(org) * (org.tier === 1 ? 1.4 : 1), 2);
     // Opex is the drain that keeps a budget a budget: staff, the building,
     // travel. Without it every org's cash grows forever and by season ten the
     // economy is decorative.
-    return round(cfg.weeklyRevenue + merch + sponsors - cfg.operatingCost, 2);
+    return round(base + merch + sponsors - cfg.operatingCost, 2);
   };
 
   W.contractsOf = function (org) {
@@ -2552,22 +2707,198 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     for (let w = 0; w < 20; w++) S.rampWeek(org.chem, org.roster, 1);
   };
 
+  /* ──────────────────────────── The Open ───────────────────────────── */
+
+  W.reindexSeats = function (G) {
+    G.seats = { 1: [], 2: [], 3: [], 4: [] };
+    G.pool = [];
+    Object.keys(G.orgs).sort().forEach((id) => {
+      const t = G.orgs[id].tier;
+      G.seats[t].push(id);
+      if (!S.isLeagueTier(t) && id !== G.you) G.pool.push(id);
+    });
+  };
+
+  /** The circuit's season table, best first. Points, then a stable id. */
+  W.circuitStandings = function (G) {
+    const pts = G.circuit ? G.circuit.points : {};
+    return Object.keys(pts).sort()
+      .map((id) => ({ orgId: id, points: pts[id] || 0 }))
+      .sort((a, b) => (b.points !== a.points ? b.points - a.points : a.orgId < b.orgId ? -1 : 1));
+  };
+
+  /** Which events run this week, for an org sitting in The Open. */
+  W.eventsThisWeek = function (G) {
+    const d = S.weekDef(G.week);
+    if (d.kind !== 'match' && d.fixedGateway !== true) {
+      // The Gateway also runs on its own fixed weeks, whatever their kind.
+      const fixed = S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0);
+      return fixed;
+    }
+    const weeks = S.matchWeeksOfSplit(d.split || 1);
+    const idx = weeks.indexOf(G.week);
+    return S.eventsForMatchWeek(idx < 0 ? 0 : idx, G.week);
+  };
+
+  /**
+   * Draw a field for one event. The player is seated first when they entered;
+   * the rest come from the pool, ordered by circuit points so the good
+   * amateurs keep turning up and the field has some continuity — then by a
+   * seeded shuffle so it is never the same sixteen every time.
+   */
+  W.drawField = function (G, event, includeYou) {
+    const rng = new S.Rng(G.seed, 'field:' + G.season + ':' + G.week + ':' + event.id);
+    const eligible = G.pool.filter((id) => {
+      const org = G.orgs[id];
+      return W.lineupOf(org) && S.prestige(org) >= event.repGate * 0.8 && org.cash >= event.entryFee;
+    });
+    const ranked = W.circuitStandings(G).map((r) => r.orgId).filter((id) => eligible.indexOf(id) >= 0);
+    const rest = eligible.filter((id) => ranked.indexOf(id) < 0);
+    const keyed = rest.map((id) => ({ id: id, k: rng.float() }));
+    keyed.sort((a, b) => (a.k !== b.k ? a.k - b.k : a.id < b.id ? -1 : 1));
+    const ordered = ranked.concat(keyed.map((k) => k.id));
+    const field = includeYou ? [G.you] : [];
+    for (let i = 0; field.length < event.fieldSize && i < ordered.length; i++) field.push(ordered[i]);
+    return field;
+  };
+
+  /** Enter an event: pay the fee, draw the field, build the bracket. */
+  W.enterEvent = function (G, event) {
+    const you = G.orgs[G.you];
+    const check = S.canEnter(event, { reputation: S.prestige(you), cash: you.cash, rosterFilled: !!W.lineupOf(you) });
+    if (!check.allowed) return check;
+    you.cash = round(you.cash - event.entryFee, 2);
+    const field = W.drawField(G, event, true);
+    G.circuit.live = {
+      rung: event.id,
+      bracket: S.buildBracket(field, event.bestOf),
+      exits: {},
+      week: G.week,
+    };
+    G.circuit.entered[G.season + ':' + G.week + ':' + event.id] = true;
+    return check;
+  };
+
+  /** A resolver that records who went out in which round. */
+  W.circuitResolver = function (G, event, live) {
+    return (m) => {
+      const rng = new S.Rng(G.seed, 'circ:' + G.season + ':' + G.week + ':' + event.id + ':' + m.id);
+      const isFinal = m.feedsInto === null;
+      const bestOf = isFinal ? event.finalBestOf : event.bestOf;
+      const res = S.resolveFastSeries(W.fastSide(G, m.a), W.fastSide(G, m.b), bestOf, rng, { games: false });
+      const winner = res.winner === 0 ? m.a : m.b;
+      const loser = res.winner === 0 ? m.b : m.a;
+      live.exits[loser] = m.round;
+      const hi = Math.max(res.score[0], res.score[1]), lo = Math.min(res.score[0], res.score[1]);
+      return { winner: winner, score: [hi, lo] };
+    };
+  };
+
+  /** Pay out a finished bracket to everyone in it. */
+  W.settleEvent = function (G, event, live) {
+    const b = live.bracket;
+    const lines = [];
+    b.teams.forEach((id) => {
+      const org = G.orgs[id];
+      if (!org) return;
+      const won = b.champion === id;
+      const place = S.placementOf(b.rounds, live.exits[id] || 1, won);
+      const reward = S.rewardFor(event, place, S.prestige(org));
+      // rewardFor already nets the entry fee off the purse. The player paid
+      // theirs when they entered, so give it back to them here; the AI never
+      // paid, so the netted figure is exactly right for them.
+      org.cash = round(org.cash + reward.cash + (id === G.you ? event.entryFee : 0), 2);
+      // Reputation is what the player sees as prestige, and prestige is
+      // 0.62*standing + 0.38*legacy — so a rep point has to arrive as more
+      // than one point of standing to actually move the number by that much.
+      org.standing = S.clamp(org.standing + reward.reputation / 0.62, 0, 100);
+      G.circuit.points[id] = (G.circuit.points[id] || 0) + reward.points;
+      if (won) {
+        lines.push(event.name + ': <b>' + org.name + '</b> take it.');
+        if (event.id === 'gateway') {
+          G.circuit.seatWinners.push(id);
+          lines.push('★ ' + org.name + ' have won a seat in ' + S.LEAGUE_BY_TIER[S.GATEWAY_PRIZE_TIER].name + ' for next season.');
+        }
+      }
+    });
+    G.circuit.results.push({
+      season: G.season, week: G.week, rung: event.id,
+      champion: b.champion, runnerUp: W.runnerUpOf(b),
+      yours: b.teams.indexOf(G.you) >= 0
+        ? S.placementOf(b.rounds, live.exits[G.you] || 1, b.champion === G.you)
+        : null,
+    });
+    return lines;
+  };
+
+  W.runnerUpOf = function (b) {
+    const final = b.matches.filter((m) => m.feedsInto === null)[0];
+    if (!final || !final.winner) return null;
+    return final.winner === final.a ? final.b : final.a;
+  };
+
+  /** Your live circuit match, if you are in a bracket with a series ready. */
+  W.yourCircuitMatch = function (G) {
+    const live = G.circuit && G.circuit.live;
+    if (!live) return null;
+    return S.nextMatchFor(live.bracket, G.you);
+  };
+
+  /** Resolve the running event around you, or entirely if you are not in it. */
+  W.runCircuitWeek = function (G, skipYours) {
+    const live = G.circuit && G.circuit.live;
+    if (!live) return [];
+    const event = S.EVENT_BY_RUNG[live.rung];
+    S.playBracket(live.bracket, W.circuitResolver(G, event, live),
+      new S.Rng(G.seed, 'circw:' + G.season + ':' + G.week + ':' + live.rung),
+      skipYours && live.bracket.teams.indexOf(G.you) >= 0 ? G.you : undefined);
+    if (live.bracket.champion === null) return [];
+    const lines = W.settleEvent(G, event, live);
+    G.circuit.live = null;
+    return lines;
+  };
+
+  /**
+   * Everything in The Open that the manager is not in. AI amateurs run their
+   * own weekend brackets so the circuit's points table moves whether or not
+   * the player shows up.
+   */
+  W.runShadowCircuit = function (G) {
+    const events = W.eventsThisWeek(G);
+    const lines = [];
+    events.forEach((event) => {
+      const key = G.season + ':' + G.week + ':' + event.id + ':shadow';
+      if (G.circuit.entered[key]) return;
+      G.circuit.entered[key] = true;
+      const inYours = G.circuit.live && G.circuit.live.rung === event.id;
+      if (inYours) return; // the player's own bracket already covers this one
+      const field = W.drawField(G, event, false);
+      if (field.length < 4) return;
+      const shadow = { rung: event.id, bracket: S.buildBracket(field, event.bestOf), exits: {}, week: G.week };
+      S.playBracket(shadow.bracket, W.circuitResolver(G, event, shadow),
+        new S.Rng(G.seed, 'shadow:' + G.season + ':' + G.week + ':' + event.id));
+      W.settleEvent(G, event, shadow).forEach((l) => {
+        if (event.id !== 'weekend') lines.push(l);
+      });
+    });
+    return lines;
+  };
+
   W.finishSeason = function (G) {
     const lines = [];
     const movements = {};
     // Every table is read before anything is applied, so promotion cannot
     // depend on which tier happens to be processed first.
-    S.PYRAMID.forEach((cfg) => {
-      const league = G.leagues[cfg.tier];
-      movements[cfg.tier] = W.orderOf(league);
+    S.LEAGUES.forEach((cfg) => {
+      movements[cfg.tier] = W.orderOf(G.leagues[cfg.tier]);
     });
 
     // The table decides who is good; the bracket decides who lifts the
     // trophy, so a title is the playoff champion, not the top of the table.
     const champions = {};
-    if (G.playoffs) S.PYRAMID.forEach((cfg) => { if (G.playoffs[cfg.tier]) champions[cfg.tier] = G.playoffs[cfg.tier].champion; });
+    if (G.playoffs) S.LEAGUES.forEach((cfg) => { if (G.playoffs[cfg.tier]) champions[cfg.tier] = G.playoffs[cfg.tier].champion; });
 
-    S.PYRAMID.forEach((cfg) => {
+    S.LEAGUES.forEach((cfg) => {
       const order = movements[cfg.tier];
       order.forEach((id, i) => {
         const org = G.orgs[id];
@@ -2583,12 +2914,11 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
       });
     });
 
-    // Seats change hands, both directions committed together. The automatic
-    // places come from the table; one more per boundary was settled in the
-    // gauntlet, and that one only moves if the challenger actually won it.
-    for (let t = 1; t < 4; t++) {
-      const auto = t === 3 ? 2 : 1;
-      const move = S.resolveBoundary(movements[t], movements[t + 1], auto);
+    // League-to-league boundaries: the automatic places come from the table,
+    // one more per boundary was settled in the gauntlet, and both directions
+    // commit together so the result cannot depend on processing order.
+    for (let t = 1; t < 3; t++) {
+      const move = S.resolveBoundary(movements[t], movements[t + 1], 1);
       const g = G.gauntlet ? G.gauntlet[t] : null;
       if (g && S.gauntletPromoted(g)) {
         move.relegated.push(g.defender);
@@ -2596,20 +2926,46 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
       }
       move.relegated.forEach((id) => { G.orgs[id].tier = t + 1; });
       move.promoted.forEach((id) => { G.orgs[id].tier = t; });
-      move.promoted.forEach((id) => lines.push(G.orgs[id].name + ' are promoted to ' + S.LEAGUE_BY_TIER[t].name + '.'));
+      move.promoted.forEach((id) => lines.push('<b>' + G.orgs[id].name + '</b> are promoted to ' + S.LEAGUE_BY_TIER[t].name + '.'));
       move.relegated.forEach((id) => lines.push(G.orgs[id].name + ' are relegated from ' + S.LEAGUE_BY_TIER[t].name + '.'));
     }
 
-    G.seats = { 1: [], 2: [], 3: [], 4: [] };
-    Object.keys(G.orgs).sort().forEach((id) => G.seats[G.orgs[id].tier].push(id));
+    // The bottom boundary is different: there is no league below tier 3 to be
+    // promoted *from*, only The Open. Two clubs drop into the circuit and the
+    // two Gateway winners take their seats — which is the whole reason the
+    // Gateway exists, and the only way in that does not cost money.
+    const bottom = S.LEAGUES[S.LEAGUES.length - 1].tier;
+    const relegated = movements[bottom].slice(-2);
+    const risers = (G.circuit.seatWinners || []).slice(0, relegated.length);
+    relegated.forEach((id) => {
+      G.orgs[id].tier = 4;
+      lines.push(G.orgs[id].name + ' drop out of ' + S.LEAGUE_BY_TIER[bottom].name + ' and into The Open.');
+    });
+    risers.forEach((id) => {
+      G.orgs[id].tier = bottom;
+      lines.push('★ <b>' + G.orgs[id].name + '</b> win their way into ' + S.LEAGUE_BY_TIER[bottom].name + '.');
+    });
+    // Any seat the Gateway did not fill goes to the circuit's points leader —
+    // a league cannot run a man short.
+    if (risers.length < relegated.length) {
+      const standings = W.circuitStandings(G).map((r) => r.orgId).filter((id) => risers.indexOf(id) < 0);
+      for (let i = 0; risers.length < relegated.length && i < standings.length; i++) {
+        const id = standings[i];
+        if (G.orgs[id].tier !== 4) continue;
+        G.orgs[id].tier = bottom;
+        risers.push(id);
+        lines.push('<b>' + G.orgs[id].name + '</b> are invited up on Circuit Points.');
+      }
+    }
+
+    W.reindexSeats(G);
 
     G.season++;
     G.week = 1;
     W.turnover(G).slice(0, 8).forEach((l) => lines.push(l));
 
     // Seats may have changed hands during turnover, so rebuild the index.
-    G.seats = { 1: [], 2: [], 3: [], 4: [] };
-    Object.keys(G.orgs).sort().forEach((id) => G.seats[G.orgs[id].tier].push(id));
+    W.reindexSeats(G);
     W.startSeason(G);
     return lines;
   };
@@ -2673,18 +3029,22 @@ function newGame(seed){
   const W=window.LOLWorld;
   const built=W.buildOrgs(seed);
   // Your org takes the last seat at the bottom of the pyramid.
+  // You start outside the pyramid entirely: no seat, no fixtures, no table,
+  // no reputation and no revenue except what you can win.
   const yours=S.seedOrg(new S.Rng(seed,'you'),{id:'you',name:'Ashgrove Collective',tag:'ASH',region:'mer',
     personality:'academy',blurb:'A garage org with a whiteboard, a spreadsheet, and you.'},4,0);
   yours.cash=100; yours.facilities=32; yours.coaching=45; yours.analytics=60; yours.scouting=38;
+  yours.standing=3; yours.legacy=0; yours.fanbase=6;
   yours.roster={top:null,jungle:null,mid:null,bot:null,support:null}; yours.contracts={};
   built.orgs['you']=yours; built.seats[4].push('you');
 
   G={
     seed:seed, season:1, week:1, you:'you',
-    orgs:built.orgs, seats:built.seats, leagues:null,
+    orgs:built.orgs, seats:built.seats, pool:built.pool, leagues:null, circuit:null,
     scoutPts:6, scoutBudget:6,
     ladder:[], sponsors:{active:[],offers:[]}, inbox:[], weekResults:{},
     ui:{screen:'season',selLad:null,match:null,orgSheet:null,drawer:false,band:'board'},
+    seatOffer:null,
     orgName:yours.name, matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
     pendingBids:[],
   };
@@ -2709,7 +3069,7 @@ function newGame(seed){
   G.sponsors.active.push({id:'spo-start',nm:SPONSOR_TEMPLATES[0].nm,flav:SPONSOR_TEMPLATES[0].flav,
     base:0,weekly:SPONSOR_TEMPLATES[0].weekly,clause:null,ob:SPONSOR_TEMPLATES[0].ob,tier:0});
   refreshSponsorOffers();
-  pushLog('You take over '+yours.name+', bottom of the Open Circuit. Fill five seats and start climbing.','info');
+  pushLog('You take over '+yours.name+' — five empty seats, a hundred credits, and no league that will have you. Sign a team and start entering weekend opens.','info');
   render();
 }
 function you(){return G.orgs[G.you];}
@@ -2876,6 +3236,14 @@ function advanceWeek(){
   const isPlayoff=d.window.indexOf('Playoffs')>=0;
   const isGauntlet=d.window==='Promotion';
 
+  // The Open: a tournament you have entered has to be played out before the
+  // week can turn, and the rest of the circuit runs whether you enter or not.
+  if(W.unaffiliated(G)){
+    if(W.yourCircuitMatch(G)){ toast('You are still in a bracket this week.','bad'); G.ui.screen='season'; render(); return; }
+    W.runCircuitWeek(G,false).forEach(l=>pushLog(l,'good'));
+    W.runShadowCircuit(G).forEach(l=>pushLog(l,'info'));
+  }
+
   // Anything you are personally in must be played, not skipped.
   const fx=W.yourFixture(G);
   if(d.kind==='match'&&!isPlayoff&&!isGauntlet&&fx){ toast('You have a series to play this week.','bad'); G.ui.screen='season'; render(); return; }
@@ -2888,7 +3256,7 @@ function advanceWeek(){
     if(W.yourGauntlet(G)){ toast('Your seat is on the line this week.','bad'); G.ui.screen='season'; render(); return; }
     W.playGauntlets(G,false).forEach(l=>pushLog(l,'info'));
   } else if(d.kind==='match'){
-    S.PYRAMID.forEach(cfg=>W.playLeagueWeek(G,cfg.tier,true));
+    S.LEAGUES.forEach(cfg=>W.playLeagueWeek(G,cfg.tier,true));
   }
 
   // Chemistry, development, money, contracts, rivals.
@@ -2935,6 +3303,35 @@ function makeOpponent(){
   let ch=S.initChem(lu);const wk=Math.round(rng.range(6,26));for(let i=0;i<wk;i++)S.rampWeek(ch,lu,1);
   return {name:'Scrim Partners',tag:'SCR',orgId:null,lineup:lu,chem:ch};
 }
+window.enterCircuitEvent=function(rungId){
+  const W=window.LOLWorld;
+  const event=S.EVENT_BY_RUNG[rungId];
+  const check=W.enterEvent(G,event);
+  if(!check.allowed){
+    toast(check.reason==='roster'?'You need five players first.'
+      :check.reason==='reputation'?'You need '+check.repShort.toFixed(1)+' more reputation.'
+      :'You cannot afford the entry fee.','bad');
+    return;
+  }
+  pushLog('Entered the <b>'+event.name+'</b> — '+event.entryFee+'◈ down, '+event.fieldSize+' teams in.','info');
+  // Play the rounds that do not involve you, so your first match is waiting.
+  W.runCircuitWeek(G,true);
+  render();
+};
+window.buySeat=function(){
+  const offer=G.seatOffer; if(!offer)return;
+  const you=G.orgs[G.you];
+  const check=S.canBuySeat(offer,{reputation:S.prestige(you),cash:you.cash});
+  if(!check.allowed)return;
+  if(!confirm('Buy '+offer.vacatedBy+'’s seat in '+S.LEAGUE_BY_TIER[offer.tier].name+' for '+offer.cost+'◈?\n\nYou will be in the league from next season.'))return;
+  you.cash=you.cash-offer.cost;
+  you.tier=offer.tier;
+  window.LOLWorld.reindexSeats(G);
+  G.seatOffer=null;
+  pushLog('★ You bought '+offer.vacatedBy+'’s seat. <b>'+S.LEAGUE_BY_TIER[offer.tier].name+'</b> next season.','good');
+  toast('★ You are in the league.','good');
+  render();
+};
 window.startFixture=function(fx){
   G.ui.fixture=fx; G.ui.knockout=null; G.matchOpp=null; G.ui.screen='compete'; G.ui.orgSheet=null;
   render();
@@ -2942,10 +3339,13 @@ window.startFixture=function(fx){
 /* A playoff series or a gauntlet: same takeover, different bookkeeping. */
 window.startKnockout=function(kind,payload){
   const W=window.LOLWorld;
-  const opp = kind==='playoff'
-    ? (payload.a===G.you?payload.b:payload.a)
-    : (payload.g.defender===G.you?payload.g.challenger:payload.g.defender);
-  G.ui.knockout={kind:kind, payload:payload, oppId:opp};
+  // A playoff series and a circuit bracket are both plain bracket matches;
+  // only the gauntlet carries its own two-sided shape.
+  const opp = kind==='gauntlet'
+    ? (payload.g.defender===G.you?payload.g.challenger:payload.g.defender)
+    : (payload.a===G.you?payload.b:payload.a);
+  G.ui.knockout={kind:kind, payload:payload, oppId:opp,
+    rung:kind==='circuit'&&G.circuit&&G.circuit.live?G.circuit.live.rung:null};
   G.ui.fixture={round:0, a:G.you, b:opp, knockout:true};
   G.matchOpp=null; G.ui.screen='compete'; G.ui.orgSheet=null;
   render();
@@ -2954,6 +3354,17 @@ window.startKnockout=function(kind,payload){
 window.commitYourSeries=function(yw,ow){
   const W=window.LOLWorld;
   const ko=G.ui.knockout;
+  if(ko&&ko.kind==='circuit'){
+    const live=G.circuit.live;
+    const won=yw>ow;
+    S.recordBracketResult(live.bracket,ko.payload.id,won?G.you:ko.oppId,[Math.max(yw,ow),Math.min(yw,ow)]);
+    if(!won)live.exits[G.you]=ko.payload.round;
+    else live.exits[ko.oppId]=ko.payload.round;
+    W.runCircuitWeek(G,true).forEach(l=>pushLog(l,'good'));
+    G.weekResults[G.season+':'+G.week]=won?'w':'l';
+    G.ui.knockout=null; G.ui.fixture=null;
+    return;
+  }
   if(ko){
     const won=yw>ow;
     const score=[Math.max(yw,ow),Math.min(yw,ow)];
@@ -3023,6 +3434,28 @@ function renderContinue(){
   const W=window.LOLWorld;
   const d=S.weekDef(G.week);
   const v=$('#continueVerb'),sub=$('#continueSub');
+  const setInbox=()=>{const u=G.inbox.filter(x=>!x.read).length;const c=$('#inboxCount');c.textContent=u;c.style.display=u?'flex':'none';};
+  if(W.unaffiliated(G)){
+    const m=W.yourCircuitMatch(G);
+    if(m){
+      const opp=G.orgs[m.a===G.you?m.b:m.a];
+      const live=G.circuit.live;
+      v.textContent='▶ Play · '+circuitRoundName(live.bracket,m);
+      sub.textContent=S.EVENT_BY_RUNG[live.rung].name+' · vs '+opp.tag;
+      $('#continueBtn').onclick=()=>window.startKnockout('circuit',m);
+      setInbox(); return;
+    }
+    const evs=W.eventsThisWeek(G);
+    if(evs.length){
+      v.textContent='▶ Advance · '+(G.circuit.live?'finish the bracket':'skip the '+evs[0].name.toLowerCase());
+      sub.textContent='week '+G.week+' · the Open';
+    } else {
+      v.textContent='▶ Advance';
+      sub.textContent='week '+G.week+' · '+d.window.toLowerCase();
+    }
+    $('#continueBtn').onclick=()=>advanceWeek();
+    setInbox(); return;
+  }
   if(d.window.indexOf('Playoffs')>=0){
     W.startPlayoffs(G);
     const m=W.yourPlayoffMatch(G);
@@ -3060,6 +3493,13 @@ function renderContinue(){
   }
   const unread=G.inbox.filter(m=>!m.read).length;
   const c=$('#inboxCount'); c.textContent=unread; c.style.display=unread?'flex':'none';
+}
+function circuitRoundName(b,m){
+  const left=b.rounds-m.round;
+  if(left===0)return 'the final';
+  if(left===1)return 'the semi-final';
+  if(left===2)return 'the quarter-final';
+  return 'round '+m.round;
 }
 function roundName(b,m){
   const left=b.rounds-m.round;
@@ -3107,8 +3547,13 @@ function renderNav(){
   $('#nb-scout').textContent=G.ladder.filter(e=>!e.signed&&e.scout.conf>0).length||'0';
   $('#nb-squad').textContent=rosterCount()+'/5';
   $('#nb-sponsors').textContent=G.sponsors.offers.length||'0';
-  const order=G.leagues?window.LOLWorld.orderOf(G.leagues[you().tier]):[];
-  $('#nb-season').textContent=order.length?(order.indexOf(G.you)+1)+'/'+order.length:'—';
+  const W=window.LOLWorld;
+  if(W.unaffiliated(G)){
+    $('#nb-season').textContent=Math.round(S.prestige(you()))+' rep';
+  } else {
+    const order=G.leagues?W.orderOf(G.leagues[you().tier]):[];
+    $('#nb-season').textContent=order.length?(order.indexOf(G.you)+1)+'/'+order.length:'—';
+  }
 }
 function renderPyramid(){
   const p=$('#pyr');p.innerHTML='';
@@ -3565,7 +4010,28 @@ function concludeSeries(yw,ow){
   // The result goes into the table (or the bracket) and the rest of the
   // pyramid plays the same week.
   window.commitYourSeries(yw,ow);
-  if(ko){
+  if(ko&&ko.kind==='circuit'){
+    const live=G.circuit.live;
+    const event=S.EVENT_BY_RUNG[ko.rung||(live&&live.rung)||'weekend'];
+    const bracket=live?live.bracket:null;
+    const tookIt=!live || live.bracket.champion===G.you;
+    if(won&&tookIt){
+      if(event.id==='gateway'){
+        pushLog('★★ <b>You have won The Gateway.</b> A seat in '+S.LEAGUE_BY_TIER[S.GATEWAY_PRIZE_TIER].name+' is yours next season.','good');
+        toast('★★ You are going up.','good');
+      } else {
+        pushLog('★ <b>'+event.name+' champions.</b> You beat '+opp.name+' '+yw+'–'+ow+' in the final.','good');
+        toast('★ You won the '+event.name+'.','good');
+      }
+    } else if(won){
+      pushLog('Through. Beat <b>'+opp.name+'</b> '+yw+'–'+ow+' — still in the '+event.name+'.','good');
+      toast('Through — '+yw+'–'+ow+'.','good');
+    } else {
+      pushLog('Out of the '+event.name+', beaten '+ow+'–'+yw+' by '+opp.name+'. The entry fee is gone.','bad');
+      toast('Knocked out by '+opp.name+'.','bad');
+    }
+    void bracket;
+  } else if(ko){
     // A knockout has no league position to report — it has a consequence.
     const b=G.playoffs?G.playoffs[you().tier]:null;
     const stillIn=b?!!window.LOLWorld.yourPlayoffMatch(G):false;
@@ -4109,6 +4575,235 @@ function renderSeries(main){
     return card;
   }
 
+  /* ═══════════════════════════ THE OPEN ═══════════════════════════════ */
+
+  /**
+   * The tournament board: what is running, what it costs, and — the detail
+   * that matters most — what is still locked and how far away it is. A locked
+   * rung is not an error state, it is the thing the manager is climbing
+   * toward, so it stays fully legible from the first week: name, prize, and
+   * the exact reputation still owed.
+   */
+  function tournamentBoard(G) {
+    const you = G.orgs[G.you];
+    const rep = S.prestige(you);
+    const running = W.eventsThisWeek(G).map((e) => e.id);
+    const card = el('div', 'card board');
+    card.appendChild(sectionLabel('The circuit', 'week ' + G.week));
+
+    S.CIRCUIT.forEach((event) => {
+      const check = S.canEnter(event, { reputation: rep, cash: you.cash, rosterFilled: !!W.lineupOf(you) });
+      const isRunning = running.indexOf(event.id) >= 0;
+      const locked = check.reason === 'reputation';
+      const row = el('div', 'evrow' + (locked ? ' locked' : '') + (isRunning && check.allowed ? ' live' : ''));
+
+      const prize = event.id === 'gateway'
+        ? 'a seat in ' + S.LEAGUE_BY_TIER[S.GATEWAY_PRIZE_TIER].name
+        : event.purse.winner + '◈ to the winner';
+
+      row.innerHTML =
+        '<div class="evmain">' +
+        '<span class="evname">' + event.name + (locked ? ' <span class="evlock">🔒</span>' : '') + '</span>' +
+        '<span class="evblurb">' + event.blurb + '</span>' +
+        '</div>' +
+        '<div class="evfacts mono">' +
+        '<span>' + event.fieldSize + ' teams</span>' +
+        '<span>' + event.entryFee + '◈ entry</span>' +
+        '<span class="evprize">' + prize + '</span>' +
+        '</div>';
+
+      const act = el('div', 'evact');
+      if (locked) {
+        act.innerHTML = '<span class="evgate mono">needs ' + event.repGate + ' rep<br><b>' +
+          check.repShort.toFixed(1) + ' to go</b></span>';
+      } else if (!isRunning) {
+        act.innerHTML = '<span class="evwhen mono">' + nextRunLabel(G, event) + '</span>';
+      } else if (check.reason === 'roster') {
+        act.innerHTML = '<span class="evgate mono">field five first</span>';
+      } else if (check.reason === 'money') {
+        act.innerHTML = '<span class="evgate mono">' + event.entryFee + '◈ short</span>';
+      } else if (G.circuit.live) {
+        act.innerHTML = '<span class="evwhen mono">in progress</span>';
+      } else {
+        const b = el('button', 'btn' + (event.id === 'gateway' ? ' primary' : ''), 'Enter · ' + event.entryFee + '◈');
+        b.onclick = () => window.enterCircuitEvent(event.id);
+        act.appendChild(b);
+      }
+      row.appendChild(act);
+      card.appendChild(row);
+    });
+    return card;
+  }
+
+  function nextRunLabel(G, event) {
+    if (event.fixedWeeks.length) {
+      const next = event.fixedWeeks.filter((w) => w >= G.week)[0];
+      return next ? 'week ' + next : 'week ' + event.fixedWeeks[0] + ' next year';
+    }
+    for (let w = G.week + 1; w < G.week + 10; w++) {
+      const d = S.weekDef(w);
+      if (d.kind !== 'match' || d.split === null) continue;
+      const weeks = S.matchWeeksOfSplit(d.split);
+      const idx = weeks.indexOf(w);
+      if (idx >= 0 && S.eventsForMatchWeek(idx, w).some((e) => e.id === event.id)) return 'week ' + w;
+    }
+    return 'next split';
+  }
+
+  /**
+   * One bar, three marks. The whole climb in a strip: where you are, what the
+   * next door costs, and how far the road goes. This is the answer to "what
+   * am I working toward" and it is on screen every single week.
+   */
+  function reputationMeter(G) {
+    const you = G.orgs[G.you];
+    const rep = S.prestige(you);
+    const next = S.nextUnlock(rep);
+    const max = 45;
+    const card = el('div', 'card repcard');
+    card.appendChild(sectionLabel('Reputation', next ? next.short.toFixed(1) + ' to ' + next.event.name : 'every door open'));
+
+    const bar = el('div', 'repbar');
+    bar.innerHTML = '<i style="width:' + Math.min(100, (rep / max) * 100).toFixed(1) + '%"></i>' +
+      S.CIRCUIT.filter((e) => e.repGate > 0).map((e) =>
+        '<b class="' + (rep >= e.repGate ? 'open' : '') + '" style="left:' + ((e.repGate / max) * 100).toFixed(1) + '%"' +
+        ' title="' + e.name + ' · needs ' + e.repGate + '"></b>').join('');
+    card.appendChild(bar);
+
+    const scale = el('div', 'repscale mono');
+    scale.innerHTML = '<span>' + rep.toFixed(1) + '</span>' +
+      S.CIRCUIT.filter((e) => e.repGate > 0).map((e) =>
+        '<span class="' + (rep >= e.repGate ? 'open' : '') + '" style="left:' + ((e.repGate / max) * 100).toFixed(1) + '%">' +
+        e.name.split(' ')[e.name.split(' ').length - 1] + '</span>').join('');
+    card.appendChild(scale);
+
+    const note = el('div', 'repnote');
+    note.textContent = next
+      ? 'Reputation comes from placing in tournaments, and every rung has a ceiling — the weekend circuit alone will never carry you to the Gateway.'
+      : 'The Gateway is open. Win it and you take a seat in the pyramid.';
+    card.appendChild(note);
+    return card;
+  }
+
+  /** The live bracket you are standing in, with your own path picked out. */
+  function liveEventCard(G) {
+    const live = G.circuit && G.circuit.live;
+    if (!live) return null;
+    const event = S.EVENT_BY_RUNG[live.rung];
+    const b = live.bracket;
+    const card = el('div', 'card bracketcard');
+    const left = b.teams.filter((t) => {
+      if (b.champion === t) return true;
+      return live.exits[t] === undefined;
+    }).length;
+    card.appendChild(sectionLabel(event.name, b.champion ? 'decided' : left + ' teams left'));
+
+    const rounds = [];
+    b.matches.forEach((m) => { (rounds[m.round] = rounds[m.round] || []).push(m); });
+    const cols = el('div', 'bracketcols');
+    for (let r = 1; r <= b.rounds; r++) {
+      const list = (rounds[r] || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1));
+      if (!list.length) continue;
+      const col = el('div', 'bcol');
+      col.appendChild(el('div', 'bcolhead', roundLabel(b, r)));
+      list.forEach((m) => col.appendChild(seriesCell(G, m)));
+      cols.appendChild(col);
+    }
+    card.appendChild(cols);
+    return card;
+  }
+
+  /** The Open's season table: points, not wins. */
+  function circuitStandings(G) {
+    const rows = W.circuitStandings(G).slice(0, 14);
+    const wrap = el('div', 'card table-card');
+    const head = el('div', 'tablehead');
+    head.innerHTML = '<div><h3>Circuit Points</h3><p class="sub">Everyone grinding The Open this season. ' +
+      'Finish top and the league invites you up when a seat falls open.</p></div>' +
+      '<span class="roundchip mono">S' + G.season + '</span>';
+    wrap.appendChild(head);
+
+    const t = el('table', 'standings');
+    t.innerHTML =
+      '<colgroup><col style="width:34px"><col><col style="width:64px"><col style="width:58px"></colgroup>' +
+      '<thead><tr><th>Pos</th><th>Org</th><th class="r">Rep</th><th class="r">Points</th></tr></thead>';
+    const body = el('tbody');
+    rows.forEach((row, i) => {
+      const org = G.orgs[row.orgId];
+      if (!org) return;
+      const tr = el('tr', row.orgId === G.you ? 'you' : '');
+      tr.dataset.org = row.orgId;
+      tr.innerHTML =
+        '<td class="mono pos">' + (i + 1) + '</td>' +
+        '<td class="orgcell"><span class="otag mono">' + org.tag + '</span><span class="oname">' + org.name + '</span></td>' +
+        '<td class="mono r">' + Math.round(S.prestige(org)) + '</td>' +
+        '<td class="mono r wr">' + row.points + '</td>';
+      body.appendChild(tr);
+    });
+    t.appendChild(body);
+    body.onclick = (e) => {
+      const tr = e.target.closest && e.target.closest('tr[data-org]');
+      if (tr) window.openOrgSheet(tr.dataset.org);
+    };
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  /** Recent results on the circuit — the form guide of an unaffiliated org. */
+  function circuitForm(G) {
+    const mine = (G.circuit.results || []).filter((r) => r.yours !== null).slice(-6).reverse();
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('Your run', mine.length ? 'last ' + mine.length : 'nothing yet'));
+    if (!mine.length) {
+      card.appendChild(el('div', 'empty-note', 'You have not entered anything. The board is on the left.'));
+      return card;
+    }
+    const list = el('div', 'formlist');
+    const LABEL = { winner: 'WON IT', finalist: 'final', semi: 'semi', quarter: 'quarter', entered: 'out early' };
+    mine.forEach((r) => {
+      const good = r.yours === 'winner' || r.yours === 'finalist';
+      const row = el('div', 'formrow circuitrow');
+      row.innerHTML =
+        '<span class="mono rnd">w' + r.week + '</span>' +
+        '<span class="res ' + (good ? 'w' : 'l') + '">' + (r.yours === 'winner' ? '★' : good ? '▲' : '▼') + '</span>' +
+        '<span class="evsm">' + S.EVENT_BY_RUNG[r.rung].name + '</span>' +
+        '<span class="score">' + LABEL[r.yours] + '</span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
+  /** A seat has fallen vacant and you can buy it. The other door, made real. */
+  function seatOfferCard(G) {
+    const offer = G.seatOffer;
+    if (!offer || offer.expiresWeek < G.week) return null;
+    const you = G.orgs[G.you];
+    const check = S.canBuySeat(offer, { reputation: S.prestige(you), cash: you.cash });
+    const card = el('div', 'card seatoffer');
+    card.appendChild(sectionLabel('A seat is for sale', 'expires week ' + offer.expiresWeek));
+    card.appendChild(el('div', 'weekbody',
+      '<p class="wknote"><b>' + offer.vacatedBy + '</b> have folded, and their seat in ' +
+      S.LEAGUE_BY_TIER[offer.tier].name + ' is going to whoever can take it on. ' +
+      'The league will not sell to a complete unknown.</p>' +
+      '<div class="kv"><span>Price</span><b class="mono">' + offer.cost + '◈</b></div>' +
+      '<div class="kv"><span>Reputation required</span><b class="mono">' + offer.repRequired + '</b></div>' +
+      '<div class="kv"><span>You have</span><b class="mono">' + you.cash.toFixed(0) + '◈ · ' +
+      Math.round(S.prestige(you)) + ' rep</b></div>'));
+    const btn = el('button', 'btn primary wide');
+    if (check.allowed) {
+      btn.textContent = '▶  Buy the seat · ' + offer.cost + '◈';
+      btn.onclick = () => window.buySeat();
+    } else {
+      btn.disabled = true;
+      btn.textContent = check.reason === 'reputation'
+        ? 'Not established enough — ' + check.repShort.toFixed(1) + ' more reputation'
+        : 'You cannot afford it — ' + (offer.cost - you.cash).toFixed(0) + '◈ short';
+    }
+    card.appendChild(btn);
+    return card;
+  }
+
   /* ─────────────────────────── the fixture card ───────────────────────── */
 
   function fixtureCard(G) {
@@ -4473,9 +5168,21 @@ function renderSeries(main){
   window.renderSeasonHub = function (G, main) {
     const you = G.orgs[G.you];
     const head = el('div', 'screen-head');
-    head.innerHTML =
-      '<h2>' + S.LEAGUE_BY_TIER[you.tier].name + '</h2>' +
-      '<p class="sub">' + S.LEAGUE_BY_TIER[you.tier].blurb + '</p>';
+    if (W.unaffiliated(G)) {
+      const next = S.nextUnlock(S.prestige(you));
+      head.innerHTML =
+        '<p class="eyebrow">Unaffiliated · season ' + G.season + '</p>' +
+        '<h2>The Open</h2>' +
+        '<p class="sub">No seat, no fixtures, no table — and no revenue but what you win. ' +
+        (next
+          ? 'Place in enough tournaments and <b>' + next.event.name + '</b> opens up.'
+          : 'The Gateway is open. One tournament stands between you and the pyramid.') +
+        '</p>';
+    } else {
+      head.innerHTML =
+        '<h2>' + S.LEAGUE_BY_TIER[you.tier].name + '</h2>' +
+        '<p class="sub">' + S.LEAGUE_BY_TIER[you.tier].blurb + '</p>';
+    }
     main.appendChild(head);
 
     main.appendChild(runStrip(G));
@@ -4483,6 +5190,25 @@ function renderSeries(main){
     const d = S.weekDef(G.week);
     const grid = el('div', 'hub');
     const left = el('div', 'hubcol');
+
+    if (W.unaffiliated(G)) {
+      const offer = seatOfferCard(G);
+      if (offer) left.appendChild(offer);
+      const live = liveEventCard(G);
+      if (live) left.appendChild(live);
+      left.appendChild(tournamentBoard(G));
+      left.appendChild(circuitStandings(G));
+      const right = el('div', 'hubcol');
+      right.appendChild(reputationMeter(G));
+      right.appendChild(circuitForm(G));
+      right.appendChild(pyramidCard(G));
+      right.appendChild(deskCard(G));
+      grid.appendChild(left);
+      grid.appendChild(right);
+      main.appendChild(grid);
+      return;
+    }
+
     left.appendChild(fixtureCard(G));
     if (d.window.indexOf('Playoffs') >= 0 || (G.playoffs && G.playoffs[you.tier] && G.playoffs[you.tier].champion)) {
       const bc = bracketCard(G, you.tier);

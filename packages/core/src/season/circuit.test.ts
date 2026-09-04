@@ -84,7 +84,7 @@ describe('reputation is a ladder, not a treadmill', () => {
     expect(entries).toBeGreaterThan(4); // ...but never in a month
   });
 
-  it('reaches the Gateway gate on the Cup, in a second season', () => {
+  it('reaches the Gateway gate on the Cup, and only by winning them', () => {
     const cup = EVENT_BY_RUNG.contenders;
     const run: Placement[] = ['semi', 'winner', 'quarter', 'finalist'];
     let rep = 14;
@@ -96,15 +96,28 @@ describe('reputation is a ladder, not a treadmill', () => {
     // The Cup runs every fourth match week: about four or five a season, so
     // this has to land inside two seasons of Cups — and weekend opens are
     // topping the same number up in parallel, which makes it sooner still.
-    expect(entries).toBeLessThanOrEqual(7);
-    expect(entries).toBeGreaterThanOrEqual(2);
+    // The Cup runs about six times a season. A team that mixes wins with
+    // semis and quarters — good, not dominant — needs roughly three seasons
+    // of them. A team that wins them all needs two. Neither gets there in one.
+    expect(entries).toBeGreaterThan(6);
+    expect(entries).toBeLessThanOrEqual(20);
+
+    // ...and the ceiling sits only just above the gate, so nothing short of
+    // repeatedly winning Cups gets a team through it. Six straight Cup wins —
+    // a perfect first season — still leaves the Gateway shut.
+    let perfectYear = 18;
+    for (let i = 0; i < 6; i++) perfectYear += repGain(cup, 'winner', perfectYear);
+    expect(perfectYear).toBeLessThan(EVENT_BY_RUNG.gateway.repGate);
+    // Two more in the second season open it.
+    for (let i = 0; i < 2; i++) perfectYear += repGain(cup, 'winner', perfectYear);
+    expect(perfectYear).toBeGreaterThan(EVENT_BY_RUNG.gateway.repGate);
   });
 
   it('names the next locked rung and the distance to it', () => {
     expect(nextUnlock(0)!.event.id).toBe('contenders');
     expect(nextUnlock(0)!.short).toBe(12);
     expect(nextUnlock(20)!.event.id).toBe('gateway');
-    expect(nextUnlock(20)!.short).toBe(10);
+    expect(nextUnlock(20)!.short).toBe(16);
     expect(nextUnlock(40)).toBeNull();
   });
 });

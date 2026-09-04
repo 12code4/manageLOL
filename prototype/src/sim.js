@@ -944,7 +944,6 @@
 
   // ---------- contracts ----------
   S.WAGE_BASE = 0.22; S.WAGE_CURVE = 1.068; S.SEASON_WEEKS = 52; S.ACCEPT_THRESHOLD = 0.72;
-  S.tierWageMult = (t) => ({ 1: 1.25, 2: 1, 3: 0.75, 4: 0.5 })[t];
 
   S.wageDemand = function (player, tier, orgPrestige) {
     const ca = S.currentAbility(player.attributes), g = player.attributes.growth, age = player.age;
@@ -1224,9 +1223,14 @@
     { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 12, winPurse: 5, operatingCost: 5.5, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
     { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 5, winPurse: 2.5, operatingCost: 2.0, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
     { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 3.4, winPurse: 1.2, operatingCost: 0.8, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
-    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 2.6, winPurse: 0.6, operatingCost: 0.35, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
+    { id: 'open', name: 'The Open', tier: 4, slots: 0, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 0, weeklyRevenue: 0, winPurse: 0, operatingCost: 0.35, promotionLine: 0, relegationLine: 99, blurb: 'No seats, no table — just entry fees and weekend brackets. Everyone starts here.' },
   ];
   S.LEAGUE_BY_TIER = {}; S.PYRAMID.forEach((l) => (S.LEAGUE_BY_TIER[l.tier] = l));
+  /* Iterate LEAGUES for anything that runs a season. PYRAMID still holds The
+     Open, which is a price band with no seats behind it. */
+  S.LEAGUES = S.PYRAMID.filter((l) => l.slots > 0);
+  S.isLeagueTier = (t) => S.LEAGUE_BY_TIER[t].slots > 0;
+  S.OPEN_TIER = 4;
   S.prizeFor = function (cfg, place) {
     const shares = [0.34, 0.21, 0.14, 0.10, 0.07, 0.05, 0.035, 0.025, 0.015, 0.01];
     return round(cfg.prizePool * (shares[place - 1] !== undefined ? shares[place - 1] : 0.005), 1);
@@ -1327,6 +1331,85 @@
   };
   S.buildGauntlet = (defender, challenger) => ({ defender: defender, challenger: challenger, bestOf: 5, winner: null, score: null });
   S.gauntletPromoted = (g) => g.winner !== null && g.winner === g.challenger;
+
+  /* ---------- The Open: the amateur circuit ---------- */
+  S.CIRCUIT = [
+    { id: 'weekend', name: 'Weekend Open', entryFee: 1, fieldSize: 8, bestOf: 1, finalBestOf: 3,
+      repGate: 0, repCap: 18,
+      purse: { winner: 6, finalist: 2.5, semi: 1, quarter: 0.4, entered: 0 },
+      points: { winner: 100, finalist: 60, semi: 35, quarter: 18, entered: 6 },
+      repBase: { winner: 3, finalist: 1.6, semi: 0.8, quarter: 0.35, entered: 0.1 },
+      everyNMatchWeeks: 1, fixedWeeks: [],
+      blurb: 'Eight teams, one Saturday, one game a round. Everyone starts here.' },
+    { id: 'contenders', name: 'Contenders Cup', entryFee: 3, fieldSize: 16, bestOf: 1, finalBestOf: 3,
+      repGate: 12, repCap: 38,
+      purse: { winner: 22, finalist: 10, semi: 4.5, quarter: 2, entered: 0 },
+      points: { winner: 260, finalist: 150, semi: 85, quarter: 42, entered: 12 },
+      repBase: { winner: 10, finalist: 5.5, semi: 2.6, quarter: 1.2, entered: 0.35 },
+      everyNMatchWeeks: 4, fixedWeeks: [],
+      blurb: 'Sixteen teams and a month of bragging rights. Where a name gets made.' },
+    { id: 'gateway', name: 'The Gateway', entryFee: 5, fieldSize: 16, bestOf: 3, finalBestOf: 5,
+      repGate: 36, repCap: 68,
+      purse: { winner: 40, finalist: 18, semi: 8, quarter: 3, entered: 0 },
+      points: { winner: 500, finalist: 300, semi: 170, quarter: 85, entered: 25 },
+      repBase: { winner: 13, finalist: 7, semi: 3.5, quarter: 1.5, entered: 0.4 },
+      everyNMatchWeeks: 0, fixedWeeks: [12, 41],
+      blurb: 'Sixteen teams. The winner takes a seat in the Regional Circuit.' },
+  ];
+  S.EVENT_BY_RUNG = {}; S.CIRCUIT.forEach((e) => (S.EVENT_BY_RUNG[e.id] = e));
+  S.GATEWAY_PRIZE_TIER = 3;
+  S.GRASSROOTS_STIPEND = 0.5;
+  S.OPEN_WAGE_MULT = 0.4;
+  S.OPEN_QUALITY_CENTRE = 62;
+  S.SEAT_BUY_IN_COST = 140;
+  S.SEAT_BUY_IN_REP = 20;
+
+  S.repGain = (event, place, rep) => round(event.repBase[place] * clamp(1 - rep / event.repCap, 0, 1), 3);
+  S.canEnter = function (event, o) {
+    if (!o.rosterFilled) return { allowed: false, reason: 'roster', repShort: 0 };
+    if (o.reputation < event.repGate) return { allowed: false, reason: 'reputation', repShort: round(event.repGate - o.reputation, 1) };
+    if (o.cash < event.entryFee) return { allowed: false, reason: 'money', repShort: 0 };
+    return { allowed: true, reason: 'ok', repShort: 0 };
+  };
+  S.nextUnlock = function (rep) {
+    for (let i = 0; i < S.CIRCUIT.length; i++) {
+      if (rep < S.CIRCUIT[i].repGate) return { event: S.CIRCUIT[i], short: round(S.CIRCUIT[i].repGate - rep, 1) };
+    }
+    return null;
+  };
+  S.eventsForMatchWeek = function (idx, week) {
+    const out = [];
+    S.CIRCUIT.forEach((e) => {
+      if (e.fixedWeeks.indexOf(week) >= 0) { out.push(e); return; }
+      if (e.everyNMatchWeeks > 0 && idx % e.everyNMatchWeeks === 0) out.push(e);
+    });
+    return out.sort((a, b) => S.CIRCUIT.indexOf(b) - S.CIRCUIT.indexOf(a));
+  };
+  S.placementOf = function (rounds, exitRound, won) {
+    if (won) return 'winner';
+    const fromEnd = rounds - exitRound;
+    if (fromEnd === 0) return 'finalist';
+    if (fromEnd === 1) return 'semi';
+    if (fromEnd === 2) return 'quarter';
+    return 'entered';
+  };
+  S.rewardFor = (event, place, rep) => ({
+    cash: round(event.purse[place] - event.entryFee, 2),
+    points: event.points[place],
+    reputation: S.repGain(event, place, rep),
+  });
+  S.seatOfferFor = function (tier, vacatedBy, week) {
+    const mult = ({ 1: 4, 2: 2.2, 3: 1, 4: 1 })[tier];
+    return { tier: tier, vacatedBy: vacatedBy, cost: round(S.SEAT_BUY_IN_COST * mult, 0),
+      repRequired: round(S.SEAT_BUY_IN_REP * mult, 0), expiresWeek: week + 3 };
+  };
+  S.canBuySeat = function (offer, o) {
+    if (o.reputation < offer.repRequired) return { allowed: false, reason: 'reputation', repShort: round(offer.repRequired - o.reputation, 1) };
+    if (o.cash < offer.cost) return { allowed: false, reason: 'money', repShort: 0 };
+    return { allowed: true, reason: 'ok', repShort: 0 };
+  };
+  /* Amateur players cost amateur money. */
+  S.tierWageMult = (t) => ({ 1: 1.25, 2: 1, 3: 0.75, 4: S.OPEN_WAGE_MULT })[t];
 
   S.resolveBoundary = (upper, lower, autoSeats) => ({
     relegated: upper.slice(Math.max(0, upper.length - autoSeats)),
