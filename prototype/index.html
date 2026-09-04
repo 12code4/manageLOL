@@ -608,6 +608,11 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 .bandtabs button+button{border-left:1px solid var(--line)}
 .bandtabs button.on{background:var(--gold-ghost);color:var(--gold)}
 .laddercount{font-size:11px;color:var(--faint);margin:8px 0 2px}
+.budgetline{font-size:11.5px;color:var(--muted);margin:6px 0 2px;padding:7px 10px;line-height:1.5;
+  border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:var(--r);background:var(--surface)}
+.budgetline b{color:var(--ink)}
+.budgetline.short{border-left-color:var(--warn);color:var(--warn)}
+.budgetline.short b{color:var(--warn)}
 .prochip{display:inline-block;padding:0 4px;border:1px solid var(--line);border-radius:3px;font-family:"IBM Plex Mono";
   font-size:8.5px;letter-spacing:.08em;color:var(--faint);margin-left:6px}
 
@@ -3090,7 +3095,7 @@ function newGame(seed){
     orgs:built.orgs, seats:built.seats, pool:built.pool, leagues:null, circuit:null,
     scoutPts:6, scoutBudget:6,
     ladder:[], sponsors:{active:[],offers:[]}, inbox:[], weekResults:{},
-    ui:{screen:'season',selLad:null,match:null,orgSheet:null,drawer:false,band:'board'},
+    ui:{screen:'season',selLad:null,match:null,orgSheet:null,drawer:false,band:null},
     seatOffer:null,
     orgName:yours.name, matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
     pendingBids:[],
@@ -3200,12 +3205,35 @@ function doDeepScout(){
   }
   render();
 }
+/** The cheapest unsigned prospect who could fill a given role, by fee. */
+function cheapestFeeFor(role){
+  let best=Infinity;
+  G.ladder.forEach(e=>{ if(e.signed||e.roleGuess!==role)return; const f=signingFee(e); if(f<best)best=f; });
+  return best===Infinity?0:best;
+}
+/** What it would cost to fill every empty seat with the cheapest option. */
+function costToFieldFive(){
+  return ROLE_ORDER.filter(r=>!G.roster[r]).reduce((s,r)=>s+cheapestFeeFor(r),0);
+}
 function doSign(id,role){
   const e=G.ladder.find(x=>x.id===id);if(!e||e.signed)return;
   role=role||e.roleGuess;
   if(G.roster[role]){toast('That role is already filled — release the '+ROLE_LABEL[role]+' first.','bad');return;}
   const fee=signingFee(e);
   if(G.cash<fee){toast('Not enough credits ('+fee+'◈ needed).','bad');return;}
+  // The trap this catches: the Leaderboard is full of 40-credit Apex accounts,
+  // and three of them spend a whole starting balance. You are then stuck with
+  // two empty seats, no money, and every sign button greyed out — a dead save
+  // with no way to tell what went wrong. Check the seats you have *left*.
+  const seatsLeft=ROLE_ORDER.filter(r=>!G.roster[r]&&r!==role);
+  const needed=seatsLeft.reduce((sum,r)=>sum+cheapestFeeFor(r),0);
+  if(seatsLeft.length&&G.cash-fee<needed){
+    if(!confirm('Signing '+e.handle+' for '+fee+'◈ leaves you '+Math.round(G.cash-fee)+'◈.\n\n'+
+      'You still need '+seatsLeft.length+' more player'+(seatsLeft.length===1?'':'s')+
+      ', and the cheapest available cost about '+Math.round(needed)+'◈ together.\n\n'+
+      'Sign anyway and you may not be able to field a team.')){return;}
+  }
+
   // Fees are one payment; wages are every week forever. A signing that puts
   // the org underwater should say so before it happens, not eight weeks later.
   const W=window.LOLWorld;
@@ -3622,12 +3650,17 @@ function renderScout(main){
     '<p class="sub">Orgs do not sign out of Gold. The board below starts at Onyx I — our Diamond 1 — and everything under it is invisible from here. That is the honest constraint, and the reason Deep Scout exists: four analyst weeks buys one file out of the badlands beneath the cutoff, and sometimes it is the best player you will ever sign.</p>';
   main.appendChild(head);
 
+  // Settle the default view before anything renders. The Leaderboard is the
+  // aspirational tab — Apex accounts at forty credits apiece — so opening on
+  // it with five empty seats is how a career gets stuck before it starts.
+  if(!G.ui.band)G.ui.band=rosterCount()<5?'pool':'board';
+
   const grid=el('div','scout-grid');
   const left=el('div');
   const bar=el('div','toolbar');
   const tabs=el('div','bandtabs');
   [['board','Leaderboard'],['pool','The pool'],['mine','Watched']].forEach(([k,lab])=>{
-    const b=el('button',(G.ui.band||'board')===k?'on':'');b.textContent=lab;
+    const b=el('button',G.ui.band===k?'on':'');b.textContent=lab;
     b.onclick=()=>{G.ui.band=k;render();};tabs.appendChild(b);
   });
   bar.appendChild(tabs);
@@ -3647,12 +3680,22 @@ function renderScout(main){
   count.innerHTML=fmt(above)+' accounts above the Onyx I cutoff in Meridia · <b style="color:var(--muted)">'+G.ladder.length+'</b> files open · '+
     G.ladder.filter(e=>e.scout.conf>0).length+' of them yours to watch';
   left.appendChild(count);
+  const empties=ROLE_ORDER.filter(r=>!G.roster[r]);
+  if(empties.length){
+    const need=costToFieldFive();
+    const budget=el('div','budgetline'+(G.cash<need?' short':''));
+    budget.innerHTML='<b>'+empties.length+' seat'+(empties.length===1?'':'s')+' to fill</b> — '+
+      empties.map(r=>ROLE_LABEL[r]).join(', ')+' · cheapest available ≈ <b>'+Math.round(need)+'◈</b> together · you have <b>'+
+      Math.round(G.cash)+'◈</b>'+
+      (G.cash<need?' — the Leaderboard is out of reach; look in The pool.':'');
+    left.appendChild(budget);
+  }
 
   const cardT=el('div','card');cardT.style.overflow='hidden';cardT.style.padding='6px 8px 8px';
   const tbl=el('table','ladder');
   tbl.innerHTML='<thead><tr><th>Prospect</th><th>Rank</th><th>Role</th><th>Age</th><th>WR</th><th>Fee</th><th>Read</th></tr></thead>';
   const tb=el('tbody');
-  const band=G.ui.band||'board';
+  const band=G.ui.band;
   let rows=G.ladder.filter(e=>!G.ui.scoutRole||e.roleGuess===G.ui.scoutRole);
   if(band==='board')rows=rows.filter(e=>S.onBoard(e.mmr));
   else if(band==='pool')rows=rows.filter(e=>!S.onBoard(e.mmr));
