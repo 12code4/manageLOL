@@ -1272,3 +1272,19 @@ Six places, and what to do about each.
 5. **`resolveBids` assumes one shared `tier`** for all bidders, but a bidding war spans tiers (a T1 org poaching from T2). Call it once per bidder's own tier and take the argmax utility across the results, or widen the signature to `Record<orgId, PyramidTier>`. Prefer widening — it keeps the determinism (sorted by utility then `orgId`) in one place.
 
 6. **The prototype's `advanceWeek` has no notion of a blocking decision.** Today it always advances. It must open with the unanswered-bid guard (§10.2) — otherwise the anti-silent-theft rule in §6.5 is unenforceable, and a player can leave without the manager ever being asked. That is the one failure mode this whole update must not have.
+
+---
+
+## 14. Rivalries (shipped after §13)
+
+The persistent-org layer gave the world *names*, but a table of strangers is not a rivalry. A design pass flagged the amateur circuit — the stage a fresh career spends its whole first session in — as the flattest part: you beat "someone" each week and moved on. Rivalries are the memory that fixes that, and they are deliberately small.
+
+**Core (`packages/core/src/world/rivalry.ts`, pure + tested).** A `HeadToHead` ledger keyed by opponent id: `met`, `won`, `lost`, `lastWon`, and a weighted `intensity`. `meetingWeight({rung, isFinal, seatOnLine})` makes a Gateway final count far more than a weekend first round, so the club you keep meeting *when it matters* rises to the top even if another has more games. `nemesisOf(ledger)` reads back the heaviest history (tiebreak: games, then id). `recordMeeting` is pure — it returns a new record and leaves the prior one for a "you trailed them before this" line. `pickRival(candidates, youPrestige, rng)` names the one peer a career is set against: closest in standing, tilted toward a developer (academy/methodical) climbing the way the manager must; deterministic (candidates sorted by id before the single seeded wobble is drawn).
+
+**Two rivals, on purpose.** The *designated* rival is picked once at career start from the pool and is a story peer, independent of results — it can climb past you, fall back to you, or fold (and a fresh one is named). The *nemesis* is emergent: whoever the ledger says you keep running into. Both are surfaced; they are usually different clubs, and that is the point.
+
+**Wiring (prototype).** `G.rivalry = {h2h, rivalId, lastTier}` lives *above* the season so it survives every rollover — a rivalry that reset each year is not one. `W.foldPlayerMeetings` reads the manager's own path through a finished bracket in `settleEvent` (shadow/AI events fall straight through — this is the manager's memory alone) and returns at most two grudge lines to the feed. `W.rivalBeats` fires one line per tier change at rollover (never the same one twice, via `lastTier`) and re-picks on a fold.
+
+**Surfaces.** A Rivalry card (rival vs you: standing, H2H bar, the emergent nemesis note); an ember ⚔ mark on the rival everywhere they appear — circuit table row, bracket cell, knockout fixture — the way gold means "you"; and the H2H record replacing the stature line on a knockout card against a club you have history with.
+
+**Deliberately not done.** No AI advantage for the rival — it is an honest peer, so upsets cut both ways, which matches the world's "upsets always exist" stance better than a rubber-band would. Rivalries currently accrue from bracket play (circuit, playoffs, gauntlet); round-robin league meetings do not yet fold in.

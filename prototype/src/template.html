@@ -598,6 +598,38 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 .gauntlist .gvs{font-size:10.5px;color:var(--faint);text-align:center}
 .gauntlist .gnote{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:right}
 
+/* Rivalries: your rival wears the ember accent everywhere it appears — a
+   table row, a bracket cell, a fixture — so you can pick them out at a glance,
+   the way gold means "you". */
+.rivalmark{color:var(--toxic);font-size:10.5px;margin-left:1px}
+.bside.rival .bname{color:var(--toxic)}
+.bside.rival.won .bscore{color:var(--toxic)}
+table.standings tbody tr.rival{box-shadow:inset 2px 0 0 var(--toxic)}
+table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,var(--ink))}
+.rivalcard{padding:14px 16px 13px;cursor:pointer}
+.rivalcard:hover{border-color:color-mix(in srgb,var(--toxic) 30%,var(--line))}
+.rivalhead{display:flex;align-items:center;gap:11px;margin:3px 0 11px}
+.rivalhead .otag.big{border-color:color-mix(in srgb,var(--toxic) 45%,var(--line-soft));color:var(--toxic)}
+.rivalid{display:flex;flex-direction:column;gap:1px;min-width:0}
+.rivalname{font-size:14.5px;color:var(--ink);letter-spacing:.01em}
+.rivalstat{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.rivalcmp{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.rcrow{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:baseline;font-size:11.5px;color:var(--muted)}
+.rcrow .rclab{font-family:"IBM Plex Mono";font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.rcrow.you .rclab{color:var(--gold)}
+.rcrow .rcval{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcrow .rcrep{color:var(--muted);font-size:11px}
+.rcrow.you .rcrep{color:var(--gold)}
+.rivalbar{position:relative;height:7px;border-radius:5px;overflow:hidden;
+  background:color-mix(in srgb,var(--toxic) 26%,var(--surface-3));margin-top:2px}
+.rivalbar i.w{display:block;height:100%;background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+.rivalbarlab{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--faint);margin-top:5px}
+.rivalbarlab span:first-child{color:var(--gold)}
+.rivalbarlab span:last-child{color:var(--toxic)}
+.rivalnote{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;font-style:italic}
+.rivalnote.small{font-size:10.5px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line-soft);font-style:normal}
+
 .ladder td.fee{color:var(--gold);text-align:right;line-height:1.25}
 .ladder td.fee small{display:block;font-size:9px;color:var(--faint);letter-spacing:.02em}
 .ladder td.fee.unaffordable{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
@@ -719,6 +751,9 @@ function newGame(seed){
     seatOffer:null,
     orgName:yours.name, matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
     pendingBids:[],
+    // Career-long memory of who you have played. Lives above the season so it
+    // survives every rollover — a rivalry that reset each year is not one.
+    rivalry:{h2h:{},rivalId:null,lastTier:null},
   };
   // cash / reputation / roster / chem alias straight through to your org, so
   // every screen written before the world existed keeps working unchanged.
@@ -730,6 +765,9 @@ function newGame(seed){
   Object.defineProperty(G,'patchFamiliarity',{get:()=>G.orgs[G.you].analytics,set:(v)=>{G.orgs[G.you].analytics=S.clamp(v,0,100);},configurable:true});
 
   W.stockRosters(G);
+  // Name your rival before the first whistle: a peer from the pool, close to
+  // your standing, who will climb the same circuit you do.
+  W.assignRival(G,'rival:pick');
   W.startSeason(G);
   const lad=W.buildLadder(G);
   G.ladderBoard=lad.board; G.ladderPool=lad.pool; G.ladderDeep=lad.deep; G.ladderDeepDraws=0;

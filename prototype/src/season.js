@@ -194,9 +194,10 @@
     const sideRow = (orgId, seed, score, won) => {
       if (orgId === null) return '<div class="bside tbd"><span class="bname">—</span></div>';
       const org = G.orgs[orgId];
-      return '<div class="bside' + (won ? ' won' : '') + (orgId === G.you ? ' you' : '') + '">' +
+      const isRival = G.rivalry && orgId === G.rivalry.rivalId;
+      return '<div class="bside' + (won ? ' won' : '') + (orgId === G.you ? ' you' : '') + (isRival ? ' rival' : '') + '">' +
         '<span class="bseed mono">' + (seed || '') + '</span>' +
-        '<span class="bname">' + org.tag + '</span>' +
+        '<span class="bname">' + org.tag + (isRival ? ' <span class="rivalmark">⚔</span>' : '') + '</span>' +
         '<span class="bscore mono">' + (score === null ? '' : score) + '</span></div>';
     };
     const sa = m.score ? (m.winner === m.a ? m.score[0] : m.score[1]) : null;
@@ -385,11 +386,13 @@
     rows.forEach((row, i) => {
       const org = G.orgs[row.orgId];
       if (!org) return;
-      const tr = el('tr', row.orgId === G.you ? 'you' : '');
+      const isRival = G.rivalry && row.orgId === G.rivalry.rivalId;
+      const tr = el('tr', row.orgId === G.you ? 'you' : isRival ? 'rival' : '');
       tr.dataset.org = row.orgId;
       tr.innerHTML =
         '<td class="mono pos">' + (i + 1) + '</td>' +
-        '<td class="orgcell"><span class="otag mono">' + org.tag + '</span><span class="oname">' + org.name + '</span></td>' +
+        '<td class="orgcell"><span class="otag mono">' + org.tag + '</span><span class="oname">' + org.name +
+        (isRival ? ' <span class="rivalmark" title="Your rival">⚔</span>' : '') + '</span></td>' +
         '<td class="mono r">' + Math.round(S.prestige(org)) + '</td>' +
         '<td class="mono r wr">' + row.points + '</td>';
       body.appendChild(tr);
@@ -425,6 +428,91 @@
       list.appendChild(row);
     });
     card.appendChild(list);
+    return card;
+  }
+
+  /* ─────────────────────────── rivalries ─────────────────────────── */
+
+  function circuitPos(G, id) {
+    const s = W.circuitStandings(G);
+    for (let i = 0; i < s.length; i++) if (s[i].orgId === id) return i + 1;
+    return null;
+  }
+  function leaguePos(G, id) {
+    const t = G.orgs[id] ? G.orgs[id].tier : 0;
+    if (!S.isLeagueTier(t) || !G.leagues[t]) return null;
+    const o = W.orderOf(G.leagues[t]);
+    const i = o.indexOf(id);
+    return i < 0 ? null : i + 1;
+  }
+  /** Where a club sits right now, in words: their circuit rank or league place. */
+  function standingPhrase(G, id) {
+    if (!G.orgs[id]) return '—';
+    if (S.isLeagueTier(G.orgs[id].tier)) {
+      const p = leaguePos(G, id);
+      return (p ? ord(p) + ' in ' : '') + S.LEAGUE_BY_TIER[G.orgs[id].tier].name;
+    }
+    const p = circuitPos(G, id);
+    return p ? ord(p) + ' on the circuit' : 'The Open';
+  }
+
+  /**
+   * The one club a career is measured against. Not a table of strangers — a
+   * face: where they sit versus you, the head-to-head you have built with them,
+   * and whatever the emergent nemesis is if it turns out to be someone else.
+   * This is the answer to "who am I actually racing", on screen every week.
+   */
+  function rivalryCard(G) {
+    const r = G.rivalry;
+    if (!r || !r.rivalId) return null;
+    const rival = G.orgs[r.rivalId];
+    const card = el('div', 'card rivalcard');
+    if (!rival) {
+      card.appendChild(sectionLabel('Your rival', 'gone'));
+      card.appendChild(el('div', 'empty-note', 'Your rival has folded. A new one emerges at the next rollover.'));
+      return card;
+    }
+    const h = r.h2h[r.rivalId];
+    card.appendChild(sectionLabel('Your rival', S.recordLabel(h)));
+
+    const head = el('div', 'rivalhead');
+    head.dataset.org = r.rivalId;
+    head.innerHTML =
+      '<span class="otag mono big">' + rival.tag + '</span>' +
+      '<div class="rivalid"><span class="rivalname">' + rival.name + '</span>' +
+      '<span class="rivalstat mono">' + S.statureLabel(rival) + ' ⚔</span></div>';
+    card.appendChild(head);
+
+    const cmp = el('div', 'rivalcmp');
+    cmp.innerHTML =
+      '<div class="rcrow"><span class="rclab">Them</span><span class="rcval">' + standingPhrase(G, r.rivalId) +
+      '</span><span class="rcrep mono">' + Math.round(S.prestige(rival)) + '</span></div>' +
+      '<div class="rcrow you"><span class="rclab">You</span><span class="rcval">' + standingPhrase(G, G.you) +
+      '</span><span class="rcrep mono">' + Math.round(S.prestige(G.orgs[G.you])) + '</span></div>';
+    card.appendChild(cmp);
+
+    if (h && h.met) {
+      const total = h.won + h.lost;
+      const bar = el('div', 'rivalbar');
+      bar.innerHTML = '<i class="w" style="width:' + (total ? (h.won / total) * 100 : 50).toFixed(0) + '%"></i>';
+      card.appendChild(bar);
+      const lab = el('div', 'rivalbarlab mono');
+      lab.innerHTML = '<span>' + h.won + ' you</span><span>' + h.met + ' met</span><span>' + h.lost + ' them</span>';
+      card.appendChild(lab);
+    } else {
+      card.appendChild(el('div', 'rivalnote', 'You have not drawn them yet. You will.'));
+    }
+
+    const nem = S.nemesisOf(r.h2h);
+    if (nem && nem.opponent !== r.rivalId && G.orgs[nem.opponent] && nem.met >= 2) {
+      card.appendChild(el('div', 'rivalnote small',
+        'You keep running into <b>' + G.orgs[nem.opponent].name + '</b> too — ' + S.recordLabel(nem) + '.'));
+    }
+
+    card.onclick = (e) => {
+      const host = e.target.closest && e.target.closest('[data-org]');
+      window.openOrgSheet(host ? host.dataset.org : r.rivalId);
+    };
     return card;
   }
 
@@ -552,11 +640,13 @@
     const p = 1 / (1 + Math.pow(10, -(mine.strength - theirs.strength) / 15));
 
     card.appendChild(sectionLabel(title, 'Bo' + (kind === 'gauntlet' ? 5 : S.LEAGUE_BY_TIER[you.tier].playoffBestOf)));
+    const h = G.rivalry && G.rivalry.h2h[opp.id];
+    const isRival = G.rivalry && opp.id === G.rivalry.rivalId;
     const vs = el('div', 'fxvs');
     vs.innerHTML =
       '<div class="fxside"><span class="otag mono big">' + you.tag + '</span></div>' +
-      '<div class="fxmid"><span class="fxname">' + opp.name + '</span>' +
-      '<span class="fxstat">' + S.statureLabel(opp) + ' · legacy ' + Math.round(opp.legacy) + (opp.legacy >= 55 ? ' ⚜' : '') + '</span></div>' +
+      '<div class="fxmid"><span class="fxname">' + opp.name + (isRival ? ' <span class="rivalmark">⚔</span>' : '') + '</span>' +
+      '<span class="fxstat">' + (h && h.met ? 'you are ' + S.recordLabel(h) + ' against them' : S.statureLabel(opp) + ' · legacy ' + Math.round(opp.legacy) + (opp.legacy >= 55 ? ' ⚜' : '')) + '</span></div>' +
       '<div class="fxside r"><span class="otag mono big">' + opp.tag + '</span></div>';
     card.appendChild(vs);
 
@@ -854,6 +944,8 @@
       left.appendChild(circuitStandings(G));
       const right = el('div', 'hubcol');
       right.appendChild(reputationMeter(G));
+      const rc = rivalryCard(G);
+      if (rc) right.appendChild(rc);
       right.appendChild(circuitForm(G));
       right.appendChild(pyramidCard(G));
       right.appendChild(deskCard(G));
@@ -875,6 +967,8 @@
     left.appendChild(standingsTable(G, you.tier));
     const right = el('div', 'hubcol');
     right.appendChild(formCard(G));
+    const rc = rivalryCard(G);
+    if (rc) right.appendChild(rc);
     right.appendChild(pyramidCard(G));
     right.appendChild(deskCard(G));
     grid.appendChild(left);

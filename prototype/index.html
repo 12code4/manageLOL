@@ -598,6 +598,38 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 .gauntlist .gvs{font-size:10.5px;color:var(--faint);text-align:center}
 .gauntlist .gnote{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:right}
 
+/* Rivalries: your rival wears the ember accent everywhere it appears — a
+   table row, a bracket cell, a fixture — so you can pick them out at a glance,
+   the way gold means "you". */
+.rivalmark{color:var(--toxic);font-size:10.5px;margin-left:1px}
+.bside.rival .bname{color:var(--toxic)}
+.bside.rival.won .bscore{color:var(--toxic)}
+table.standings tbody tr.rival{box-shadow:inset 2px 0 0 var(--toxic)}
+table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,var(--ink))}
+.rivalcard{padding:14px 16px 13px;cursor:pointer}
+.rivalcard:hover{border-color:color-mix(in srgb,var(--toxic) 30%,var(--line))}
+.rivalhead{display:flex;align-items:center;gap:11px;margin:3px 0 11px}
+.rivalhead .otag.big{border-color:color-mix(in srgb,var(--toxic) 45%,var(--line-soft));color:var(--toxic)}
+.rivalid{display:flex;flex-direction:column;gap:1px;min-width:0}
+.rivalname{font-size:14.5px;color:var(--ink);letter-spacing:.01em}
+.rivalstat{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.rivalcmp{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.rcrow{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:baseline;font-size:11.5px;color:var(--muted)}
+.rcrow .rclab{font-family:"IBM Plex Mono";font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.rcrow.you .rclab{color:var(--gold)}
+.rcrow .rcval{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcrow .rcrep{color:var(--muted);font-size:11px}
+.rcrow.you .rcrep{color:var(--gold)}
+.rivalbar{position:relative;height:7px;border-radius:5px;overflow:hidden;
+  background:color-mix(in srgb,var(--toxic) 26%,var(--surface-3));margin-top:2px}
+.rivalbar i.w{display:block;height:100%;background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+.rivalbarlab{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--faint);margin-top:5px}
+.rivalbarlab span:first-child{color:var(--gold)}
+.rivalbarlab span:last-child{color:var(--toxic)}
+.rivalnote{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;font-style:italic}
+.rivalnote.small{font-size:10.5px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line-soft);font-style:normal}
+
 .ladder td.fee{color:var(--gold);text-align:right;line-height:1.25}
 .ladder td.fee small{display:block;font-size:9px;color:var(--faint);letter-spacing:.02em}
 .ladder td.fee.unaffordable{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
@@ -2060,6 +2092,76 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     relegated: upper.slice(Math.max(0, upper.length - autoSeats)),
     promoted: lower.slice(0, autoSeats),
   });
+
+  /* ─────────────────────────── rivalries ─────────────────────────── */
+  /* Memory of who a manager has played, so The Open has faces and not just a
+     points column. Ported from packages/core/src/world/rivalry.ts — same
+     logic, so the prototype and the engine agree on who your nemesis is. */
+
+  S.meetingWeight = function (o) {
+    let w = o.rung === 'gateway' ? 2.2 : o.rung === 'contenders' ? 1.5 : 1;
+    if (o.isFinal) w *= 1.8;
+    if (o.seatOnLine) w *= 1.6;
+    return round(w, 2);
+  };
+
+  S.recordMeeting = function (prev, opponent, won, ctx) {
+    const base = prev || { opponent: opponent, met: 0, won: 0, lost: 0, lastSeason: 0, lastWeek: 0, lastWon: false, intensity: 0 };
+    return {
+      opponent: opponent,
+      met: base.met + 1,
+      won: base.won + (won ? 1 : 0),
+      lost: base.lost + (won ? 0 : 1),
+      lastSeason: ctx.season,
+      lastWeek: ctx.week,
+      lastWon: won,
+      intensity: round(base.intensity + ctx.weight, 2),
+    };
+  };
+
+  S.nemesisOf = function (ledger) {
+    const all = Object.keys(ledger || {}).sort().map((k) => ledger[k]).filter((h) => h && h.met > 0);
+    if (!all.length) return null;
+    return all.reduce((best, h) => {
+      if (h.intensity !== best.intensity) return h.intensity > best.intensity ? h : best;
+      if (h.met !== best.met) return h.met > best.met ? h : best;
+      return h.opponent < best.opponent ? h : best;
+    });
+  };
+
+  S.recordLabel = function (h) {
+    if (!h || h.met === 0) return 'first meeting';
+    const s = h.won + '–' + h.lost;
+    if (h.won > h.lost) return s + ' up';
+    if (h.won < h.lost) return s + ' down';
+    return s + ' level';
+  };
+
+  S.grudgeLine = function (prev, oppName, won) {
+    if (!prev || prev.met === 0) return null;
+    if (won) {
+      if (prev.lost > prev.won) return 'Revenge on ' + oppName + ' — they had the better of you at ' + prev.won + '–' + prev.lost + '.';
+      if (!prev.lastWon) return 'You bounce back against ' + oppName + '.';
+      return 'You have ' + oppName + "'s number now — that is " + (prev.won + 1) + '.';
+    }
+    if (prev.won > prev.lost) return oppName + ' finally get one back on you.';
+    if (prev.lastWon) return oppName + ' return the favour.';
+    return oppName + ' knock you out again — ' + (prev.lost + 1) + ' times now.';
+  };
+
+  S.RIVAL_CLIMBERS = { academy: 1, methodical: 1 };
+  S.pickRival = function (candidates, youPrestige, rng) {
+    const ordered = candidates.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    if (!ordered.length) return null;
+    const scored = ordered.map((c) => {
+      const closeness = 1 - Math.min(1, Math.abs(c.prestige - youPrestige) / 30);
+      const climber = S.RIVAL_CLIMBERS[c.personality] ? 1 : 0;
+      const jitter = rng.float() * 0.15;
+      return { id: c.id, score: closeness * 0.7 + climber * 0.2 + jitter };
+    });
+    scored.sort((a, b) => (a.score !== b.score ? b.score - a.score : a.id < b.id ? -1 : 1));
+    return scored[0].id;
+  };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
@@ -2838,6 +2940,10 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
         }
       }
     });
+    // Fold every series the manager actually played into the rivalry ledger,
+    // and surface any that carried history. Shadow events (no player in the
+    // field) fall straight through — this is the manager's memory alone.
+    W.foldPlayerMeetings(G, event, b).forEach((l) => lines.push(l));
     G.circuit.results.push({
       season: G.season, week: G.week, rung: event.id,
       champion: b.champion, runnerUp: W.runnerUpOf(b),
@@ -2845,6 +2951,83 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
         ? S.placementOf(b.rounds, live.exits[G.you] || 1, b.champion === G.you)
         : null,
     });
+    return lines;
+  };
+
+  /**
+   * Read the manager's own path through a finished bracket into the head-to-head
+   * ledger — every series they played, in round order, the seat-deciding ones
+   * weighing heaviest. Returns the grudge lines worth putting in the feed (at
+   * most two, so a bracket run cannot flood it), and nothing at all when the
+   * manager was not in this field.
+   */
+  W.foldPlayerMeetings = function (G, event, b) {
+    if (!G.rivalry || b.teams.indexOf(G.you) < 0) return [];
+    const mine = b.matches
+      .filter((m) => m.winner && (m.a === G.you || m.b === G.you))
+      .slice()
+      .sort((x, y) => (x.round !== y.round ? x.round - y.round : x.id < y.id ? -1 : 1));
+    const lines = [];
+    mine.forEach((m) => {
+      const opp = m.a === G.you ? m.b : m.a;
+      if (!opp || !G.orgs[opp]) return;
+      const won = m.winner === G.you;
+      const isFinal = m.feedsInto === null;
+      const prev = G.rivalry.h2h[opp];
+      const line = S.grudgeLine(prev, G.orgs[opp].name, won);
+      G.rivalry.h2h[opp] = S.recordMeeting(prev, opp, won, {
+        season: G.season, week: G.week,
+        weight: S.meetingWeight({ rung: event.id, isFinal: isFinal, seatOnLine: event.id === 'gateway' && isFinal }),
+      });
+      if (line) lines.push(line);
+    });
+    return lines.slice(0, 2);
+  };
+
+  /**
+   * Name the one peer a career is set against: closest in standing, tilted
+   * toward a developer that climbs the way the manager must. Picked once at the
+   * start and again only if the rival folds. Records the rival's tier so a
+   * later promotion or relegation can be told as a story beat and not repeated.
+   */
+  W.assignRival = function (G, seedTag) {
+    const cands = G.pool.map((id) => ({ id: id, prestige: S.prestige(G.orgs[id]), personality: G.orgs[id].personality }));
+    const id = S.pickRival(cands, S.prestige(G.orgs[G.you]), new S.Rng(G.seed, seedTag));
+    G.rivalry.rivalId = id;
+    G.rivalry.lastTier = id && G.orgs[id] ? G.orgs[id].tier : null;
+    return id;
+  };
+
+  /**
+   * Where the rivalry stands after a rollover: the rival climbing past you, or
+   * falling back to you, or folding and a new face stepping up. One beat per
+   * change, never the same one twice — the rival's last known tier is the memo.
+   */
+  W.rivalBeats = function (G) {
+    const r = G.rivalry;
+    if (!r || !r.rivalId) return [];
+    const lines = [];
+    const rival = G.orgs[r.rivalId];
+    if (!rival) {
+      lines.push('Your rival is gone — folded, and the circuit closes over the space. Time for a new one.');
+      W.assignRival(G, 'rival:repick:' + G.season);
+      const fresh = G.orgs[r.rivalId];
+      if (fresh) lines.push('You mark <b>' + fresh.name + '</b> as the team to beat now.');
+      return lines;
+    }
+    const was = r.lastTier;
+    const now = rival.tier;
+    if (now !== was) {
+      const youUp = S.isLeagueTier(G.orgs[G.you].tier);
+      if (now < was) {
+        lines.push((youUp ? '' : '★ ') + 'Your rival <b>' + rival.name + '</b> climb into ' + S.LEAGUE_BY_TIER[now].name +
+          (youUp ? '.' : ' — and you are still grinding The Open.'));
+      } else {
+        lines.push('Your rival ' + rival.name + ' slip back to ' +
+          (S.isLeagueTier(now) ? S.LEAGUE_BY_TIER[now].name : 'The Open') + '.');
+      }
+      r.lastTier = now;
+    }
     return lines;
   };
 
@@ -3018,6 +3201,9 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 
     // Seats may have changed hands during turnover, so rebuild the index.
     W.reindexSeats(G);
+    // Where the rivalry stands now the dust has settled — told before the new
+    // season starts, while the tiers that just changed are still the news.
+    W.rivalBeats(G).forEach((l) => lines.push(l));
     W.startSeason(G);
     return lines;
   };
@@ -3099,6 +3285,9 @@ function newGame(seed){
     seatOffer:null,
     orgName:yours.name, matchOpp:null, patch:null, patchFamiliarity:60, coachQuality:45, match:null,
     pendingBids:[],
+    // Career-long memory of who you have played. Lives above the season so it
+    // survives every rollover — a rivalry that reset each year is not one.
+    rivalry:{h2h:{},rivalId:null,lastTier:null},
   };
   // cash / reputation / roster / chem alias straight through to your org, so
   // every screen written before the world existed keeps working unchanged.
@@ -3110,6 +3299,9 @@ function newGame(seed){
   Object.defineProperty(G,'patchFamiliarity',{get:()=>G.orgs[G.you].analytics,set:(v)=>{G.orgs[G.you].analytics=S.clamp(v,0,100);},configurable:true});
 
   W.stockRosters(G);
+  // Name your rival before the first whistle: a peer from the pool, close to
+  // your standing, who will climb the same circuit you do.
+  W.assignRival(G,'rival:pick');
   W.startSeason(G);
   const lad=W.buildLadder(G);
   G.ladderBoard=lad.board; G.ladderPool=lad.pool; G.ladderDeep=lad.deep; G.ladderDeepDraws=0;
@@ -4634,9 +4826,10 @@ function renderSeries(main){
     const sideRow = (orgId, seed, score, won) => {
       if (orgId === null) return '<div class="bside tbd"><span class="bname">—</span></div>';
       const org = G.orgs[orgId];
-      return '<div class="bside' + (won ? ' won' : '') + (orgId === G.you ? ' you' : '') + '">' +
+      const isRival = G.rivalry && orgId === G.rivalry.rivalId;
+      return '<div class="bside' + (won ? ' won' : '') + (orgId === G.you ? ' you' : '') + (isRival ? ' rival' : '') + '">' +
         '<span class="bseed mono">' + (seed || '') + '</span>' +
-        '<span class="bname">' + org.tag + '</span>' +
+        '<span class="bname">' + org.tag + (isRival ? ' <span class="rivalmark">⚔</span>' : '') + '</span>' +
         '<span class="bscore mono">' + (score === null ? '' : score) + '</span></div>';
     };
     const sa = m.score ? (m.winner === m.a ? m.score[0] : m.score[1]) : null;
@@ -4825,11 +5018,13 @@ function renderSeries(main){
     rows.forEach((row, i) => {
       const org = G.orgs[row.orgId];
       if (!org) return;
-      const tr = el('tr', row.orgId === G.you ? 'you' : '');
+      const isRival = G.rivalry && row.orgId === G.rivalry.rivalId;
+      const tr = el('tr', row.orgId === G.you ? 'you' : isRival ? 'rival' : '');
       tr.dataset.org = row.orgId;
       tr.innerHTML =
         '<td class="mono pos">' + (i + 1) + '</td>' +
-        '<td class="orgcell"><span class="otag mono">' + org.tag + '</span><span class="oname">' + org.name + '</span></td>' +
+        '<td class="orgcell"><span class="otag mono">' + org.tag + '</span><span class="oname">' + org.name +
+        (isRival ? ' <span class="rivalmark" title="Your rival">⚔</span>' : '') + '</span></td>' +
         '<td class="mono r">' + Math.round(S.prestige(org)) + '</td>' +
         '<td class="mono r wr">' + row.points + '</td>';
       body.appendChild(tr);
@@ -4865,6 +5060,91 @@ function renderSeries(main){
       list.appendChild(row);
     });
     card.appendChild(list);
+    return card;
+  }
+
+  /* ─────────────────────────── rivalries ─────────────────────────── */
+
+  function circuitPos(G, id) {
+    const s = W.circuitStandings(G);
+    for (let i = 0; i < s.length; i++) if (s[i].orgId === id) return i + 1;
+    return null;
+  }
+  function leaguePos(G, id) {
+    const t = G.orgs[id] ? G.orgs[id].tier : 0;
+    if (!S.isLeagueTier(t) || !G.leagues[t]) return null;
+    const o = W.orderOf(G.leagues[t]);
+    const i = o.indexOf(id);
+    return i < 0 ? null : i + 1;
+  }
+  /** Where a club sits right now, in words: their circuit rank or league place. */
+  function standingPhrase(G, id) {
+    if (!G.orgs[id]) return '—';
+    if (S.isLeagueTier(G.orgs[id].tier)) {
+      const p = leaguePos(G, id);
+      return (p ? ord(p) + ' in ' : '') + S.LEAGUE_BY_TIER[G.orgs[id].tier].name;
+    }
+    const p = circuitPos(G, id);
+    return p ? ord(p) + ' on the circuit' : 'The Open';
+  }
+
+  /**
+   * The one club a career is measured against. Not a table of strangers — a
+   * face: where they sit versus you, the head-to-head you have built with them,
+   * and whatever the emergent nemesis is if it turns out to be someone else.
+   * This is the answer to "who am I actually racing", on screen every week.
+   */
+  function rivalryCard(G) {
+    const r = G.rivalry;
+    if (!r || !r.rivalId) return null;
+    const rival = G.orgs[r.rivalId];
+    const card = el('div', 'card rivalcard');
+    if (!rival) {
+      card.appendChild(sectionLabel('Your rival', 'gone'));
+      card.appendChild(el('div', 'empty-note', 'Your rival has folded. A new one emerges at the next rollover.'));
+      return card;
+    }
+    const h = r.h2h[r.rivalId];
+    card.appendChild(sectionLabel('Your rival', S.recordLabel(h)));
+
+    const head = el('div', 'rivalhead');
+    head.dataset.org = r.rivalId;
+    head.innerHTML =
+      '<span class="otag mono big">' + rival.tag + '</span>' +
+      '<div class="rivalid"><span class="rivalname">' + rival.name + '</span>' +
+      '<span class="rivalstat mono">' + S.statureLabel(rival) + ' ⚔</span></div>';
+    card.appendChild(head);
+
+    const cmp = el('div', 'rivalcmp');
+    cmp.innerHTML =
+      '<div class="rcrow"><span class="rclab">Them</span><span class="rcval">' + standingPhrase(G, r.rivalId) +
+      '</span><span class="rcrep mono">' + Math.round(S.prestige(rival)) + '</span></div>' +
+      '<div class="rcrow you"><span class="rclab">You</span><span class="rcval">' + standingPhrase(G, G.you) +
+      '</span><span class="rcrep mono">' + Math.round(S.prestige(G.orgs[G.you])) + '</span></div>';
+    card.appendChild(cmp);
+
+    if (h && h.met) {
+      const total = h.won + h.lost;
+      const bar = el('div', 'rivalbar');
+      bar.innerHTML = '<i class="w" style="width:' + (total ? (h.won / total) * 100 : 50).toFixed(0) + '%"></i>';
+      card.appendChild(bar);
+      const lab = el('div', 'rivalbarlab mono');
+      lab.innerHTML = '<span>' + h.won + ' you</span><span>' + h.met + ' met</span><span>' + h.lost + ' them</span>';
+      card.appendChild(lab);
+    } else {
+      card.appendChild(el('div', 'rivalnote', 'You have not drawn them yet. You will.'));
+    }
+
+    const nem = S.nemesisOf(r.h2h);
+    if (nem && nem.opponent !== r.rivalId && G.orgs[nem.opponent] && nem.met >= 2) {
+      card.appendChild(el('div', 'rivalnote small',
+        'You keep running into <b>' + G.orgs[nem.opponent].name + '</b> too — ' + S.recordLabel(nem) + '.'));
+    }
+
+    card.onclick = (e) => {
+      const host = e.target.closest && e.target.closest('[data-org]');
+      window.openOrgSheet(host ? host.dataset.org : r.rivalId);
+    };
     return card;
   }
 
@@ -4992,11 +5272,13 @@ function renderSeries(main){
     const p = 1 / (1 + Math.pow(10, -(mine.strength - theirs.strength) / 15));
 
     card.appendChild(sectionLabel(title, 'Bo' + (kind === 'gauntlet' ? 5 : S.LEAGUE_BY_TIER[you.tier].playoffBestOf)));
+    const h = G.rivalry && G.rivalry.h2h[opp.id];
+    const isRival = G.rivalry && opp.id === G.rivalry.rivalId;
     const vs = el('div', 'fxvs');
     vs.innerHTML =
       '<div class="fxside"><span class="otag mono big">' + you.tag + '</span></div>' +
-      '<div class="fxmid"><span class="fxname">' + opp.name + '</span>' +
-      '<span class="fxstat">' + S.statureLabel(opp) + ' · legacy ' + Math.round(opp.legacy) + (opp.legacy >= 55 ? ' ⚜' : '') + '</span></div>' +
+      '<div class="fxmid"><span class="fxname">' + opp.name + (isRival ? ' <span class="rivalmark">⚔</span>' : '') + '</span>' +
+      '<span class="fxstat">' + (h && h.met ? 'you are ' + S.recordLabel(h) + ' against them' : S.statureLabel(opp) + ' · legacy ' + Math.round(opp.legacy) + (opp.legacy >= 55 ? ' ⚜' : '')) + '</span></div>' +
       '<div class="fxside r"><span class="otag mono big">' + opp.tag + '</span></div>';
     card.appendChild(vs);
 
@@ -5294,6 +5576,8 @@ function renderSeries(main){
       left.appendChild(circuitStandings(G));
       const right = el('div', 'hubcol');
       right.appendChild(reputationMeter(G));
+      const rc = rivalryCard(G);
+      if (rc) right.appendChild(rc);
       right.appendChild(circuitForm(G));
       right.appendChild(pyramidCard(G));
       right.appendChild(deskCard(G));
@@ -5315,6 +5599,8 @@ function renderSeries(main){
     left.appendChild(standingsTable(G, you.tier));
     const right = el('div', 'hubcol');
     right.appendChild(formCard(G));
+    const rc = rivalryCard(G);
+    if (rc) right.appendChild(rc);
     right.appendChild(pyramidCard(G));
     right.appendChild(deskCard(G));
     grid.appendChild(left);

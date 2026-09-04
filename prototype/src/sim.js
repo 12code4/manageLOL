@@ -1409,4 +1409,74 @@
     relegated: upper.slice(Math.max(0, upper.length - autoSeats)),
     promoted: lower.slice(0, autoSeats),
   });
+
+  /* ─────────────────────────── rivalries ─────────────────────────── */
+  /* Memory of who a manager has played, so The Open has faces and not just a
+     points column. Ported from packages/core/src/world/rivalry.ts — same
+     logic, so the prototype and the engine agree on who your nemesis is. */
+
+  S.meetingWeight = function (o) {
+    let w = o.rung === 'gateway' ? 2.2 : o.rung === 'contenders' ? 1.5 : 1;
+    if (o.isFinal) w *= 1.8;
+    if (o.seatOnLine) w *= 1.6;
+    return round(w, 2);
+  };
+
+  S.recordMeeting = function (prev, opponent, won, ctx) {
+    const base = prev || { opponent: opponent, met: 0, won: 0, lost: 0, lastSeason: 0, lastWeek: 0, lastWon: false, intensity: 0 };
+    return {
+      opponent: opponent,
+      met: base.met + 1,
+      won: base.won + (won ? 1 : 0),
+      lost: base.lost + (won ? 0 : 1),
+      lastSeason: ctx.season,
+      lastWeek: ctx.week,
+      lastWon: won,
+      intensity: round(base.intensity + ctx.weight, 2),
+    };
+  };
+
+  S.nemesisOf = function (ledger) {
+    const all = Object.keys(ledger || {}).sort().map((k) => ledger[k]).filter((h) => h && h.met > 0);
+    if (!all.length) return null;
+    return all.reduce((best, h) => {
+      if (h.intensity !== best.intensity) return h.intensity > best.intensity ? h : best;
+      if (h.met !== best.met) return h.met > best.met ? h : best;
+      return h.opponent < best.opponent ? h : best;
+    });
+  };
+
+  S.recordLabel = function (h) {
+    if (!h || h.met === 0) return 'first meeting';
+    const s = h.won + '–' + h.lost;
+    if (h.won > h.lost) return s + ' up';
+    if (h.won < h.lost) return s + ' down';
+    return s + ' level';
+  };
+
+  S.grudgeLine = function (prev, oppName, won) {
+    if (!prev || prev.met === 0) return null;
+    if (won) {
+      if (prev.lost > prev.won) return 'Revenge on ' + oppName + ' — they had the better of you at ' + prev.won + '–' + prev.lost + '.';
+      if (!prev.lastWon) return 'You bounce back against ' + oppName + '.';
+      return 'You have ' + oppName + "'s number now — that is " + (prev.won + 1) + '.';
+    }
+    if (prev.won > prev.lost) return oppName + ' finally get one back on you.';
+    if (prev.lastWon) return oppName + ' return the favour.';
+    return oppName + ' knock you out again — ' + (prev.lost + 1) + ' times now.';
+  };
+
+  S.RIVAL_CLIMBERS = { academy: 1, methodical: 1 };
+  S.pickRival = function (candidates, youPrestige, rng) {
+    const ordered = candidates.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    if (!ordered.length) return null;
+    const scored = ordered.map((c) => {
+      const closeness = 1 - Math.min(1, Math.abs(c.prestige - youPrestige) / 30);
+      const climber = S.RIVAL_CLIMBERS[c.personality] ? 1 : 0;
+      const jitter = rng.float() * 0.15;
+      return { id: c.id, score: closeness * 0.7 + climber * 0.2 + jitter };
+    });
+    scored.sort((a, b) => (a.score !== b.score ? b.score - a.score : a.id < b.id ? -1 : 1));
+    return scored[0].id;
+  };
 })(typeof window !== 'undefined' ? window : globalThis);

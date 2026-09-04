@@ -14,6 +14,7 @@ export * from './world/clock.js';
 export * from './world/fixtures.js';
 export * from './world/orgs.js';
 export * from './world/contracts.js';
+export * from './world/rivalry.js';
 
 // players
 export * from './players/types.js';

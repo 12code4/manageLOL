@@ -772,6 +772,10 @@
         }
       }
     });
+    // Fold every series the manager actually played into the rivalry ledger,
+    // and surface any that carried history. Shadow events (no player in the
+    // field) fall straight through — this is the manager's memory alone.
+    W.foldPlayerMeetings(G, event, b).forEach((l) => lines.push(l));
     G.circuit.results.push({
       season: G.season, week: G.week, rung: event.id,
       champion: b.champion, runnerUp: W.runnerUpOf(b),
@@ -779,6 +783,83 @@
         ? S.placementOf(b.rounds, live.exits[G.you] || 1, b.champion === G.you)
         : null,
     });
+    return lines;
+  };
+
+  /**
+   * Read the manager's own path through a finished bracket into the head-to-head
+   * ledger — every series they played, in round order, the seat-deciding ones
+   * weighing heaviest. Returns the grudge lines worth putting in the feed (at
+   * most two, so a bracket run cannot flood it), and nothing at all when the
+   * manager was not in this field.
+   */
+  W.foldPlayerMeetings = function (G, event, b) {
+    if (!G.rivalry || b.teams.indexOf(G.you) < 0) return [];
+    const mine = b.matches
+      .filter((m) => m.winner && (m.a === G.you || m.b === G.you))
+      .slice()
+      .sort((x, y) => (x.round !== y.round ? x.round - y.round : x.id < y.id ? -1 : 1));
+    const lines = [];
+    mine.forEach((m) => {
+      const opp = m.a === G.you ? m.b : m.a;
+      if (!opp || !G.orgs[opp]) return;
+      const won = m.winner === G.you;
+      const isFinal = m.feedsInto === null;
+      const prev = G.rivalry.h2h[opp];
+      const line = S.grudgeLine(prev, G.orgs[opp].name, won);
+      G.rivalry.h2h[opp] = S.recordMeeting(prev, opp, won, {
+        season: G.season, week: G.week,
+        weight: S.meetingWeight({ rung: event.id, isFinal: isFinal, seatOnLine: event.id === 'gateway' && isFinal }),
+      });
+      if (line) lines.push(line);
+    });
+    return lines.slice(0, 2);
+  };
+
+  /**
+   * Name the one peer a career is set against: closest in standing, tilted
+   * toward a developer that climbs the way the manager must. Picked once at the
+   * start and again only if the rival folds. Records the rival's tier so a
+   * later promotion or relegation can be told as a story beat and not repeated.
+   */
+  W.assignRival = function (G, seedTag) {
+    const cands = G.pool.map((id) => ({ id: id, prestige: S.prestige(G.orgs[id]), personality: G.orgs[id].personality }));
+    const id = S.pickRival(cands, S.prestige(G.orgs[G.you]), new S.Rng(G.seed, seedTag));
+    G.rivalry.rivalId = id;
+    G.rivalry.lastTier = id && G.orgs[id] ? G.orgs[id].tier : null;
+    return id;
+  };
+
+  /**
+   * Where the rivalry stands after a rollover: the rival climbing past you, or
+   * falling back to you, or folding and a new face stepping up. One beat per
+   * change, never the same one twice — the rival's last known tier is the memo.
+   */
+  W.rivalBeats = function (G) {
+    const r = G.rivalry;
+    if (!r || !r.rivalId) return [];
+    const lines = [];
+    const rival = G.orgs[r.rivalId];
+    if (!rival) {
+      lines.push('Your rival is gone — folded, and the circuit closes over the space. Time for a new one.');
+      W.assignRival(G, 'rival:repick:' + G.season);
+      const fresh = G.orgs[r.rivalId];
+      if (fresh) lines.push('You mark <b>' + fresh.name + '</b> as the team to beat now.');
+      return lines;
+    }
+    const was = r.lastTier;
+    const now = rival.tier;
+    if (now !== was) {
+      const youUp = S.isLeagueTier(G.orgs[G.you].tier);
+      if (now < was) {
+        lines.push((youUp ? '' : '★ ') + 'Your rival <b>' + rival.name + '</b> climb into ' + S.LEAGUE_BY_TIER[now].name +
+          (youUp ? '.' : ' — and you are still grinding The Open.'));
+      } else {
+        lines.push('Your rival ' + rival.name + ' slip back to ' +
+          (S.isLeagueTier(now) ? S.LEAGUE_BY_TIER[now].name : 'The Open') + '.');
+      }
+      r.lastTier = now;
+    }
     return lines;
   };
 
@@ -952,6 +1033,9 @@
 
     // Seats may have changed hands during turnover, so rebuild the index.
     W.reindexSeats(G);
+    // Where the rivalry stands now the dust has settled — told before the new
+    // season starts, while the tiers that just changed are still the news.
+    W.rivalBeats(G).forEach((l) => lines.push(l));
     W.startSeason(G);
     return lines;
   };
