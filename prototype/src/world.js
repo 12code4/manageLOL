@@ -156,6 +156,7 @@
     G.playoffs = null;
     G.gauntlet = null;
     G.lastSeason = null;
+    G.intl = null;
     // The Open runs a points table across the year instead of a league table.
     G.circuit = { points: {}, results: [], live: null, entered: {}, seatWinners: [] };
     // Keyed off the live field, not just the pool: a club relegated into The
@@ -913,6 +914,140 @@
         if (event.id !== 'weekend') lines.push(l);
       });
     });
+    return lines;
+  };
+
+  /* ─────────────────────── the international stage ─────────────────────── */
+  /* Worlds and the Crucible. The home region sends its real tier-1 teams; the
+     rest of the world is drawn from each region's character. See sim.js /
+     packages/core/src/season/international.ts. */
+
+  W.intlEventThisWeek = (G) => S.INTL_EVENTS.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0)[0] || null;
+
+  /** The home region's real qualifiers: the top of the tier-1 table. */
+  W.homeReps = function (G, event) {
+    const league = G.leagues[1];
+    if (!league) return [];
+    return W.orderOf(league).slice(0, event.homeSlots);
+  };
+
+  /** A fresh name for a foreign entrant, from the same pool the pyramid uses. */
+  W.intlName = function (rng, taken) {
+    const P = S.ORG_NAME_PARTS;
+    let name = '';
+    for (let i = 0; i < 30 && !name; i++) {
+      const stem = rng.chance(0.55) ? rng.pick(P.prefixes) + rng.pick(P.suffixes) : rng.pick(P.standalone);
+      const q = rng.pick(P.qualifiers);
+      const cand = q === '' ? stem : stem + ' ' + q;
+      if (!taken[cand]) name = cand;
+    }
+    if (!name) name = rng.pick(P.standalone) + ' ' + rng.int(2, 99);
+    taken[name] = 1;
+    const tag = name.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 3) || 'INT';
+    return { name: name, tag: tag };
+  };
+
+  /** Build the field, seed it, draw the bracket. One per season and event. */
+  W.buildIntl = function (G, event) {
+    const nameRng = new S.Rng(G.seed, 'intlname:' + G.season + ':' + event.id);
+    const meta = {};
+    const sides = {};
+    const entrants = [];
+    const taken = {};
+    Object.keys(G.orgs).forEach((k) => (taken[G.orgs[k].name] = 1));
+    W.homeReps(G, event).forEach((id) => {
+      const org = G.orgs[id];
+      meta[id] = { name: org.name, tag: org.tag, region: org.region, home: true };
+      sides[id] = null; // resolved live via fastSide
+      entrants.push({ id: id, seedStrength: W.fastSide(G, id).strength });
+    });
+    const alloc = S.foreignAllocation(event);
+    S.FOREIGN_REGIONS.forEach((region) => {
+      for (let s = 0; s < alloc[region]; s++) {
+        const id = 'intl-' + region + '-' + s;
+        const strength = S.regionChampionStrength(region, new S.Rng(G.seed, 'intlpow:' + G.season + ':' + event.id + ':' + region + ':' + s));
+        const nm = W.intlName(nameRng, taken);
+        meta[id] = { name: nm.name, tag: nm.tag, region: region, home: false };
+        sides[id] = S.foreignChampionSide(id, region, strength);
+        entrants.push({ id: id, seedStrength: strength });
+      }
+    });
+    const order = S.seedInternational(entrants.map((e) => ({ id: e.id, seedStrength: e.seedStrength })));
+    const ids = order.map((e) => e.id);
+    G.intl = {
+      event: event.id, season: G.season,
+      bracket: S.buildBracket(ids, event.bestOf),
+      meta: meta, sides: sides, exits: {}, done: false, settled: false,
+      playerIn: ids.indexOf(G.you) >= 0,
+    };
+    return G.intl;
+  };
+
+  /** A side for the resolver: home teams live off their roster, foreigns synthetic. */
+  W.intlSideOf = function (G, id) {
+    const s = G.intl.sides[id];
+    return s ? s : W.fastSide(G, id);
+  };
+
+  W.intlResolver = function (G, event) {
+    return (m) => {
+      const rng = new S.Rng(G.seed, 'intlm:' + G.season + ':' + event.id + ':' + m.id);
+      const isFinal = m.feedsInto === null;
+      const bestOf = isFinal ? event.finalBestOf : event.bestOf;
+      const res = S.resolveFastSeries(W.intlSideOf(G, m.a), W.intlSideOf(G, m.b), bestOf, rng, { games: false });
+      const winner = res.winner === 0 ? m.a : m.b;
+      const loser = res.winner === 0 ? m.b : m.a;
+      G.intl.exits[loser] = m.round;
+      const hi = Math.max(res.score[0], res.score[1]), lo = Math.min(res.score[0], res.score[1]);
+      return { winner: winner, score: [hi, lo] };
+    };
+  };
+
+  /** Advance the bracket around the player, or fully if they are not in it. */
+  W.runIntlWeek = function (G, skipYours) {
+    if (!G.intl || G.intl.done) return [];
+    const event = S.INTL_BY_ID[G.intl.event];
+    S.playBracket(G.intl.bracket, W.intlResolver(G, event),
+      new S.Rng(G.seed, 'intlw:' + G.season + ':' + event.id),
+      skipYours && G.intl.bracket.teams.indexOf(G.you) >= 0 ? G.you : undefined);
+    if (G.intl.bracket.champion === null) return [];
+    return W.settleIntl(G, event);
+  };
+
+  W.yourIntlMatch = function (G) {
+    if (!G.intl || G.intl.done) return null;
+    return S.nextMatchFor(G.intl.bracket, G.you);
+  };
+
+  /** Pay the real orgs in the field; announce who conquered the world. */
+  W.settleIntl = function (G, event) {
+    if (G.intl.settled) return [];
+    const b = G.intl.bracket;
+    const lines = [];
+    b.teams.forEach((id) => {
+      const org = G.orgs[id];
+      if (!org) return; // foreign synthetic team: no persistent state to pay
+      const place = S.placementOf(b.rounds, G.intl.exits[id] || 1, b.champion === id);
+      const rw = S.intlReward(event, place);
+      org.cash = round(org.cash + rw.cash, 2);
+      org.standing = S.clamp(org.standing + rw.standing, 0, 100);
+      org.legacy = S.clamp(org.legacy + rw.legacy, 0, 100);
+    });
+    const champId = b.champion;
+    const champ = G.intl.meta[champId];
+    if (champId === G.you) {
+      lines.push('★★ <b>' + G.orgs[G.you].name + '</b> ARE ' + (event.id === 'worlds' ? 'WORLD CHAMPIONS' : 'CRUCIBLE CHAMPIONS') + '! ★★');
+    } else if (champ) {
+      lines.push(event.name + ': <b>' + champ.name + '</b> of ' + S.REGIONS[champ.region].name + ' take the title.');
+      if (champ.home) lines.push('★ Meridia rules the world — a home-region team wins ' + event.name + '.');
+    }
+    if (G.intl.playerIn && champId !== G.you) {
+      const place = S.placementOf(b.rounds, G.intl.exits[G.you] || 1, false);
+      const LAB = { finalist: 'the final', semi: 'the semi-finals', quarter: 'the quarter-finals', entered: 'the group stage' };
+      lines.push('Your ' + event.name + ' run ends in ' + (LAB[place] || 'the group stage') + '.');
+    }
+    G.intl.done = true;
+    G.intl.settled = true;
     return lines;
   };
 

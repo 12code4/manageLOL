@@ -66,11 +66,11 @@
     support: ['enchanter', 'catcher', 'tankEngage'],
   };
   const REGIONS = {
-    kyo: { name: 'Kyorin', wealth: 1.05, langs: ['kyoril', 'common'], bias: { mechanics: 8, reflexes: 7, laning: 6, waveManagement: 5, consistency: 4, professionalism: 6, workEthic: 6, streamAppeal: -3 }, on: ['Se', 'Ky', 'Ji', 'Ha', 'Do', 'Mu', 'Ry', 'Ta', 'Wo', 'Bi', 'Gu', 'Sh'], nu: ['a', 'eo', 'u', 'i', 'o', 'ae', 'ya'], co: ['n', 'k', 'ng', 'l', 'm', 'ru', 'ho', ''] },
-    tia: { name: 'Tianxu', wealth: 1.5, langs: ['tianhua', 'common'], bias: { teamfighting: 7, playstyleAggression: 10, mechanics: 5, objectiveControl: 5, ego: 5, ambition: 6, mapAwareness: -2 }, on: ['Xi', 'Zh', 'Ru', 'Ka', 'Ll', 'Sh', 'Ti', 'Ya', 'Fo', 'We', 'Ji', 'Ma'], nu: ['a', 'ao', 'e', 'ai', 'ou', 'u', 'ei'], co: ['n', 'ng', 'o', 'i', 'x', 'ge', 'ke', ''] },
-    mer: { name: 'Meridia', wealth: 1.1, langs: ['meric', 'auran', 'common'], bias: { rotations: 7, shotcalling: 6, adaptability: 6, visionControl: 5, leadership: 5, communication: 6, mediaHandling: 4, mechanics: -3 }, on: ['Ca', 'Vi', 'Lu', 'Ma', 'Re', 'Th', 'Ni', 'Ga', 'Br', 'El', 'Or', 'Fe'], nu: ['a', 'e', 'i', 'o', 'au', 'ie', 'ea'], co: ['s', 'x', 'n', 'r', 'z', 'll', 'ne', ''] },
-    van: { name: 'Vantia', wealth: 1.55, langs: ['vanto', 'common'], bias: { starPower: 8, streamAppeal: 10, marketability: 8, fanbase: 6, ego: 4, mechanics: -2, professionalism: -3, consistency: -3 }, on: ['Ja', 'Ma', 'Da', 'Ko', 'Ze', 'Ni', 'Bl', 'Tr', 'Sn', 'Vi', 'Ra', 'Cl'], nu: ['a', 'e', 'i', 'o', 'u', 'ay', 'oo'], co: ['x', 'z', 'n', 'r', 'sh', 'ke', 'per', ''] },
-    wilds: { name: 'the Wilds', wealth: 0.5, langs: ['common'], bias: { potential: 4, playstyleRiskTaking: 8, consistency: -6, professionalism: -4, mechanics: 2 }, on: ['Ak', 'Zu', 'Ne', 'Ov', 'Ka', 'Ri', 'Ta', 'Yo', 'Mi', 'Du', 'Fa', 'Pe'], nu: ['a', 'e', 'i', 'o', 'u', 'ia', 'ou'], co: ['n', 'k', 's', 'r', 'm', 'to', 'vi', ''] },
+    kyo: { name: 'Kyorin', wealth: 1.05, depth: 1.6, langs: ['kyoril', 'common'], bias: { mechanics: 8, reflexes: 7, laning: 6, waveManagement: 5, consistency: 4, professionalism: 6, workEthic: 6, streamAppeal: -3 }, on: ['Se', 'Ky', 'Ji', 'Ha', 'Do', 'Mu', 'Ry', 'Ta', 'Wo', 'Bi', 'Gu', 'Sh'], nu: ['a', 'eo', 'u', 'i', 'o', 'ae', 'ya'], co: ['n', 'k', 'ng', 'l', 'm', 'ru', 'ho', ''] },
+    tia: { name: 'Tianxu', wealth: 1.5, depth: 1.5, langs: ['tianhua', 'common'], bias: { teamfighting: 7, playstyleAggression: 10, mechanics: 5, objectiveControl: 5, ego: 5, ambition: 6, mapAwareness: -2 }, on: ['Xi', 'Zh', 'Ru', 'Ka', 'Ll', 'Sh', 'Ti', 'Ya', 'Fo', 'We', 'Ji', 'Ma'], nu: ['a', 'ao', 'e', 'ai', 'ou', 'u', 'ei'], co: ['n', 'ng', 'o', 'i', 'x', 'ge', 'ke', ''] },
+    mer: { name: 'Meridia', wealth: 1.1, depth: 1.2, langs: ['meric', 'auran', 'common'], bias: { rotations: 7, shotcalling: 6, adaptability: 6, visionControl: 5, leadership: 5, communication: 6, mediaHandling: 4, mechanics: -3 }, on: ['Ca', 'Vi', 'Lu', 'Ma', 'Re', 'Th', 'Ni', 'Ga', 'Br', 'El', 'Or', 'Fe'], nu: ['a', 'e', 'i', 'o', 'au', 'ie', 'ea'], co: ['s', 'x', 'n', 'r', 'z', 'll', 'ne', ''] },
+    van: { name: 'Vantia', wealth: 1.55, depth: 0.85, langs: ['vanto', 'common'], bias: { starPower: 8, streamAppeal: 10, marketability: 8, fanbase: 6, ego: 4, mechanics: -2, professionalism: -3, consistency: -3 }, on: ['Ja', 'Ma', 'Da', 'Ko', 'Ze', 'Ni', 'Bl', 'Tr', 'Sn', 'Vi', 'Ra', 'Cl'], nu: ['a', 'e', 'i', 'o', 'u', 'ay', 'oo'], co: ['x', 'z', 'n', 'r', 'sh', 'ke', 'per', ''] },
+    wilds: { name: 'the Wilds', wealth: 0.5, depth: 1.0, langs: ['common'], bias: { potential: 4, playstyleRiskTaking: 8, consistency: -6, professionalism: -4, mechanics: 2 }, on: ['Ak', 'Zu', 'Ne', 'Ov', 'Ka', 'Ri', 'Ta', 'Yo', 'Mi', 'Du', 'Fa', 'Pe'], nu: ['a', 'e', 'i', 'o', 'u', 'ia', 'ou'], co: ['n', 'k', 's', 'r', 'm', 'to', 'vi', ''] },
   };
   function handle(rng, reg) {
     const syl = () => rng.pick(reg.on) + rng.pick(reg.nu) + rng.pick(reg.co);
@@ -1479,4 +1479,60 @@
     scored.sort((a, b) => (a.score !== b.score ? b.score - a.score : a.id < b.id ? -1 : 1));
     return scored[0].id;
   };
+
+  /* ─────────────────────── the international stage ─────────────────────── */
+  /* Worlds + the Crucible. Ported from packages/core/src/season/international.ts. */
+
+  S.INTL_EVENTS = [
+    { id: 'crucible', name: 'The Crucible', short: 'Crucible', fieldSize: 6, bestOf: 3, finalBestOf: 5,
+      homeSlots: 2, fixedWeeks: [16, 17, 18],
+      reward: {
+        winner: { cash: 45, legacy: 8, standing: 14, points: 200 },
+        finalist: { cash: 20, legacy: 4, standing: 7, points: 110 },
+        semi: { cash: 9, legacy: 2, standing: 3, points: 60 },
+        quarter: { cash: 4, legacy: 1, standing: 1.5, points: 30 },
+        entered: { cash: 2, legacy: 0.5, standing: 0.7, points: 12 } },
+      blurb: 'Mid-season. Every region sends its champion. A trophy, and a read on the field before Worlds.' },
+    { id: 'worlds', name: 'Worlds', short: 'Worlds', fieldSize: 16, bestOf: 3, finalBestOf: 5,
+      homeSlots: 3, fixedWeeks: [36, 37, 38, 39, 40],
+      reward: {
+        winner: { cash: 120, legacy: 22, standing: 30, points: 500 },
+        finalist: { cash: 60, legacy: 12, standing: 16, points: 300 },
+        semi: { cash: 30, legacy: 7, standing: 9, points: 170 },
+        quarter: { cash: 14, legacy: 3, standing: 4, points: 85 },
+        entered: { cash: 6, legacy: 1, standing: 1.5, points: 25 } },
+      blurb: 'The mountaintop. Sixteen teams, five regions, one trophy. This is the one they remember you for.' },
+  ];
+  S.INTL_BY_ID = {}; S.INTL_EVENTS.forEach((e) => (S.INTL_BY_ID[e.id] = e));
+  S.HOME_REGION = 'mer';
+  S.FOREIGN_REGIONS = ['kyo', 'tia', 'van', 'wilds'];
+  const INTL_EDGE = { kyo: 0.12, tia: 0, mer: 0, van: -0.1, wilds: -0.05 };
+  const SWING_SIGMA = { kyo: 3, tia: 3.5, mer: 3, van: 3.5, wilds: 6 };
+
+  S.regionPower = (region) => round(0.72 * S.REGIONS[region].depth + 0.28 * S.REGIONS[region].wealth + INTL_EDGE[region], 3);
+  S.regionChampionCentre = (region) => round(62 + 15 * S.regionPower(region), 1);
+  S.regionChampionStrength = (region, rng) => clamp(round(S.regionChampionCentre(region) + rng.gaussian(0, SWING_SIGMA[region]), 1), 66, 93);
+  S.foreignChampionSide = function (id, region, strength) {
+    const bias = S.REGIONS[region].bias; const b = (k) => bias[k] || 0;
+    return { orgId: id, strength: strength,
+      drafting: clamp(76 + b('shotcalling') + b('rotations') / 2 + b('adaptability') / 2, 40, 95),
+      metaFit: clamp((b('adaptability') - 2) / 6, -2, 2),
+      consistency: clamp(78 + b('consistency'), 45, 92) };
+  };
+  S.foreignAllocation = function (event) {
+    const seats = event.fieldSize - event.homeSlots; const alloc = {};
+    S.FOREIGN_REGIONS.forEach((r) => (alloc[r] = 0));
+    const order = S.FOREIGN_REGIONS.slice().sort((a, b) => {
+      const d = S.regionPower(b) - S.regionPower(a); return Math.abs(d) > 1e-9 ? d : a < b ? -1 : 1;
+    });
+    for (let i = 0; i < seats; i++) alloc[order[i % order.length]] += 1;
+    return alloc;
+  };
+  S.seedInternational = function (entrants) {
+    return entrants.slice().sort((a, b) => {
+      if (Math.abs(b.seedStrength - a.seedStrength) > 1e-9) return b.seedStrength - a.seedStrength;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+  };
+  S.intlReward = (event, place) => event.reward[place];
 })(typeof window !== 'undefined' ? window : globalThis);

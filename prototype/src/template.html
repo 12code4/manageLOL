@@ -630,6 +630,21 @@ table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,v
 .rivalnote{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;font-style:italic}
 .rivalnote.small{font-size:10.5px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line-soft);font-style:normal}
 
+/* The international stage: the world map, and the summit atop the climb rail. */
+.worldlist{display:flex;flex-direction:column;gap:6px;margin:2px 0 10px}
+.worldrow{display:grid;grid-template-columns:112px 1fr;gap:9px;align-items:center;font-size:11.5px;color:var(--muted)}
+.worldrow.home .wrname{color:var(--gold)}
+.wrname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrhome{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin-left:5px}
+.wrbar{height:7px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+.wrbar i{display:block;height:100%;background:linear-gradient(90deg,var(--info),color-mix(in srgb,var(--info) 50%,var(--gold)))}
+.worldrow.home .wrbar i{background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+.bside.home:not(.you) .bname{color:color-mix(in srgb,var(--gold) 62%,var(--ink))}
+.pyr .step.summit{color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 28%,transparent);
+  background:linear-gradient(180deg,var(--gold-ghost),transparent)}
+.pyr .step.summit .dot{background:var(--gold);box-shadow:0 0 0 3px var(--gold-ghost)}
+.pyr .step.summit .summitcap{margin-left:auto;font-size:9px;opacity:.75}
+
 .ladder td.fee{color:var(--gold);text-align:right;line-height:1.25}
 .ladder td.fee small{display:block;font-size:9px;color:var(--faint);letter-spacing:.02em}
 .ladder td.fee.unaffordable{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
@@ -969,6 +984,22 @@ function advanceWeek(){
   const isPlayoff=d.window.indexOf('Playoffs')>=0;
   const isGauntlet=d.window==='Promotion';
 
+  // The international stage: the Crucible and Worlds. Runs before the circuit so
+  // a week resolves in a single pass. The home region sends its real tier-1
+  // teams; when that is you, there are series to play before the week can turn.
+  const intlEvent=W.intlEventThisWeek(G);
+  if(intlEvent){
+    const fresh=(!G.intl||G.intl.season!==G.season||G.intl.event!==intlEvent.id);
+    if(fresh){
+      W.buildIntl(G,intlEvent);
+      W.runIntlWeek(G,true).forEach(l=>pushLog(l,'good'));
+      // Stop on the summit so you can see the draw (and play your series, if you
+      // qualified) instead of the week blowing straight past it.
+      G.ui.screen='season'; render(); return;
+    }
+    if(!G.intl.done&&W.yourIntlMatch(G)){ toast('You are at '+intlEvent.short+' — there is a series to play.','bad'); G.ui.screen='season'; render(); return; }
+  }
+
   // The Open: a tournament you have entered has to be played out before the
   // week can turn, and the rest of the circuit runs whether you enter or not.
   if(W.unaffiliated(G)){
@@ -1050,6 +1081,29 @@ window.enterCircuitEvent=function(rungId){
   pushLog('Entered the <b>'+event.name+'</b> — '+event.entryFee+'◈ down, '+event.fieldSize+' teams in.','info');
   // Play the rounds that do not involve you, so your first match is waiting.
   W.runCircuitWeek(G,true);
+  render();
+};
+/* A Worlds/Crucible series against a foreign champion — no roster to draft
+   against, so it resolves on the fast path with a bit of ceremony, then the
+   bracket carries on around you. */
+window.playIntlSeries=function(){
+  const W=window.LOLWorld;
+  const m=W.yourIntlMatch(G); if(!m)return;
+  const event=S.INTL_BY_ID[G.intl.event];
+  const oppId=m.a===G.you?m.b:m.a;
+  const isFinal=m.feedsInto===null;
+  const bestOf=isFinal?event.finalBestOf:event.bestOf;
+  const rng=new S.Rng(G.seed,'intlplay:'+G.season+':'+event.id+':'+m.id);
+  const res=S.resolveFastSeries(W.fastSide(G,G.you),W.intlSideOf(G,oppId),bestOf,rng,{games:false});
+  const youWon=res.winner===0;
+  const yw=res.score[0],ow=res.score[1];
+  S.recordBracketResult(G.intl.bracket,m.id,youWon?G.you:oppId,[Math.max(yw,ow),Math.min(yw,ow)]);
+  G.intl.exits[youWon?oppId:G.you]=m.round;
+  const opp=G.intl.meta[oppId];
+  pushLog((youWon?'You beat ':'You lost to ')+'<b>'+opp.name+'</b> '+Math.max(yw,ow)+'–'+Math.min(yw,ow)+' at '+event.name+'.',youWon?'good':'bad');
+  W.runIntlWeek(G,true).forEach(l=>pushLog(l,'good'));
+  G.weekResults[G.season+':'+G.week]=youWon?'w':'l';
+  toast(youWon?'Through — on to the next round.':'Knocked out of '+event.short+'.',youWon?'good':'bad');
   render();
 };
 window.buySeat=function(){
@@ -1291,14 +1345,20 @@ function renderNav(){
 }
 function renderPyramid(){
   const p=$('#pyr');p.innerHTML='';
+  // The summit sits above the pyramid: the world championship the whole climb
+  // is named for. Visible from day one so a tier-4 career can see the top.
+  const summit=el('div','step summit');
+  const wonWorlds=you().history&&you().history.finishes&&false; // reserved for a future 'held' state
+  summit.innerHTML='<span class="dot"></span><span>Worlds</span><span class="summitcap mono">★</span>';
+  summit.title='The world championship. Win your league and you are one of the teams your region sends to the roof of the world.';
+  p.appendChild(summit);
+  void wonWorlds;
   S.PYRAMID.forEach(cfg=>{
     const here=cfg.tier===you().tier;
-    const cls=cfg.tier<you().tier?'':here?'cur':'done';
     const d=el('div','step '+(here?'cur':cfg.tier<you().tier?'':'done'));
     d.innerHTML='<span class="dot"></span><span>'+cfg.name+'</span>';
     d.title=cfg.blurb;
     p.appendChild(d);
-    void cls;
   });
 }
 /* ---------- scout ---------- */

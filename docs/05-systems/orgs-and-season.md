@@ -1288,3 +1288,19 @@ The persistent-org layer gave the world *names*, but a table of strangers is not
 **Surfaces.** A Rivalry card (rival vs you: standing, H2H bar, the emergent nemesis note); an ember ⚔ mark on the rival everywhere they appear — circuit table row, bracket cell, knockout fixture — the way gold means "you"; and the H2H record replacing the stature line on a knockout card against a club you have history with.
 
 **Deliberately not done.** No AI advantage for the rival — it is an honest peer, so upsets cut both ways, which matches the world's "upsets always exist" stance better than a rubber-band would. Rivalries currently accrue from bracket play (circuit, playoffs, gauntlet); round-robin league meetings do not yet fold in.
+
+---
+
+## 15. The international stage (shipped after §14)
+
+The game is named for a climb "from nothing to the world championships", but the pyramid stopped at the top of one region: win tier 1 and the season simply ended. The calendar had always *named* the summit — the Crucible (mid-season, weeks 16–18) and Worlds (weeks 36–40) — and a full five-region model sat in `packages/data`. None of it was simulated. This wires it up.
+
+**Core (`packages/core/src/season/international.ts`, pure + tested).** `regionPower` derives each region's international strength from its `talentDepth` and `wealth` plus a narrative `INTL_EDGE` (Kyorin's proving ground overperforms; Vantia, all brand and imports, is the perennial choke; the Wilds punch below their paper weight but — via `SWING_SIGMA` — swing widest). `regionChampionStrength` is the per-season draw; `foreignChampionSide` turns it into a `FastSide` whose region shows through in *how* it wins (Meridian tacticians out-draft, Kyorin is relentless and consistent, the Wilds are the coin-flip). `foreignAllocation` hands the non-home seats to the strongest regions (floored at one each); `seedInternational` orders the field; `intlReward` is the payout curve — winning Worlds is the biggest legacy event in the game. Two `INTL_EVENTS` descriptors carry the formats and the exact calendar weeks.
+
+**The way in is the pyramid.** The home region always sends its *real* tier-1 teams (`homeReps` = top of the tier-1 table, `homeSlots` of them). So you watch your region's champion — perhaps a rival who climbed — against the world, and when *you* are that champion you play it yourself. The rest of the world is not a second pyramid: foreign champions are synthetic `FastSide`s, regenerated each season, resolved by the same `bracket.ts` + `fast.ts` engines as everything else.
+
+**Wiring (prototype).** `W.buildIntl` assembles and seeds the field and draws the bracket; `W.runIntlWeek` advances it around the player (or fully, as a spectator); `W.settleIntl` pays the real orgs (cash, standing, legacy) and announces the champion. `advanceWeek` runs the international block *before* the circuit so a week resolves in one pass, and stops on the summit so you see the draw. A player series against a foreign team (no roster to draft) resolves on the fast path with win-probability ceremony via `playIntlSeries`, not the full match screen.
+
+**Surfaces.** An international takeover of the season hub during those weeks (the fixture/knockout card, the full draw with home teams in gold, a world-map card ranking the regions), and **Worlds on the climb rail from season 1** so a tier-4 career can see the top of the mountain. Note the rail's convention is higher-tier-lower-on-screen, so the Worlds cap sits at the foot of the rail, just beyond the Prime League.
+
+**Deliberately not done.** Foreign teams have no persistent rosters or history (they are regenerated yearly), so there are no cross-region transfers or foreign dynasties yet; the five Worlds weeks resolve as one compressed bracket rather than a staged play-in/groups/knockout; championship points across the year are not yet tabulated. All are clean follow-ups on this base.

@@ -630,6 +630,21 @@ table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,v
 .rivalnote{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;font-style:italic}
 .rivalnote.small{font-size:10.5px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line-soft);font-style:normal}
 
+/* The international stage: the world map, and the summit atop the climb rail. */
+.worldlist{display:flex;flex-direction:column;gap:6px;margin:2px 0 10px}
+.worldrow{display:grid;grid-template-columns:112px 1fr;gap:9px;align-items:center;font-size:11.5px;color:var(--muted)}
+.worldrow.home .wrname{color:var(--gold)}
+.wrname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrhome{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);border-radius:3px;padding:0 4px;margin-left:5px}
+.wrbar{height:7px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+.wrbar i{display:block;height:100%;background:linear-gradient(90deg,var(--info),color-mix(in srgb,var(--info) 50%,var(--gold)))}
+.worldrow.home .wrbar i{background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+.bside.home:not(.you) .bname{color:color-mix(in srgb,var(--gold) 62%,var(--ink))}
+.pyr .step.summit{color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 28%,transparent);
+  background:linear-gradient(180deg,var(--gold-ghost),transparent)}
+.pyr .step.summit .dot{background:var(--gold);box-shadow:0 0 0 3px var(--gold-ghost)}
+.pyr .step.summit .summitcap{margin-left:auto;font-size:9px;opacity:.75}
+
 .ladder td.fee{color:var(--gold);text-align:right;line-height:1.25}
 .ladder td.fee small{display:block;font-size:9px;color:var(--faint);letter-spacing:.02em}
 .ladder td.fee.unaffordable{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
@@ -749,11 +764,11 @@ table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,v
     support: ['enchanter', 'catcher', 'tankEngage'],
   };
   const REGIONS = {
-    kyo: { name: 'Kyorin', wealth: 1.05, langs: ['kyoril', 'common'], bias: { mechanics: 8, reflexes: 7, laning: 6, waveManagement: 5, consistency: 4, professionalism: 6, workEthic: 6, streamAppeal: -3 }, on: ['Se', 'Ky', 'Ji', 'Ha', 'Do', 'Mu', 'Ry', 'Ta', 'Wo', 'Bi', 'Gu', 'Sh'], nu: ['a', 'eo', 'u', 'i', 'o', 'ae', 'ya'], co: ['n', 'k', 'ng', 'l', 'm', 'ru', 'ho', ''] },
-    tia: { name: 'Tianxu', wealth: 1.5, langs: ['tianhua', 'common'], bias: { teamfighting: 7, playstyleAggression: 10, mechanics: 5, objectiveControl: 5, ego: 5, ambition: 6, mapAwareness: -2 }, on: ['Xi', 'Zh', 'Ru', 'Ka', 'Ll', 'Sh', 'Ti', 'Ya', 'Fo', 'We', 'Ji', 'Ma'], nu: ['a', 'ao', 'e', 'ai', 'ou', 'u', 'ei'], co: ['n', 'ng', 'o', 'i', 'x', 'ge', 'ke', ''] },
-    mer: { name: 'Meridia', wealth: 1.1, langs: ['meric', 'auran', 'common'], bias: { rotations: 7, shotcalling: 6, adaptability: 6, visionControl: 5, leadership: 5, communication: 6, mediaHandling: 4, mechanics: -3 }, on: ['Ca', 'Vi', 'Lu', 'Ma', 'Re', 'Th', 'Ni', 'Ga', 'Br', 'El', 'Or', 'Fe'], nu: ['a', 'e', 'i', 'o', 'au', 'ie', 'ea'], co: ['s', 'x', 'n', 'r', 'z', 'll', 'ne', ''] },
-    van: { name: 'Vantia', wealth: 1.55, langs: ['vanto', 'common'], bias: { starPower: 8, streamAppeal: 10, marketability: 8, fanbase: 6, ego: 4, mechanics: -2, professionalism: -3, consistency: -3 }, on: ['Ja', 'Ma', 'Da', 'Ko', 'Ze', 'Ni', 'Bl', 'Tr', 'Sn', 'Vi', 'Ra', 'Cl'], nu: ['a', 'e', 'i', 'o', 'u', 'ay', 'oo'], co: ['x', 'z', 'n', 'r', 'sh', 'ke', 'per', ''] },
-    wilds: { name: 'the Wilds', wealth: 0.5, langs: ['common'], bias: { potential: 4, playstyleRiskTaking: 8, consistency: -6, professionalism: -4, mechanics: 2 }, on: ['Ak', 'Zu', 'Ne', 'Ov', 'Ka', 'Ri', 'Ta', 'Yo', 'Mi', 'Du', 'Fa', 'Pe'], nu: ['a', 'e', 'i', 'o', 'u', 'ia', 'ou'], co: ['n', 'k', 's', 'r', 'm', 'to', 'vi', ''] },
+    kyo: { name: 'Kyorin', wealth: 1.05, depth: 1.6, langs: ['kyoril', 'common'], bias: { mechanics: 8, reflexes: 7, laning: 6, waveManagement: 5, consistency: 4, professionalism: 6, workEthic: 6, streamAppeal: -3 }, on: ['Se', 'Ky', 'Ji', 'Ha', 'Do', 'Mu', 'Ry', 'Ta', 'Wo', 'Bi', 'Gu', 'Sh'], nu: ['a', 'eo', 'u', 'i', 'o', 'ae', 'ya'], co: ['n', 'k', 'ng', 'l', 'm', 'ru', 'ho', ''] },
+    tia: { name: 'Tianxu', wealth: 1.5, depth: 1.5, langs: ['tianhua', 'common'], bias: { teamfighting: 7, playstyleAggression: 10, mechanics: 5, objectiveControl: 5, ego: 5, ambition: 6, mapAwareness: -2 }, on: ['Xi', 'Zh', 'Ru', 'Ka', 'Ll', 'Sh', 'Ti', 'Ya', 'Fo', 'We', 'Ji', 'Ma'], nu: ['a', 'ao', 'e', 'ai', 'ou', 'u', 'ei'], co: ['n', 'ng', 'o', 'i', 'x', 'ge', 'ke', ''] },
+    mer: { name: 'Meridia', wealth: 1.1, depth: 1.2, langs: ['meric', 'auran', 'common'], bias: { rotations: 7, shotcalling: 6, adaptability: 6, visionControl: 5, leadership: 5, communication: 6, mediaHandling: 4, mechanics: -3 }, on: ['Ca', 'Vi', 'Lu', 'Ma', 'Re', 'Th', 'Ni', 'Ga', 'Br', 'El', 'Or', 'Fe'], nu: ['a', 'e', 'i', 'o', 'au', 'ie', 'ea'], co: ['s', 'x', 'n', 'r', 'z', 'll', 'ne', ''] },
+    van: { name: 'Vantia', wealth: 1.55, depth: 0.85, langs: ['vanto', 'common'], bias: { starPower: 8, streamAppeal: 10, marketability: 8, fanbase: 6, ego: 4, mechanics: -2, professionalism: -3, consistency: -3 }, on: ['Ja', 'Ma', 'Da', 'Ko', 'Ze', 'Ni', 'Bl', 'Tr', 'Sn', 'Vi', 'Ra', 'Cl'], nu: ['a', 'e', 'i', 'o', 'u', 'ay', 'oo'], co: ['x', 'z', 'n', 'r', 'sh', 'ke', 'per', ''] },
+    wilds: { name: 'the Wilds', wealth: 0.5, depth: 1.0, langs: ['common'], bias: { potential: 4, playstyleRiskTaking: 8, consistency: -6, professionalism: -4, mechanics: 2 }, on: ['Ak', 'Zu', 'Ne', 'Ov', 'Ka', 'Ri', 'Ta', 'Yo', 'Mi', 'Du', 'Fa', 'Pe'], nu: ['a', 'e', 'i', 'o', 'u', 'ia', 'ou'], co: ['n', 'k', 's', 'r', 'm', 'to', 'vi', ''] },
   };
   function handle(rng, reg) {
     const syl = () => rng.pick(reg.on) + rng.pick(reg.nu) + rng.pick(reg.co);
@@ -2162,6 +2177,62 @@ table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,v
     scored.sort((a, b) => (a.score !== b.score ? b.score - a.score : a.id < b.id ? -1 : 1));
     return scored[0].id;
   };
+
+  /* ─────────────────────── the international stage ─────────────────────── */
+  /* Worlds + the Crucible. Ported from packages/core/src/season/international.ts. */
+
+  S.INTL_EVENTS = [
+    { id: 'crucible', name: 'The Crucible', short: 'Crucible', fieldSize: 6, bestOf: 3, finalBestOf: 5,
+      homeSlots: 2, fixedWeeks: [16, 17, 18],
+      reward: {
+        winner: { cash: 45, legacy: 8, standing: 14, points: 200 },
+        finalist: { cash: 20, legacy: 4, standing: 7, points: 110 },
+        semi: { cash: 9, legacy: 2, standing: 3, points: 60 },
+        quarter: { cash: 4, legacy: 1, standing: 1.5, points: 30 },
+        entered: { cash: 2, legacy: 0.5, standing: 0.7, points: 12 } },
+      blurb: 'Mid-season. Every region sends its champion. A trophy, and a read on the field before Worlds.' },
+    { id: 'worlds', name: 'Worlds', short: 'Worlds', fieldSize: 16, bestOf: 3, finalBestOf: 5,
+      homeSlots: 3, fixedWeeks: [36, 37, 38, 39, 40],
+      reward: {
+        winner: { cash: 120, legacy: 22, standing: 30, points: 500 },
+        finalist: { cash: 60, legacy: 12, standing: 16, points: 300 },
+        semi: { cash: 30, legacy: 7, standing: 9, points: 170 },
+        quarter: { cash: 14, legacy: 3, standing: 4, points: 85 },
+        entered: { cash: 6, legacy: 1, standing: 1.5, points: 25 } },
+      blurb: 'The mountaintop. Sixteen teams, five regions, one trophy. This is the one they remember you for.' },
+  ];
+  S.INTL_BY_ID = {}; S.INTL_EVENTS.forEach((e) => (S.INTL_BY_ID[e.id] = e));
+  S.HOME_REGION = 'mer';
+  S.FOREIGN_REGIONS = ['kyo', 'tia', 'van', 'wilds'];
+  const INTL_EDGE = { kyo: 0.12, tia: 0, mer: 0, van: -0.1, wilds: -0.05 };
+  const SWING_SIGMA = { kyo: 3, tia: 3.5, mer: 3, van: 3.5, wilds: 6 };
+
+  S.regionPower = (region) => round(0.72 * S.REGIONS[region].depth + 0.28 * S.REGIONS[region].wealth + INTL_EDGE[region], 3);
+  S.regionChampionCentre = (region) => round(62 + 15 * S.regionPower(region), 1);
+  S.regionChampionStrength = (region, rng) => clamp(round(S.regionChampionCentre(region) + rng.gaussian(0, SWING_SIGMA[region]), 1), 66, 93);
+  S.foreignChampionSide = function (id, region, strength) {
+    const bias = S.REGIONS[region].bias; const b = (k) => bias[k] || 0;
+    return { orgId: id, strength: strength,
+      drafting: clamp(76 + b('shotcalling') + b('rotations') / 2 + b('adaptability') / 2, 40, 95),
+      metaFit: clamp((b('adaptability') - 2) / 6, -2, 2),
+      consistency: clamp(78 + b('consistency'), 45, 92) };
+  };
+  S.foreignAllocation = function (event) {
+    const seats = event.fieldSize - event.homeSlots; const alloc = {};
+    S.FOREIGN_REGIONS.forEach((r) => (alloc[r] = 0));
+    const order = S.FOREIGN_REGIONS.slice().sort((a, b) => {
+      const d = S.regionPower(b) - S.regionPower(a); return Math.abs(d) > 1e-9 ? d : a < b ? -1 : 1;
+    });
+    for (let i = 0; i < seats; i++) alloc[order[i % order.length]] += 1;
+    return alloc;
+  };
+  S.seedInternational = function (entrants) {
+    return entrants.slice().sort((a, b) => {
+      if (Math.abs(b.seedStrength - a.seedStrength) > 1e-9) return b.seedStrength - a.seedStrength;
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+  };
+  S.intlReward = (event, place) => event.reward[place];
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
@@ -2324,6 +2395,7 @@ table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,v
     G.playoffs = null;
     G.gauntlet = null;
     G.lastSeason = null;
+    G.intl = null;
     // The Open runs a points table across the year instead of a league table.
     G.circuit = { points: {}, results: [], live: null, entered: {}, seatWinners: [] };
     // Keyed off the live field, not just the pool: a club relegated into The
@@ -3084,6 +3156,140 @@ table.standings tbody tr.rival .oname{color:color-mix(in srgb,var(--toxic) 72%,v
     return lines;
   };
 
+  /* ─────────────────────── the international stage ─────────────────────── */
+  /* Worlds and the Crucible. The home region sends its real tier-1 teams; the
+     rest of the world is drawn from each region's character. See sim.js /
+     packages/core/src/season/international.ts. */
+
+  W.intlEventThisWeek = (G) => S.INTL_EVENTS.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0)[0] || null;
+
+  /** The home region's real qualifiers: the top of the tier-1 table. */
+  W.homeReps = function (G, event) {
+    const league = G.leagues[1];
+    if (!league) return [];
+    return W.orderOf(league).slice(0, event.homeSlots);
+  };
+
+  /** A fresh name for a foreign entrant, from the same pool the pyramid uses. */
+  W.intlName = function (rng, taken) {
+    const P = S.ORG_NAME_PARTS;
+    let name = '';
+    for (let i = 0; i < 30 && !name; i++) {
+      const stem = rng.chance(0.55) ? rng.pick(P.prefixes) + rng.pick(P.suffixes) : rng.pick(P.standalone);
+      const q = rng.pick(P.qualifiers);
+      const cand = q === '' ? stem : stem + ' ' + q;
+      if (!taken[cand]) name = cand;
+    }
+    if (!name) name = rng.pick(P.standalone) + ' ' + rng.int(2, 99);
+    taken[name] = 1;
+    const tag = name.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 3) || 'INT';
+    return { name: name, tag: tag };
+  };
+
+  /** Build the field, seed it, draw the bracket. One per season and event. */
+  W.buildIntl = function (G, event) {
+    const nameRng = new S.Rng(G.seed, 'intlname:' + G.season + ':' + event.id);
+    const meta = {};
+    const sides = {};
+    const entrants = [];
+    const taken = {};
+    Object.keys(G.orgs).forEach((k) => (taken[G.orgs[k].name] = 1));
+    W.homeReps(G, event).forEach((id) => {
+      const org = G.orgs[id];
+      meta[id] = { name: org.name, tag: org.tag, region: org.region, home: true };
+      sides[id] = null; // resolved live via fastSide
+      entrants.push({ id: id, seedStrength: W.fastSide(G, id).strength });
+    });
+    const alloc = S.foreignAllocation(event);
+    S.FOREIGN_REGIONS.forEach((region) => {
+      for (let s = 0; s < alloc[region]; s++) {
+        const id = 'intl-' + region + '-' + s;
+        const strength = S.regionChampionStrength(region, new S.Rng(G.seed, 'intlpow:' + G.season + ':' + event.id + ':' + region + ':' + s));
+        const nm = W.intlName(nameRng, taken);
+        meta[id] = { name: nm.name, tag: nm.tag, region: region, home: false };
+        sides[id] = S.foreignChampionSide(id, region, strength);
+        entrants.push({ id: id, seedStrength: strength });
+      }
+    });
+    const order = S.seedInternational(entrants.map((e) => ({ id: e.id, seedStrength: e.seedStrength })));
+    const ids = order.map((e) => e.id);
+    G.intl = {
+      event: event.id, season: G.season,
+      bracket: S.buildBracket(ids, event.bestOf),
+      meta: meta, sides: sides, exits: {}, done: false, settled: false,
+      playerIn: ids.indexOf(G.you) >= 0,
+    };
+    return G.intl;
+  };
+
+  /** A side for the resolver: home teams live off their roster, foreigns synthetic. */
+  W.intlSideOf = function (G, id) {
+    const s = G.intl.sides[id];
+    return s ? s : W.fastSide(G, id);
+  };
+
+  W.intlResolver = function (G, event) {
+    return (m) => {
+      const rng = new S.Rng(G.seed, 'intlm:' + G.season + ':' + event.id + ':' + m.id);
+      const isFinal = m.feedsInto === null;
+      const bestOf = isFinal ? event.finalBestOf : event.bestOf;
+      const res = S.resolveFastSeries(W.intlSideOf(G, m.a), W.intlSideOf(G, m.b), bestOf, rng, { games: false });
+      const winner = res.winner === 0 ? m.a : m.b;
+      const loser = res.winner === 0 ? m.b : m.a;
+      G.intl.exits[loser] = m.round;
+      const hi = Math.max(res.score[0], res.score[1]), lo = Math.min(res.score[0], res.score[1]);
+      return { winner: winner, score: [hi, lo] };
+    };
+  };
+
+  /** Advance the bracket around the player, or fully if they are not in it. */
+  W.runIntlWeek = function (G, skipYours) {
+    if (!G.intl || G.intl.done) return [];
+    const event = S.INTL_BY_ID[G.intl.event];
+    S.playBracket(G.intl.bracket, W.intlResolver(G, event),
+      new S.Rng(G.seed, 'intlw:' + G.season + ':' + event.id),
+      skipYours && G.intl.bracket.teams.indexOf(G.you) >= 0 ? G.you : undefined);
+    if (G.intl.bracket.champion === null) return [];
+    return W.settleIntl(G, event);
+  };
+
+  W.yourIntlMatch = function (G) {
+    if (!G.intl || G.intl.done) return null;
+    return S.nextMatchFor(G.intl.bracket, G.you);
+  };
+
+  /** Pay the real orgs in the field; announce who conquered the world. */
+  W.settleIntl = function (G, event) {
+    if (G.intl.settled) return [];
+    const b = G.intl.bracket;
+    const lines = [];
+    b.teams.forEach((id) => {
+      const org = G.orgs[id];
+      if (!org) return; // foreign synthetic team: no persistent state to pay
+      const place = S.placementOf(b.rounds, G.intl.exits[id] || 1, b.champion === id);
+      const rw = S.intlReward(event, place);
+      org.cash = round(org.cash + rw.cash, 2);
+      org.standing = S.clamp(org.standing + rw.standing, 0, 100);
+      org.legacy = S.clamp(org.legacy + rw.legacy, 0, 100);
+    });
+    const champId = b.champion;
+    const champ = G.intl.meta[champId];
+    if (champId === G.you) {
+      lines.push('★★ <b>' + G.orgs[G.you].name + '</b> ARE ' + (event.id === 'worlds' ? 'WORLD CHAMPIONS' : 'CRUCIBLE CHAMPIONS') + '! ★★');
+    } else if (champ) {
+      lines.push(event.name + ': <b>' + champ.name + '</b> of ' + S.REGIONS[champ.region].name + ' take the title.');
+      if (champ.home) lines.push('★ Meridia rules the world — a home-region team wins ' + event.name + '.');
+    }
+    if (G.intl.playerIn && champId !== G.you) {
+      const place = S.placementOf(b.rounds, G.intl.exits[G.you] || 1, false);
+      const LAB = { finalist: 'the final', semi: 'the semi-finals', quarter: 'the quarter-finals', entered: 'the group stage' };
+      lines.push('Your ' + event.name + ' run ends in ' + (LAB[place] || 'the group stage') + '.');
+    }
+    G.intl.done = true;
+    G.intl.settled = true;
+    return lines;
+  };
+
   W.finishSeason = function (G) {
     const lines = [];
     const movements = {};
@@ -3503,6 +3709,22 @@ function advanceWeek(){
   const isPlayoff=d.window.indexOf('Playoffs')>=0;
   const isGauntlet=d.window==='Promotion';
 
+  // The international stage: the Crucible and Worlds. Runs before the circuit so
+  // a week resolves in a single pass. The home region sends its real tier-1
+  // teams; when that is you, there are series to play before the week can turn.
+  const intlEvent=W.intlEventThisWeek(G);
+  if(intlEvent){
+    const fresh=(!G.intl||G.intl.season!==G.season||G.intl.event!==intlEvent.id);
+    if(fresh){
+      W.buildIntl(G,intlEvent);
+      W.runIntlWeek(G,true).forEach(l=>pushLog(l,'good'));
+      // Stop on the summit so you can see the draw (and play your series, if you
+      // qualified) instead of the week blowing straight past it.
+      G.ui.screen='season'; render(); return;
+    }
+    if(!G.intl.done&&W.yourIntlMatch(G)){ toast('You are at '+intlEvent.short+' — there is a series to play.','bad'); G.ui.screen='season'; render(); return; }
+  }
+
   // The Open: a tournament you have entered has to be played out before the
   // week can turn, and the rest of the circuit runs whether you enter or not.
   if(W.unaffiliated(G)){
@@ -3584,6 +3806,29 @@ window.enterCircuitEvent=function(rungId){
   pushLog('Entered the <b>'+event.name+'</b> — '+event.entryFee+'◈ down, '+event.fieldSize+' teams in.','info');
   // Play the rounds that do not involve you, so your first match is waiting.
   W.runCircuitWeek(G,true);
+  render();
+};
+/* A Worlds/Crucible series against a foreign champion — no roster to draft
+   against, so it resolves on the fast path with a bit of ceremony, then the
+   bracket carries on around you. */
+window.playIntlSeries=function(){
+  const W=window.LOLWorld;
+  const m=W.yourIntlMatch(G); if(!m)return;
+  const event=S.INTL_BY_ID[G.intl.event];
+  const oppId=m.a===G.you?m.b:m.a;
+  const isFinal=m.feedsInto===null;
+  const bestOf=isFinal?event.finalBestOf:event.bestOf;
+  const rng=new S.Rng(G.seed,'intlplay:'+G.season+':'+event.id+':'+m.id);
+  const res=S.resolveFastSeries(W.fastSide(G,G.you),W.intlSideOf(G,oppId),bestOf,rng,{games:false});
+  const youWon=res.winner===0;
+  const yw=res.score[0],ow=res.score[1];
+  S.recordBracketResult(G.intl.bracket,m.id,youWon?G.you:oppId,[Math.max(yw,ow),Math.min(yw,ow)]);
+  G.intl.exits[youWon?oppId:G.you]=m.round;
+  const opp=G.intl.meta[oppId];
+  pushLog((youWon?'You beat ':'You lost to ')+'<b>'+opp.name+'</b> '+Math.max(yw,ow)+'–'+Math.min(yw,ow)+' at '+event.name+'.',youWon?'good':'bad');
+  W.runIntlWeek(G,true).forEach(l=>pushLog(l,'good'));
+  G.weekResults[G.season+':'+G.week]=youWon?'w':'l';
+  toast(youWon?'Through — on to the next round.':'Knocked out of '+event.short+'.',youWon?'good':'bad');
   render();
 };
 window.buySeat=function(){
@@ -3825,14 +4070,20 @@ function renderNav(){
 }
 function renderPyramid(){
   const p=$('#pyr');p.innerHTML='';
+  // The summit sits above the pyramid: the world championship the whole climb
+  // is named for. Visible from day one so a tier-4 career can see the top.
+  const summit=el('div','step summit');
+  const wonWorlds=you().history&&you().history.finishes&&false; // reserved for a future 'held' state
+  summit.innerHTML='<span class="dot"></span><span>Worlds</span><span class="summitcap mono">★</span>';
+  summit.title='The world championship. Win your league and you are one of the teams your region sends to the roof of the world.';
+  p.appendChild(summit);
+  void wonWorlds;
   S.PYRAMID.forEach(cfg=>{
     const here=cfg.tier===you().tier;
-    const cls=cfg.tier<you().tier?'':here?'cur':'done';
     const d=el('div','step '+(here?'cur':cfg.tier<you().tier?'':'done'));
     d.innerHTML='<span class="dot"></span><span>'+cfg.name+'</span>';
     d.title=cfg.blurb;
     p.appendChild(d);
-    void cls;
   });
 }
 /* ---------- scout ---------- */
@@ -5180,6 +5431,153 @@ function renderSeries(main){
 
   /* ─────────────────────────── the fixture card ───────────────────────── */
 
+  /* ═══════════════════════ THE INTERNATIONAL STAGE ═══════════════════════ */
+  /* `regionName` is declared once further down (with the org sheet) and, being
+     module-scoped, is in scope here at call time. */
+
+  function intlRoundLabel(b, round) {
+    const fromEnd = b.rounds - round;
+    return fromEnd === 0 ? 'The final' : fromEnd === 1 ? 'Semi-finals'
+      : fromEnd === 2 ? 'Quarter-finals' : fromEnd === 3 ? 'Round of 16' : 'Opening round';
+  }
+
+  function intlPlayerResult(G) {
+    const b = G.intl.bracket;
+    const place = S.placementOf(b.rounds, G.intl.exits[G.you] || 1, b.champion === G.you);
+    return { winner: 'You won it all.', finalist: 'You reached the final.', semi: 'You reached the semi-finals.',
+      quarter: 'You reached the quarter-finals.', entered: 'You went out in the group stage.' }[place] || '';
+  }
+
+  /** The prompt/knockout/result card for a Worlds or Crucible week. */
+  function intlFixtureCard(G, event) {
+    const you = G.orgs[G.you];
+    const card = el('div', 'card fixture knockout');
+    const current = G.intl && G.intl.season === G.season && G.intl.event === event.id;
+
+    if (!current) {
+      card.appendChild(sectionLabel(event.name, event.short));
+      card.appendChild(el('div', 'weekbody', '<p class="wknote">' + event.blurb + '</p><p class="wknote">' +
+        (you.tier === 1
+          ? 'Your league sends its best. Finish high enough and you are one of them.'
+          : 'You are not in this yet — your region is represented by its champion. This is the mountain the whole climb is for.') +
+        '</p>'));
+      const btn = el('button', 'btn primary wide', '▶  ' + (you.tier === 1 ? 'To ' + event.short : 'Watch ' + event.short));
+      btn.onclick = () => window.advanceWeek();
+      card.appendChild(btn);
+      return card;
+    }
+
+    const m = W.yourIntlMatch(G);
+    if (m) {
+      const oppId = m.a === G.you ? m.b : m.a;
+      const opp = G.intl.meta[oppId];
+      const isFinal = m.feedsInto === null;
+      const p = 1 / (1 + Math.pow(10, -(W.fastSide(G, G.you).strength - W.intlSideOf(G, oppId).strength) / 15));
+      card.appendChild(sectionLabel(event.name, intlRoundLabel(G.intl.bracket, m.round)));
+      const vs = el('div', 'fxvs');
+      vs.innerHTML =
+        '<div class="fxside"><span class="otag mono big">' + you.tag + '</span></div>' +
+        '<div class="fxmid"><span class="fxname">' + opp.name + '</span>' +
+        '<span class="fxstat">' + regionName(opp.region) + (opp.home ? ' · home region' : '') + '</span></div>' +
+        '<div class="fxside r"><span class="otag mono big">' + opp.tag + '</span></div>';
+      card.appendChild(vs);
+      const bar = el('div', 'wpsplit'); bar.innerHTML = '<i style="width:' + (p * 100).toFixed(1) + '%"></i>'; card.appendChild(bar);
+      const pct = el('div', 'wplabels');
+      pct.innerHTML = '<span class="mono">' + Math.round(p * 100) + '% you</span><span class="mono">' + Math.round((1 - p) * 100) + '% ' + opp.tag + '</span>';
+      card.appendChild(pct);
+      const st = el('div', 'stake');
+      st.textContent = isFinal ? 'The final. Everything the climb was for.' : 'Win and you go through. Lose and your ' + event.short + ' is over.';
+      card.appendChild(st);
+      const btn = el('button', 'btn primary wide', '▶  Play the series');
+      btn.onclick = () => window.playIntlSeries();
+      card.appendChild(btn);
+      return card;
+    }
+
+    const b = G.intl.bracket;
+    const champ = b.champion ? G.intl.meta[b.champion] : null;
+    card.appendChild(sectionLabel(event.name, b.champion ? 'decided' : 'in progress'));
+    if (champ) {
+      const youWon = b.champion === G.you;
+      const title = event.id === 'worlds' ? 'world champions' : 'Crucible champions';
+      card.appendChild(el('div', 'weekbody', '<p class="wknote">' +
+        (youWon
+          ? '<b>You are ' + title + '.</b> From nothing to the roof of the world.'
+          : '<b>' + champ.name + '</b> of ' + regionName(champ.region) + ' are ' + title + '.' +
+            (G.intl.playerIn ? ' ' + intlPlayerResult(G) : '')) +
+        '</p>'));
+    }
+    const btn = el('button', 'btn primary wide', '▶  Continue');
+    btn.onclick = () => window.advanceWeek();
+    card.appendChild(btn);
+    return card;
+  }
+
+  function intlSeriesCell(G, m) {
+    const cell = el('div', 'bmatch' + (m.winner ? ' done' : '') + (m.a === G.you || m.b === G.you ? ' mine' : ''));
+    const side = (id, seed, score, won) => {
+      if (id === null) return '<div class="bside tbd"><span class="bname">—</span></div>';
+      const meta = G.intl.meta[id] || { tag: '?' };
+      return '<div class="bside' + (won ? ' won' : '') + (id === G.you ? ' you' : '') + (meta.home ? ' home' : '') + '">' +
+        '<span class="bseed mono">' + (seed || '') + '</span>' +
+        '<span class="bname" title="' + (meta.name || '') + ' · ' + regionName(meta.region) + '">' + meta.tag + '</span>' +
+        '<span class="bscore mono">' + (score === null ? '' : score) + '</span></div>';
+    };
+    const sa = m.score ? (m.winner === m.a ? m.score[0] : m.score[1]) : null;
+    const sb = m.score ? (m.winner === m.b ? m.score[0] : m.score[1]) : null;
+    cell.innerHTML = side(m.a, m.seedA, sa, m.winner === m.a) + side(m.b, m.seedB, sb, m.winner === m.b);
+    return cell;
+  }
+
+  /** The full international draw, home teams picked out in gold. */
+  function intlBracketCard(G) {
+    if (!G.intl) return null;
+    const event = S.INTL_BY_ID[G.intl.event];
+    const b = G.intl.bracket;
+    const card = el('div', 'card bracketcard');
+    card.appendChild(sectionLabel(event.name + ' · the draw', b.champion ? 'decided' : b.teams.length + ' teams'));
+    const rounds = [];
+    b.matches.forEach((m) => { (rounds[m.round] = rounds[m.round] || []).push(m); });
+    const cols = el('div', 'bracketcols');
+    for (let r = 1; r <= b.rounds; r++) {
+      const list = (rounds[r] || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1));
+      if (!list.length) continue;
+      const col = el('div', 'bcol');
+      col.appendChild(el('div', 'bcolhead', intlRoundLabel(b, r)));
+      list.forEach((m) => col.appendChild(intlSeriesCell(G, m)));
+      cols.appendChild(col);
+    }
+    card.appendChild(cols);
+    if (b.champion) {
+      const champ = G.intl.meta[b.champion];
+      const win = el('div', 'bchamp');
+      win.innerHTML = '<span class="otag mono">' + champ.tag + '</span><span>' + champ.name +
+        '</span><span class="btrophy">' + regionName(champ.region) + ' · champions</span>';
+      card.appendChild(win);
+    }
+    return card;
+  }
+
+  /** The world at a glance: five regions, their power, the story behind each. */
+  function worldMapCard(G) {
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('The regions', 'the world stage'));
+    const regs = [S.HOME_REGION].concat(S.FOREIGN_REGIONS).sort((a, b) => S.regionPower(b) - S.regionPower(a));
+    const maxP = Math.max.apply(null, regs.map((r) => S.regionPower(r)));
+    const list = el('div', 'worldlist');
+    regs.forEach((r) => {
+      const home = r === S.HOME_REGION;
+      const row = el('div', 'worldrow' + (home ? ' home' : ''));
+      row.innerHTML = '<span class="wrname">' + regionName(r) + (home ? ' <span class="wrhome mono">home</span>' : '') + '</span>' +
+        '<span class="wrbar"><i style="width:' + ((S.regionPower(r) / maxP) * 100).toFixed(0) + '%"></i></span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    card.appendChild(el('div', 'rivalnote small',
+      'Kyorin forges the most complete teams. Vantia buys stars and falls short abroad. The Wilds are the coin-flip nobody wants to draw.'));
+    return card;
+  }
+
   function fixtureCard(G) {
     const d = S.weekDef(G.week);
     const card = el('div', 'card fixture');
@@ -5566,6 +5964,24 @@ function renderSeries(main){
     const d = S.weekDef(G.week);
     const grid = el('div', 'hub');
     const left = el('div', 'hubcol');
+
+    // The international weeks take over the hub — the whole world is here.
+    const ie = W.intlEventThisWeek(G);
+    if (ie) {
+      left.appendChild(intlFixtureCard(G, ie));
+      if (G.intl && G.intl.season === G.season && G.intl.event === ie.id) left.appendChild(intlBracketCard(G));
+      if (W.unaffiliated(G)) { const lv = liveEventCard(G); if (lv) left.appendChild(lv); left.appendChild(tournamentBoard(G)); }
+      const rightI = el('div', 'hubcol');
+      rightI.appendChild(worldMapCard(G));
+      const rcI = rivalryCard(G);
+      if (rcI) rightI.appendChild(rcI);
+      rightI.appendChild(pyramidCard(G));
+      rightI.appendChild(deskCard(G));
+      grid.appendChild(left);
+      grid.appendChild(rightI);
+      main.appendChild(grid);
+      return;
+    }
 
     if (W.unaffiliated(G)) {
       const offer = seatOfferCard(G);

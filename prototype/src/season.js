@@ -548,6 +548,153 @@
 
   /* ─────────────────────────── the fixture card ───────────────────────── */
 
+  /* ═══════════════════════ THE INTERNATIONAL STAGE ═══════════════════════ */
+  /* `regionName` is declared once further down (with the org sheet) and, being
+     module-scoped, is in scope here at call time. */
+
+  function intlRoundLabel(b, round) {
+    const fromEnd = b.rounds - round;
+    return fromEnd === 0 ? 'The final' : fromEnd === 1 ? 'Semi-finals'
+      : fromEnd === 2 ? 'Quarter-finals' : fromEnd === 3 ? 'Round of 16' : 'Opening round';
+  }
+
+  function intlPlayerResult(G) {
+    const b = G.intl.bracket;
+    const place = S.placementOf(b.rounds, G.intl.exits[G.you] || 1, b.champion === G.you);
+    return { winner: 'You won it all.', finalist: 'You reached the final.', semi: 'You reached the semi-finals.',
+      quarter: 'You reached the quarter-finals.', entered: 'You went out in the group stage.' }[place] || '';
+  }
+
+  /** The prompt/knockout/result card for a Worlds or Crucible week. */
+  function intlFixtureCard(G, event) {
+    const you = G.orgs[G.you];
+    const card = el('div', 'card fixture knockout');
+    const current = G.intl && G.intl.season === G.season && G.intl.event === event.id;
+
+    if (!current) {
+      card.appendChild(sectionLabel(event.name, event.short));
+      card.appendChild(el('div', 'weekbody', '<p class="wknote">' + event.blurb + '</p><p class="wknote">' +
+        (you.tier === 1
+          ? 'Your league sends its best. Finish high enough and you are one of them.'
+          : 'You are not in this yet — your region is represented by its champion. This is the mountain the whole climb is for.') +
+        '</p>'));
+      const btn = el('button', 'btn primary wide', '▶  ' + (you.tier === 1 ? 'To ' + event.short : 'Watch ' + event.short));
+      btn.onclick = () => window.advanceWeek();
+      card.appendChild(btn);
+      return card;
+    }
+
+    const m = W.yourIntlMatch(G);
+    if (m) {
+      const oppId = m.a === G.you ? m.b : m.a;
+      const opp = G.intl.meta[oppId];
+      const isFinal = m.feedsInto === null;
+      const p = 1 / (1 + Math.pow(10, -(W.fastSide(G, G.you).strength - W.intlSideOf(G, oppId).strength) / 15));
+      card.appendChild(sectionLabel(event.name, intlRoundLabel(G.intl.bracket, m.round)));
+      const vs = el('div', 'fxvs');
+      vs.innerHTML =
+        '<div class="fxside"><span class="otag mono big">' + you.tag + '</span></div>' +
+        '<div class="fxmid"><span class="fxname">' + opp.name + '</span>' +
+        '<span class="fxstat">' + regionName(opp.region) + (opp.home ? ' · home region' : '') + '</span></div>' +
+        '<div class="fxside r"><span class="otag mono big">' + opp.tag + '</span></div>';
+      card.appendChild(vs);
+      const bar = el('div', 'wpsplit'); bar.innerHTML = '<i style="width:' + (p * 100).toFixed(1) + '%"></i>'; card.appendChild(bar);
+      const pct = el('div', 'wplabels');
+      pct.innerHTML = '<span class="mono">' + Math.round(p * 100) + '% you</span><span class="mono">' + Math.round((1 - p) * 100) + '% ' + opp.tag + '</span>';
+      card.appendChild(pct);
+      const st = el('div', 'stake');
+      st.textContent = isFinal ? 'The final. Everything the climb was for.' : 'Win and you go through. Lose and your ' + event.short + ' is over.';
+      card.appendChild(st);
+      const btn = el('button', 'btn primary wide', '▶  Play the series');
+      btn.onclick = () => window.playIntlSeries();
+      card.appendChild(btn);
+      return card;
+    }
+
+    const b = G.intl.bracket;
+    const champ = b.champion ? G.intl.meta[b.champion] : null;
+    card.appendChild(sectionLabel(event.name, b.champion ? 'decided' : 'in progress'));
+    if (champ) {
+      const youWon = b.champion === G.you;
+      const title = event.id === 'worlds' ? 'world champions' : 'Crucible champions';
+      card.appendChild(el('div', 'weekbody', '<p class="wknote">' +
+        (youWon
+          ? '<b>You are ' + title + '.</b> From nothing to the roof of the world.'
+          : '<b>' + champ.name + '</b> of ' + regionName(champ.region) + ' are ' + title + '.' +
+            (G.intl.playerIn ? ' ' + intlPlayerResult(G) : '')) +
+        '</p>'));
+    }
+    const btn = el('button', 'btn primary wide', '▶  Continue');
+    btn.onclick = () => window.advanceWeek();
+    card.appendChild(btn);
+    return card;
+  }
+
+  function intlSeriesCell(G, m) {
+    const cell = el('div', 'bmatch' + (m.winner ? ' done' : '') + (m.a === G.you || m.b === G.you ? ' mine' : ''));
+    const side = (id, seed, score, won) => {
+      if (id === null) return '<div class="bside tbd"><span class="bname">—</span></div>';
+      const meta = G.intl.meta[id] || { tag: '?' };
+      return '<div class="bside' + (won ? ' won' : '') + (id === G.you ? ' you' : '') + (meta.home ? ' home' : '') + '">' +
+        '<span class="bseed mono">' + (seed || '') + '</span>' +
+        '<span class="bname" title="' + (meta.name || '') + ' · ' + regionName(meta.region) + '">' + meta.tag + '</span>' +
+        '<span class="bscore mono">' + (score === null ? '' : score) + '</span></div>';
+    };
+    const sa = m.score ? (m.winner === m.a ? m.score[0] : m.score[1]) : null;
+    const sb = m.score ? (m.winner === m.b ? m.score[0] : m.score[1]) : null;
+    cell.innerHTML = side(m.a, m.seedA, sa, m.winner === m.a) + side(m.b, m.seedB, sb, m.winner === m.b);
+    return cell;
+  }
+
+  /** The full international draw, home teams picked out in gold. */
+  function intlBracketCard(G) {
+    if (!G.intl) return null;
+    const event = S.INTL_BY_ID[G.intl.event];
+    const b = G.intl.bracket;
+    const card = el('div', 'card bracketcard');
+    card.appendChild(sectionLabel(event.name + ' · the draw', b.champion ? 'decided' : b.teams.length + ' teams'));
+    const rounds = [];
+    b.matches.forEach((m) => { (rounds[m.round] = rounds[m.round] || []).push(m); });
+    const cols = el('div', 'bracketcols');
+    for (let r = 1; r <= b.rounds; r++) {
+      const list = (rounds[r] || []).slice().sort((x, y) => (x.id < y.id ? -1 : 1));
+      if (!list.length) continue;
+      const col = el('div', 'bcol');
+      col.appendChild(el('div', 'bcolhead', intlRoundLabel(b, r)));
+      list.forEach((m) => col.appendChild(intlSeriesCell(G, m)));
+      cols.appendChild(col);
+    }
+    card.appendChild(cols);
+    if (b.champion) {
+      const champ = G.intl.meta[b.champion];
+      const win = el('div', 'bchamp');
+      win.innerHTML = '<span class="otag mono">' + champ.tag + '</span><span>' + champ.name +
+        '</span><span class="btrophy">' + regionName(champ.region) + ' · champions</span>';
+      card.appendChild(win);
+    }
+    return card;
+  }
+
+  /** The world at a glance: five regions, their power, the story behind each. */
+  function worldMapCard(G) {
+    const card = el('div', 'card');
+    card.appendChild(sectionLabel('The regions', 'the world stage'));
+    const regs = [S.HOME_REGION].concat(S.FOREIGN_REGIONS).sort((a, b) => S.regionPower(b) - S.regionPower(a));
+    const maxP = Math.max.apply(null, regs.map((r) => S.regionPower(r)));
+    const list = el('div', 'worldlist');
+    regs.forEach((r) => {
+      const home = r === S.HOME_REGION;
+      const row = el('div', 'worldrow' + (home ? ' home' : ''));
+      row.innerHTML = '<span class="wrname">' + regionName(r) + (home ? ' <span class="wrhome mono">home</span>' : '') + '</span>' +
+        '<span class="wrbar"><i style="width:' + ((S.regionPower(r) / maxP) * 100).toFixed(0) + '%"></i></span>';
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    card.appendChild(el('div', 'rivalnote small',
+      'Kyorin forges the most complete teams. Vantia buys stars and falls short abroad. The Wilds are the coin-flip nobody wants to draw.'));
+    return card;
+  }
+
   function fixtureCard(G) {
     const d = S.weekDef(G.week);
     const card = el('div', 'card fixture');
@@ -934,6 +1081,24 @@
     const d = S.weekDef(G.week);
     const grid = el('div', 'hub');
     const left = el('div', 'hubcol');
+
+    // The international weeks take over the hub — the whole world is here.
+    const ie = W.intlEventThisWeek(G);
+    if (ie) {
+      left.appendChild(intlFixtureCard(G, ie));
+      if (G.intl && G.intl.season === G.season && G.intl.event === ie.id) left.appendChild(intlBracketCard(G));
+      if (W.unaffiliated(G)) { const lv = liveEventCard(G); if (lv) left.appendChild(lv); left.appendChild(tournamentBoard(G)); }
+      const rightI = el('div', 'hubcol');
+      rightI.appendChild(worldMapCard(G));
+      const rcI = rivalryCard(G);
+      if (rcI) rightI.appendChild(rcI);
+      rightI.appendChild(pyramidCard(G));
+      rightI.appendChild(deskCard(G));
+      grid.appendChild(left);
+      grid.appendChild(rightI);
+      main.appendChild(grid);
+      return;
+    }
 
     if (W.unaffiliated(G)) {
       const offer = seatOfferCard(G);
