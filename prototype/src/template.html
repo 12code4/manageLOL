@@ -558,6 +558,10 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
 .gauntlist .gvs{font-size:10.5px;color:var(--faint);text-align:center}
 .gauntlist .gnote{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:right}
 
+.ladder td.fee{color:var(--gold);text-align:right;line-height:1.25}
+.ladder td.fee small{display:block;font-size:9px;color:var(--faint);letter-spacing:.02em}
+.ladder td.fee.unaffordable{color:var(--faint);text-decoration:line-through;text-decoration-thickness:1px}
+
 /* recruit tabs */
 .bandtabs{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .bandtabs button{background:var(--surface);border:0;color:var(--muted);font:inherit;font-size:11.5px;padding:6px 12px;cursor:pointer}
@@ -654,7 +658,7 @@ function newGame(seed){
   // Your org takes the last seat at the bottom of the pyramid.
   const yours=S.seedOrg(new S.Rng(seed,'you'),{id:'you',name:'Ashgrove Collective',tag:'ASH',region:'mer',
     personality:'academy',blurb:'A garage org with a whiteboard, a spreadsheet, and you.'},4,0);
-  yours.cash=60; yours.facilities=32; yours.coaching=45; yours.analytics=60; yours.scouting=38;
+  yours.cash=100; yours.facilities=32; yours.coaching=45; yours.analytics=60; yours.scouting=38;
   yours.roster={top:null,jungle:null,mid:null,bot:null,support:null}; yours.contracts={};
   built.orgs['you']=yours; built.seats[4].push('you');
 
@@ -712,9 +716,22 @@ function potentialRead(pot,conf){
   return {label:label,conf:cl};
 }
 function overall(p){return Math.round(S.currentAbility(p.attributes));}
+/**
+ * What it costs to get a ladder player to sign.
+ *
+ * Scaled across the *visible* ladder, not the whole MMR range: since the board
+ * starts at Onyx I, a curve anchored at 1000 MMR compressed every player into
+ * a handful of credits apart and made the cheapest five cost exactly a
+ * starting balance. Anchored at the cutoff instead, an Onyx I unknown is
+ * pocket change and an Apex name is a season's savings — which is the price
+ * signal that makes the leaderboard something to grind toward.
+ */
 function signingFee(e){
-  const base=S.clamp((e.mmr-1000)/140+1,1,45);
+  const span=3400-S.SHOW_CUTOFF;
+  const t=S.clamp((e.mmr-S.SHOW_CUTOFF)/span,0,1);
+  const base=2+Math.pow(t,1.7)*40;
   const pot=e.hidden.potential;
+  // Once your scouts are confident a player has a ceiling, so is everyone else.
   const mult=1+0.8*e.scout.conf*S.clamp((pot-55)/45,0,1);
   return Math.max(1,Math.round(base*mult*stage().fee));
 }
@@ -765,13 +782,24 @@ function doSign(id,role){
   if(G.roster[role]){toast('That role is already filled — release the '+ROLE_LABEL[role]+' first.','bad');return;}
   const fee=signingFee(e);
   if(G.cash<fee){toast('Not enough credits ('+fee+'◈ needed).','bad');return;}
+  // Fees are one payment; wages are every week forever. A signing that puts
+  // the org underwater should say so before it happens, not eight weeks later.
+  const W=window.LOLWorld;
+  const wage=S.offerToAccept(e.hidden.player,you(),you().tier,0.9,false);
+  const billAfter=S.wageBill(W.contractsOf(you()))+wage;
+  const income=W.weeklyIncome(G,G.you);
+  if(billAfter>income&&!e.__confirmed){
+    const short=(billAfter-income).toFixed(1);
+    if(!confirm(e.handle+' wants '+wage.toFixed(1)+'◈ a week.\n\nThat puts your wage bill at '+billAfter.toFixed(1)+
+      '◈ against '+income.toFixed(1)+'◈ of income — '+short+'◈ a week in the red.\n\nSign anyway?')){return;}
+  }
   G.cash-=fee; e.signed=true;
   const p=e.hidden.player; p.ladder=e; p.signedRole=role;
   if(!p.championPool||!Object.keys(p.championPool).length)S.seedPool(p,new S.Rng(G.seed,'pool:'+p.id));
   G.roster[role]=p; recomputeChem();
   // Every signing is a contract: a wage every week and a date it runs out.
+  // `wage` was already priced above, when we checked you could carry it.
   const org=you();
-  const wage=S.offerToAccept(p,org,org.tier,0.9,false);
   const term=S.SEASON_WEEKS*2;
   org.contracts[p.id]={playerId:p.id,orgId:G.you,wage:wage,weeksRemaining:term,termWeeks:term,
     signedSeason:G.season,buyout:S.defaultBuyout(wage,term),role:role};
@@ -914,6 +942,7 @@ window.commitYourSeries=function(yw,ow){
     const score=[Math.max(yw,ow),Math.min(yw,ow)];
     if(ko.kind==='playoff'){
       const b=G.playoffs[you().tier];
+      if(won)you().cash=you().cash+S.LEAGUE_BY_TIER[you().tier].winPurse*2;
       S.recordBracketResult(b,ko.payload.id,won?G.you:ko.oppId,score);
       W.playPlayoffWeek(G,true).forEach(l=>pushLog(l,'good'));
     } else {
@@ -1111,7 +1140,7 @@ function renderScout(main){
 
   const cardT=el('div','card');cardT.style.overflow='hidden';cardT.style.padding='6px 8px 8px';
   const tbl=el('table','ladder');
-  tbl.innerHTML='<thead><tr><th>Prospect</th><th>Rank</th><th>Role</th><th>Age</th><th>Games</th><th>WR</th><th>Read</th></tr></thead>';
+  tbl.innerHTML='<thead><tr><th>Prospect</th><th>Rank</th><th>Role</th><th>Age</th><th>WR</th><th>Fee</th><th>Read</th></tr></thead>';
   const tb=el('tbody');
   const band=G.ui.band||'board';
   let rows=G.ladder.filter(e=>!G.ui.scoutRole||e.roleGuess===G.ui.scoutRole);
@@ -1123,14 +1152,16 @@ function renderScout(main){
     const tr=el('tr');if(e.id===G.ui.selLad)tr.classList.add('sel');if(e.signed)tr.classList.add('signed');
     tr.onclick=()=>{G.ui.selLad=e.id;render();};
     const pr=potentialRead(e.hidden.potential,e.scout.conf);
+    const fee=signingFee(e);
+    const wage=S.wageDemand(e.hidden.player,you().tier,S.prestige(you()));
     const flags=e.scout.revealed.map(f=>'<span class="pill '+FLAG_META[f].cls+'">'+FLAG_META[f].label+'</span>').join('');
     tr.innerHTML=
       '<td><div class="handle">'+e.handle+'</div>'+(flags?'<div class="flagline">'+flags+'</div>':'')+'</td>'+
       '<td>'+gemBadge(e.tier)+'<div class="role-tag" style="margin-top:2px">'+(e.tier==='ascendant'||e.tier==='paragon'||e.tier==='apex'?fmt(e.mmr)+' mmr':'Div '+toRoman(e.division))+'</div></td>'+
       '<td><span class="role-tag">'+ROLE_LABEL[e.roleGuess]+'</span></td>'+
       '<td class="mono">'+e.age+'</td>'+
-      '<td class="mono">'+e.games+'</td>'+
       '<td class="wr">'+Math.round(e.winRate*100)+'%</td>'+
+      '<td class="mono fee'+(fee>G.cash?' unaffordable':'')+'">'+fee+'◈<small>'+wage.toFixed(1)+'/wk</small></td>'+
       '<td>'+(e.signed?'<span class="role-tag">signed</span>':pr.label==='?'?'<span class="role-tag" style="color:var(--faint)">— unscouted</span>':'<span class="pill">'+cap(pr.label)+'</span>')+'</td>';
     tb.appendChild(tr);
   });

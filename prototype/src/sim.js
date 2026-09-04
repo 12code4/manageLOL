@@ -1221,10 +1221,10 @@
   };
 
   S.PYRAMID = [
-    { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 12, operatingCost: 5.5, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
-    { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 5, operatingCost: 2.0, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
-    { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 3.4, operatingCost: 0.8, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
-    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 2.6, operatingCost: 0.35, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
+    { id: 'prime', name: 'The Prime League', tier: 1, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 6, prizePool: 300, weeklyRevenue: 12, winPurse: 5, operatingCost: 5.5, promotionLine: 0, relegationLine: 10, blurb: 'The top of the sport. Revenue share, real money, and a seat at the Summit.' },
+    { id: 'ascent', name: 'Ascent Division', tier: 2, slots: 10, legs: 2, regularBestOf: 3, playoffBestOf: 5, playoffTeams: 4, prizePool: 110, weeklyRevenue: 5, winPurse: 2.5, operatingCost: 2.0, promotionLine: 3, relegationLine: 9, blurb: 'Semi-pro, and one gauntlet from everything. Also one bad split from nothing.' },
+    { id: 'circuit', name: 'Regional Circuit', tier: 3, slots: 16, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 8, prizePool: 34, weeklyRevenue: 3.4, winPurse: 1.2, operatingCost: 0.8, promotionLine: 3, relegationLine: 13, blurb: 'The widest band in the pyramid, and where most careers actually happen.' },
+    { id: 'open', name: 'Open Circuit', tier: 4, slots: 12, legs: 1, regularBestOf: 1, playoffBestOf: 3, playoffTeams: 4, prizePool: 9, weeklyRevenue: 2.6, winPurse: 0.6, operatingCost: 0.35, promotionLine: 2, relegationLine: 99, blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.' },
   ];
   S.LEAGUE_BY_TIER = {}; S.PYRAMID.forEach((l) => (S.LEAGUE_BY_TIER[l.tier] = l));
   S.prizeFor = function (cfg, place) {

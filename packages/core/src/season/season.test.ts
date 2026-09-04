@@ -161,6 +161,25 @@ describe('the pyramid', () => {
     }
   });
 
+  it('pays a purse for winning, so the grind up the pyramid actually pays', () => {
+    // Season-end prize money alone leaves a whole year with no felt reward for
+    // winning — worst exactly where the manager most needs to earn their way
+    // up. A split of wins should be worth real money against the wage bill.
+    for (const cfg of PYRAMID) {
+      expect(cfg.winPurse).toBeGreaterThan(0);
+      // Nine wins in a split is meaningful next to a week's revenue...
+      expect(cfg.winPurse * 9).toBeGreaterThan(cfg.weeklyRevenue);
+      // ...without turning the season into the only thing that pays. At the
+      // amateur floor the weekly grind genuinely is the income and the trophy
+      // is small, so the bound is loose by design.
+      expect(cfg.winPurse * 18).toBeLessThan(prizeFor(cfg, 1) * 5);
+      // A title is always worth more than a couple of good weeks.
+      expect(prizeFor(cfg, 1)).toBeGreaterThan(cfg.winPurse * 2);
+    }
+    const [t1, , , t4] = PYRAMID;
+    expect(t1!.winPurse).toBeGreaterThan(t4!.winPurse * 4);
+  });
+
   it('awards championship points only at the top tier', () => {
     expect(championshipPoints(LEAGUE_BY_TIER[1], 1)).toBe(90);
     expect(championshipPoints(LEAGUE_BY_TIER[1], 10)).toBe(4);

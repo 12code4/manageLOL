@@ -172,6 +172,16 @@ export interface LeagueConfig {
    * budget a budget.
    */
   operatingCost: number;
+  /**
+   * Credits paid to the winner of a single league series.
+   *
+   * Prize money only settling at the end of a season leaves the whole year
+   * with no felt reward for winning, which is exactly backwards at the bottom
+   * of the pyramid where the manager most needs a way to earn their way up.
+   * A per-win purse is the grind loop: win matches, bank credits, buy a better
+   * player, win more.
+   */
+  winPurse: number;
   /** Finishing at or above this place is promotion contention. */
   promotionLine: number;
   /** Finishing at or below this place is the relegation zone. */
@@ -197,6 +207,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffTeams: 6,
     prizePool: 300,
     weeklyRevenue: 12,
+    winPurse: 5,
     operatingCost: 5.5,
     promotionLine: 0,
     relegationLine: 10,
@@ -213,6 +224,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffTeams: 4,
     prizePool: 110,
     weeklyRevenue: 5,
+    winPurse: 2.5,
     operatingCost: 2.0,
     promotionLine: 3,
     relegationLine: 9,
@@ -229,6 +241,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffTeams: 8,
     prizePool: 34,
     weeklyRevenue: 3.4,
+    winPurse: 1.2,
     operatingCost: 0.8,
     promotionLine: 3,
     relegationLine: 13,
@@ -245,6 +258,7 @@ export const PYRAMID: readonly LeagueConfig[] = [
     playoffTeams: 4,
     prizePool: 9,
     weeklyRevenue: 2.6,
+    winPurse: 0.6,
     operatingCost: 0.35,
     promotionLine: 2,
     relegationLine: 99,

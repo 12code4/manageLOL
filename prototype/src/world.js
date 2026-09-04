@@ -304,6 +304,9 @@
     const wg = Math.max(res.score[0], res.score[1]);
     const lg = Math.min(res.score[0], res.score[1]);
     S.recordResult(league.table, winner, loser, wg, lg);
+    // The purse: winning pays now, not only in the season-end prize table.
+    // At the bottom of the pyramid this is most of how an org earns its way up.
+    if (G.orgs[winner]) G.orgs[winner].cash = round(G.orgs[winner].cash + league.cfg.winPurse, 2);
     league.results.push({ round: fixture.round, a: fixture.a, b: fixture.b, score: res.score, upset: res.upset });
   };
 
