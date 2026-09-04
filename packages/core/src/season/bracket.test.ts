@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../rng/rng.js';
-import { LEAGUE_BY_TIER, PYRAMID } from './calendar.js';
+import { LEAGUES, LEAGUE_BY_TIER } from './calendar.js';
 import {
   bracketPlacings,
   bracketSize,
@@ -161,8 +161,8 @@ describe('playing a bracket', () => {
 
 describe('the pyramid uses formats a manager will actually play', () => {
   it('every tier resolves in a handful of series', () => {
-    const expected: Record<number, number> = { 1: 5, 2: 3, 3: 7, 4: 3 };
-    for (const cfg of PYRAMID) {
+    const expected: Record<number, number> = { 1: 5, 2: 3, 3: 7 };
+    for (const cfg of LEAGUES) {
       const b = buildBracket(seeds(cfg.playoffTeams), cfg.playoffBestOf);
       expect(b.matches).toHaveLength(expected[cfg.tier]!);
     }
@@ -186,7 +186,7 @@ describe('the promotion gauntlet', () => {
 
 describe('bracket shape holds under a real resolver', () => {
   it('produces a full ordering for every tier from a seeded run', () => {
-    for (const cfg of PYRAMID) {
+    for (const cfg of LEAGUES) {
       const b: Bracket = buildBracket(seeds(cfg.playoffTeams), cfg.playoffBestOf);
       const r = rng(`real${cfg.tier}`);
       playBracket(b, (m) => {

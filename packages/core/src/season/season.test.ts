@@ -3,8 +3,11 @@ import { Rng } from '../rng/rng.js';
 import { roundRobin } from '../world/fixtures.js';
 import {
   CALENDAR,
+  LEAGUES,
   LEAGUE_BY_TIER,
+  OPEN_TIER,
   PYRAMID,
+  isLeagueTier,
   championshipPoints,
   matchWeeksOfSplit,
   phaseOfWeek,
@@ -95,23 +98,38 @@ describe('the calendar', () => {
 });
 
 describe('the pyramid', () => {
-  it('has four tiers, every one an even field so nobody ever gets a bye', () => {
+  it('runs three leagues, every one an even field so nobody ever gets a bye', () => {
     expect(PYRAMID).toHaveLength(4);
-    for (const l of PYRAMID) {
+    expect(LEAGUES).toHaveLength(3);
+    for (const l of LEAGUES) {
       expect(l.slots % 2).toBe(0);
       expect(l.playoffTeams).toBeLessThan(l.slots);
-      expect(l.blurb.length).toBeGreaterThan(20);
     }
+    for (const l of PYRAMID) expect(l.blurb.length).toBeGreaterThan(20);
+  });
+
+  it('keeps The Open as a pricing band with no league behind it', () => {
+    // A career starts here, unaffiliated: no seat, no fixtures, no table, and
+    // crucially no league revenue — the tournament circuit is the only income.
+    expect(isLeagueTier(OPEN_TIER)).toBe(false);
+    expect(LEAGUE_BY_TIER[OPEN_TIER].slots).toBe(0);
+    expect(LEAGUE_BY_TIER[OPEN_TIER].weeklyRevenue).toBe(0);
+    expect(LEAGUES.map((l) => l.tier)).not.toContain(OPEN_TIER);
+    // ...but it still prices wages and signing fees.
+    expect(LEAGUE_BY_TIER[OPEN_TIER].operatingCost).toBeGreaterThan(0);
+    for (const t of [1, 2, 3] as const) expect(isLeagueTier(t)).toBe(true);
   });
 
   it('money and rhythm both fall as you descend, but the rhythm falls later', () => {
-    const [t1, t2, t3, t4] = PYRAMID;
+    const [t1, t2, t3] = LEAGUES;
     expect(t1!.prizePool).toBeGreaterThan(t2!.prizePool * 2);
     expect(t2!.prizePool).toBeGreaterThan(t3!.prizePool * 2);
-    expect(t3!.prizePool).toBeGreaterThan(t4!.prizePool * 2);
+    // ...and below the last league there is nothing at all, which is the
+    // whole point of starting outside the pyramid.
+    expect(LEAGUE_BY_TIER[OPEN_TIER].prizePool).toBe(0);
     // Revenue compresses far less than prize money does: the ladder cutoff
-    // puts a floor under every wage bill, so no tier can be starved.
-    expect(t1!.weeklyRevenue).toBeGreaterThan(t4!.weeklyRevenue * 4);
+    // puts a floor under every wage bill, so no league tier can be starved.
+    expect(t1!.weeklyRevenue).toBeGreaterThan(t3!.weeklyRevenue * 3);
     expect(t1!.weeklyRevenue).toBeGreaterThan(t2!.weeklyRevenue * 2);
     // Relegation from the top changes the money, not the weekly shape.
     expect(t2!.legs).toBe(t1!.legs);
@@ -153,7 +171,7 @@ describe('the pyramid', () => {
         0,
       );
 
-    for (const cfg of PYRAMID) {
+    for (const cfg of LEAGUES) {
       const realistic = Math.max(billFor(cfg.tier, centres[cfg.tier]!), billFor(cfg.tier, LADDER_FLOOR_QUALITY));
       const income = cfg.weeklyRevenue + sponsor[cfg.tier]!;
       expect(income).toBeGreaterThan(realistic); // solvent...
@@ -165,7 +183,7 @@ describe('the pyramid', () => {
     // Season-end prize money alone leaves a whole year with no felt reward for
     // winning — worst exactly where the manager most needs to earn their way
     // up. A split of wins should be worth real money against the wage bill.
-    for (const cfg of PYRAMID) {
+    for (const cfg of LEAGUES) {
       expect(cfg.winPurse).toBeGreaterThan(0);
       // Nine wins in a split is meaningful next to a week's revenue...
       expect(cfg.winPurse * 9).toBeGreaterThan(cfg.weeklyRevenue);
@@ -176,8 +194,8 @@ describe('the pyramid', () => {
       // A title is always worth more than a couple of good weeks.
       expect(prizeFor(cfg, 1)).toBeGreaterThan(cfg.winPurse * 2);
     }
-    const [t1, , , t4] = PYRAMID;
-    expect(t1!.winPurse).toBeGreaterThan(t4!.winPurse * 4);
+    const [t1, , t3] = LEAGUES;
+    expect(t1!.winPurse).toBeGreaterThan(t3!.winPurse * 4);
   });
 
   it('awards championship points only at the top tier', () => {

@@ -142,7 +142,15 @@ export interface LeagueConfig {
   id: string;
   name: string;
   tier: PyramidTier;
-  /** Seats. Always even, so a round-robin never needs a bye. */
+  /**
+   * Seats. Always even, so a round-robin never needs a bye.
+   *
+   * **Zero means this tier is not a league at all.** Tier 4 is The Open: a
+   * band that still prices wages, signing fees and purses, but holds no
+   * seats, plays no fixtures and keeps no table. Its competition is the
+   * tournament circuit in `circuit.ts`. Use `LEAGUES` wherever you mean
+   * "tiers that actually run a season".
+   */
   slots: number;
   /** 1 = single round-robin, 2 = double. */
   legs: 1 | 2;
@@ -249,26 +257,42 @@ export const PYRAMID: readonly LeagueConfig[] = [
   },
   {
     id: 'open',
-    name: 'Open Circuit',
+    name: 'The Open',
     tier: 4,
-    slots: 12,
+    slots: 0,
     legs: 1,
     regularBestOf: 1,
     playoffBestOf: 3,
     playoffTeams: 4,
-    prizePool: 9,
-    weeklyRevenue: 2.6,
-    winPurse: 0.6,
+    prizePool: 0,
+    weeklyRevenue: 0,
+    winPurse: 0,
     operatingCost: 0.35,
-    promotionLine: 2,
+    promotionLine: 0,
     relegationLine: 99,
-    blurb: 'Amateur weekend brackets. Everyone starts here; almost everyone stays.',
+    blurb: 'No seats, no table — just entry fees and weekend brackets. Everyone starts here; almost everyone stays.',
   },
 ];
 
 export const LEAGUE_BY_TIER: Readonly<Record<PyramidTier, LeagueConfig>> = Object.freeze(
   Object.fromEntries(PYRAMID.map((l) => [l.tier, l])) as Record<PyramidTier, LeagueConfig>,
 );
+
+/**
+ * The tiers that actually run a league season — seats, fixtures, a table,
+ * playoffs. Iterate this, not `PYRAMID`, anywhere you are building or
+ * resolving a competition; `PYRAMID` still includes The Open, which is a
+ * pricing band rather than a league.
+ */
+export const LEAGUES: readonly LeagueConfig[] = PYRAMID.filter((l) => l.slots > 0);
+
+/** Whether a tier runs a league at all, as opposed to being a band. */
+export function isLeagueTier(tier: PyramidTier): boolean {
+  return LEAGUE_BY_TIER[tier].slots > 0;
+}
+
+/** The band an org with no league seat sits in. */
+export const OPEN_TIER: PyramidTier = 4;
 
 /**
  * Prize money for one placement, in credits. Steep at the top so a title is
