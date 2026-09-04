@@ -977,6 +977,7 @@ window.enterCircuitEvent=function(rungId){
   if(!check.allowed){
     toast(check.reason==='roster'?'You need five players first.'
       :check.reason==='reputation'?'You need '+check.repShort.toFixed(1)+' more reputation.'
+      :check.reason==='field'?'Not enough teams entered — it has been called off.'
       :'You cannot afford the entry fee.','bad');
     return;
   }

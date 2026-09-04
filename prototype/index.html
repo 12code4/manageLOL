@@ -2225,7 +2225,10 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     G.lastSeason = null;
     // The Open runs a points table across the year instead of a league table.
     G.circuit = { points: {}, results: [], live: null, entered: {}, seatWinners: [] };
-    G.pool.forEach((id) => (G.circuit.points[id] = 0));
+    // Keyed off the live field, not just the pool: a club relegated into The
+    // Open at rollover, or one minted by turnover, has to be visible to the
+    // standings or it cannot be promoted no matter how well it does.
+    W.openField(G).forEach((id) => (G.circuit.points[id] = 0));
     G.circuit.points[G.you] = 0;
   };
 
@@ -2723,17 +2726,23 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   W.circuitStandings = function (G) {
     const pts = G.circuit ? G.circuit.points : {};
     return Object.keys(pts).sort()
-      .map((id) => ({ orgId: id, points: pts[id] || 0 }))
-      .sort((a, b) => (b.points !== a.points ? b.points - a.points : a.orgId < b.orgId ? -1 : 1));
+      .map((id) => ({ orgId: id, points: pts[id] || 0, rep: G.orgs[id] ? S.prestige(G.orgs[id]) : 0 }))
+      .sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        // Points first, then who the scene actually rates. Falling straight to
+        // the id would rank a whole scoreless field alphabetically.
+        if (Math.abs(b.rep - a.rep) > 1e-9) return b.rep - a.rep;
+        return a.orgId < b.orgId ? -1 : 1;
+      });
   };
 
   /** Which events run this week, for an org sitting in The Open. */
   W.eventsThisWeek = function (G) {
     const d = S.weekDef(G.week);
-    if (d.kind !== 'match' && d.fixedGateway !== true) {
-      // The Gateway also runs on its own fixed weeks, whatever their kind.
-      const fixed = S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0);
-      return fixed;
+    // Fixed-date events run whatever kind of week they land on; everything
+    // else only runs on a match week.
+    if (d.kind !== 'match') {
+      return S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0);
     }
     const weeks = S.matchWeeksOfSplit(d.split || 1);
     const idx = weeks.indexOf(G.week);
@@ -2748,9 +2757,15 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
    */
   W.drawField = function (G, event, includeYou) {
     const rng = new S.Rng(G.seed, 'field:' + G.season + ':' + G.week + ':' + event.id);
+    // The reputation gate is the *manager's* barrier — it is the thing being
+    // climbed. It must not also filter the field, or the Gateway draws from
+    // the handful of amateur clubs that happen to have cleared 36 and comes up
+    // empty in season one: a one-team bracket the player wins by walking in.
+    // A qualifier for a league seat attracts the best amateurs in the scene,
+    // so that is exactly who it invites — ranked, not gated.
     const eligible = G.pool.filter((id) => {
       const org = G.orgs[id];
-      return W.lineupOf(org) && S.prestige(org) >= event.repGate * 0.8 && org.cash >= event.entryFee;
+      return W.lineupOf(org) && org.cash >= event.entryFee;
     });
     const ranked = W.circuitStandings(G).map((r) => r.orgId).filter((id) => eligible.indexOf(id) >= 0);
     const rest = eligible.filter((id) => ranked.indexOf(id) < 0);
@@ -2762,13 +2777,19 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     return field;
   };
 
+  /** A bracket this thin is not a tournament; nobody should win one by default. */
+  W.MIN_FIELD = 4;
+
   /** Enter an event: pay the fee, draw the field, build the bracket. */
   W.enterEvent = function (G, event) {
     const you = G.orgs[G.you];
     const check = S.canEnter(event, { reputation: S.prestige(you), cash: you.cash, rosterFilled: !!W.lineupOf(you) });
     if (!check.allowed) return check;
-    you.cash = round(you.cash - event.entryFee, 2);
     const field = W.drawField(G, event, true);
+    if (field.length < W.MIN_FIELD) {
+      return { allowed: false, reason: 'field', repShort: 0 };
+    }
+    you.cash = round(you.cash - event.entryFee, 2);
     G.circuit.live = {
       rung: event.id,
       bracket: S.buildBracket(field, event.bestOf),
@@ -2873,7 +2894,7 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
       const inYours = G.circuit.live && G.circuit.live.rung === event.id;
       if (inYours) return; // the player's own bracket already covers this one
       const field = W.drawField(G, event, false);
-      if (field.length < 4) return;
+      if (field.length < W.MIN_FIELD) return;
       const shadow = { rung: event.id, bracket: S.buildBracket(field, event.bestOf), exits: {}, week: G.week };
       S.playBracket(shadow.bracket, W.circuitResolver(G, event, shadow),
         new S.Rng(G.seed, 'shadow:' + G.season + ':' + G.week + ':' + event.id));
@@ -2938,8 +2959,14 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     const relegated = movements[bottom].slice(-2);
     const risers = (G.circuit.seatWinners || []).slice(0, relegated.length);
     relegated.forEach((id) => {
-      G.orgs[id].tier = 4;
-      lines.push(G.orgs[id].name + ' drop out of ' + S.LEAGUE_BY_TIER[bottom].name + ' and into The Open.');
+      const org = G.orgs[id];
+      org.tier = 4;
+      // A club that just left the league would otherwise land in The Open with
+      // more reputation than the Gateway asks for, and could walk straight
+      // back up. Dropping out costs you your standing as well as your seat:
+      // the Open's own ceiling is the most any unaffiliated club may carry.
+      org.standing = Math.min(org.standing, S.EVENT_BY_RUNG.contenders.repCap / 0.62);
+      lines.push(org.name + ' drop out of ' + S.LEAGUE_BY_TIER[bottom].name + ' and into The Open.');
     });
     risers.forEach((id) => {
       G.orgs[id].tier = bottom;
@@ -2948,7 +2975,16 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     // Any seat the Gateway did not fill goes to the circuit's points leader —
     // a league cannot run a man short.
     if (risers.length < relegated.length) {
-      const standings = W.circuitStandings(G).map((r) => r.orgId).filter((id) => risers.indexOf(id) < 0);
+      // Seats must conserve: two clubs went down, so two must come up, or the
+      // league drains a pair a year until there is nobody left in it. Circuit
+      // Points decide it, but they cannot decide it alone — in a season where
+      // nobody scored, an id tiebreak would promote the same two lowest-id
+      // orgs forever, so reputation breaks the tie underneath. That is the
+      // honest fallback anyway: the league invites its most established
+      // amateur clubs.
+      const standings = W.circuitStandings(G)
+        .filter((r) => risers.indexOf(r.orgId) < 0)
+        .map((r) => r.orgId);
       for (let i = 0; risers.length < relegated.length && i < standings.length; i++) {
         const id = standings[i];
         if (G.orgs[id].tier !== 4) continue;
@@ -3310,6 +3346,7 @@ window.enterCircuitEvent=function(rungId){
   if(!check.allowed){
     toast(check.reason==='roster'?'You need five players first.'
       :check.reason==='reputation'?'You need '+check.repShort.toFixed(1)+' more reputation.'
+      :check.reason==='field'?'Not enough teams entered — it has been called off.'
       :'You cannot afford the entry fee.','bad');
     return;
   }
@@ -4050,6 +4087,9 @@ function concludeSeries(yw,ow){
       pushLog('Knocked out by '+opp.name+' '+ow+'–'+yw+'. The season ends here.','bad');
       toast('Knocked out by '+opp.name+'.','bad');
     }
+  } else if(window.LOLWorld.unaffiliated(G)){
+    // An unaffiliated org has no table to be placed in.
+    pushLog(won?'Won a scrim against '+opp.name+' '+yw+'–'+ow+'.':'Lost a scrim to '+opp.name+' '+ow+'–'+yw+'.',won?'good':'bad');
   } else {
     const order=window.LOLWorld.orderOf(G.leagues[you().tier]);
     const place=order.indexOf(G.you)+1;

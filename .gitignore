@@ -23,3 +23,6 @@ coverage/
 # saves produced by devtools runs
 *.save.json
 /tmp-saves/
+
+# scratch pacing calculators — analysis belongs in docs, not the package
+packages/core/calc*.ts

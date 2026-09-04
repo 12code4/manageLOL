@@ -208,6 +208,9 @@ function concludeSeries(yw,ow){
       pushLog('Knocked out by '+opp.name+' '+ow+'–'+yw+'. The season ends here.','bad');
       toast('Knocked out by '+opp.name+'.','bad');
     }
+  } else if(window.LOLWorld.unaffiliated(G)){
+    // An unaffiliated org has no table to be placed in.
+    pushLog(won?'Won a scrim against '+opp.name+' '+yw+'–'+ow+'.':'Lost a scrim to '+opp.name+' '+ow+'–'+yw+'.',won?'good':'bad');
   } else {
     const order=window.LOLWorld.orderOf(G.leagues[you().tier]);
     const place=order.indexOf(G.you)+1;
