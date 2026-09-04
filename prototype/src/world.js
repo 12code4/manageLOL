@@ -82,7 +82,7 @@
       const org = G.orgs[id];
       if (id === G.you) return;
       const rng = new S.Rng(G.seed, 'roster:' + id);
-      const centre = (S.isLeagueTier(org.tier) ? { 1: 76, 2: 67, 3: 58 }[org.tier] : S.OPEN_QUALITY_CENTRE)
+      const centre = (S.isLeagueTier(org.tier) ? { 1: 80, 2: 72, 3: 66 }[org.tier] : S.OPEN_QUALITY_CENTRE)
         + (S.prestige(org) - 50) * 0.12;
       ROLES.forEach((role, i) => {
         const p = S.genPlayer(rng, {
@@ -622,7 +622,8 @@
   /** Sign a replacement into one empty seat on an AI roster. */
   W.refillSeat = function (G, org, role) {
     const rng = new S.Rng(G.seed, 'refill:' + G.season + ':' + org.id + ':' + role);
-    const centre = ({ 1: 76, 2: 67, 3: 58, 4: 49 })[org.tier] + (S.prestige(org) - 50) * 0.12;
+    const centre = (S.isLeagueTier(org.tier) ? { 1: 80, 2: 72, 3: 66 }[org.tier] : S.OPEN_QUALITY_CENTRE)
+      + (S.prestige(org) - 50) * 0.12;
     const p = S.genPlayer(rng, {
       id: org.id + ':' + role + ':' + G.season,
       region: org.region,
@@ -670,17 +671,8 @@
   };
 
   /** Which events run this week, for an org sitting in The Open. */
-  W.eventsThisWeek = function (G) {
-    const d = S.weekDef(G.week);
-    // Fixed-date events run whatever kind of week they land on; everything
-    // else only runs on a match week.
-    if (d.kind !== 'match') {
-      return S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0);
-    }
-    const weeks = S.matchWeeksOfSplit(d.split || 1);
-    const idx = weeks.indexOf(G.week);
-    return S.eventsForMatchWeek(idx < 0 ? 0 : idx, G.week);
-  };
+  /** The circuit's calendar is a plain list of weeks. Nothing is derived. */
+  W.eventsThisWeek = (G) => S.eventsInWeek(G.week);
 
   /**
    * Draw a field for one event. The player is seated first when they entered;
@@ -700,11 +692,16 @@
       const org = G.orgs[id];
       return W.lineupOf(org) && org.cash >= event.entryFee;
     });
+    // Seed only the top of the scene, then shuffle the rest. Ranking the whole
+    // field meant `rest` was always empty and the shuffle below it was dead
+    // code: the same eight clubs turned up in the same bracket slots every
+    // single week, which is the difference between a circuit and a treadmill.
     const ranked = W.circuitStandings(G).map((r) => r.orgId).filter((id) => eligible.indexOf(id) >= 0);
-    const rest = eligible.filter((id) => ranked.indexOf(id) < 0);
+    const seeds = ranked.slice(0, Math.max(1, Math.floor(event.fieldSize / 4)));
+    const rest = eligible.filter((id) => seeds.indexOf(id) < 0);
     const keyed = rest.map((id) => ({ id: id, k: rng.float() }));
     keyed.sort((a, b) => (a.k !== b.k ? a.k - b.k : a.id < b.id ? -1 : 1));
-    const ordered = ranked.concat(keyed.map((k) => k.id));
+    const ordered = seeds.concat(keyed.map((k) => k.id));
     const field = includeYou ? [G.you] : [];
     for (let i = 0; field.length < event.fieldSize && i < ordered.length; i++) field.push(ordered[i]);
     return field;
@@ -926,6 +923,26 @@
         lines.push('<b>' + G.orgs[id].name + '</b> are invited up on Circuit Points.');
       }
     }
+
+    // The Open's clubs live too. Without this their seasons counter, legacy,
+    // infrastructure and reinvestment all freeze, and the amateur scene is a
+    // set of statues the player walks past.
+    const openOrder = W.circuitStandings(G).map((r) => r.orgId).filter((id) => G.orgs[id] && G.orgs[id].tier === 4);
+    openOrder.forEach((id, i) => {
+      const org = G.orgs[id];
+      const advanced = S.advanceOrgSeason(org, {
+        season: G.season, tier: 4, place: i + 1, of: Math.max(1, openOrder.length),
+        wonTitle: false, netCash: 0, investment: S.investmentBudget(org),
+      });
+      // Everything advances except standing. On the circuit, standing *is* the
+      // reputation the manager is climbing with, and letting the season-end
+      // regression drag it toward the amateur band would undo a year of
+      // tournament results every rollover — a player at 42 would be pulled
+      // back under 30 for the crime of a mid-table year. The rung ceilings are
+      // already what stop reputation running away; nothing else needs to.
+      advanced.standing = org.standing;
+      G.orgs[id] = advanced;
+    });
 
     W.reindexSeats(G);
 

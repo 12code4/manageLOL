@@ -1985,28 +1985,28 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
       purse: { winner: 6, finalist: 2.5, semi: 1, quarter: 0.4, entered: 0 },
       points: { winner: 100, finalist: 60, semi: 35, quarter: 18, entered: 6 },
       repBase: { winner: 3, finalist: 1.6, semi: 0.8, quarter: 0.35, entered: 0.1 },
-      everyNMatchWeeks: 1, fixedWeeks: [],
+      fixedWeeks: [3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28],
       blurb: 'Eight teams, one Saturday, one game a round. Everyone starts here.' },
     { id: 'contenders', name: 'Contenders Cup', entryFee: 3, fieldSize: 16, bestOf: 1, finalBestOf: 3,
       repGate: 12, repCap: 38,
       purse: { winner: 22, finalist: 10, semi: 4.5, quarter: 2, entered: 0 },
       points: { winner: 260, finalist: 150, semi: 85, quarter: 42, entered: 12 },
       repBase: { winner: 10, finalist: 5.5, semi: 2.6, quarter: 1.2, entered: 0.35 },
-      everyNMatchWeeks: 4, fixedWeeks: [],
+      fixedWeeks: [6, 11, 17, 23, 28, 34],
       blurb: 'Sixteen teams and a month of bragging rights. Where a name gets made.' },
     { id: 'gateway', name: 'The Gateway', entryFee: 5, fieldSize: 16, bestOf: 3, finalBestOf: 5,
       repGate: 36, repCap: 68,
       purse: { winner: 40, finalist: 18, semi: 8, quarter: 3, entered: 0 },
       points: { winner: 500, finalist: 300, semi: 170, quarter: 85, entered: 25 },
       repBase: { winner: 13, finalist: 7, semi: 3.5, quarter: 1.5, entered: 0.4 },
-      everyNMatchWeeks: 0, fixedWeeks: [12, 41],
+      fixedWeeks: [19, 42],
       blurb: 'Sixteen teams. The winner takes a seat in the Regional Circuit.' },
   ];
   S.EVENT_BY_RUNG = {}; S.CIRCUIT.forEach((e) => (S.EVENT_BY_RUNG[e.id] = e));
   S.GATEWAY_PRIZE_TIER = 3;
   S.GRASSROOTS_STIPEND = 0.5;
   S.OPEN_WAGE_MULT = 0.4;
-  S.OPEN_QUALITY_CENTRE = 62;
+  S.OPEN_QUALITY_CENTRE = 60;
   S.SEAT_BUY_IN_COST = 140;
   S.SEAT_BUY_IN_REP = 20;
 
@@ -2023,14 +2023,8 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
     }
     return null;
   };
-  S.eventsForMatchWeek = function (idx, week) {
-    const out = [];
-    S.CIRCUIT.forEach((e) => {
-      if (e.fixedWeeks.indexOf(week) >= 0) { out.push(e); return; }
-      if (e.everyNMatchWeeks > 0 && idx % e.everyNMatchWeeks === 0) out.push(e);
-    });
-    return out.sort((a, b) => S.CIRCUIT.indexOf(b) - S.CIRCUIT.indexOf(a));
-  };
+  S.eventsInWeek = (week) => S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(week) >= 0)
+    .sort((a, b) => S.CIRCUIT.indexOf(b) - S.CIRCUIT.indexOf(a));
   S.placementOf = function (rounds, exitRound, won) {
     if (won) return 'winner';
     const fromEnd = rounds - exitRound;
@@ -2149,7 +2143,7 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
       const org = G.orgs[id];
       if (id === G.you) return;
       const rng = new S.Rng(G.seed, 'roster:' + id);
-      const centre = (S.isLeagueTier(org.tier) ? { 1: 76, 2: 67, 3: 58 }[org.tier] : S.OPEN_QUALITY_CENTRE)
+      const centre = (S.isLeagueTier(org.tier) ? { 1: 80, 2: 72, 3: 66 }[org.tier] : S.OPEN_QUALITY_CENTRE)
         + (S.prestige(org) - 50) * 0.12;
       ROLES.forEach((role, i) => {
         const p = S.genPlayer(rng, {
@@ -2689,7 +2683,8 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   /** Sign a replacement into one empty seat on an AI roster. */
   W.refillSeat = function (G, org, role) {
     const rng = new S.Rng(G.seed, 'refill:' + G.season + ':' + org.id + ':' + role);
-    const centre = ({ 1: 76, 2: 67, 3: 58, 4: 49 })[org.tier] + (S.prestige(org) - 50) * 0.12;
+    const centre = (S.isLeagueTier(org.tier) ? { 1: 80, 2: 72, 3: 66 }[org.tier] : S.OPEN_QUALITY_CENTRE)
+      + (S.prestige(org) - 50) * 0.12;
     const p = S.genPlayer(rng, {
       id: org.id + ':' + role + ':' + G.season,
       region: org.region,
@@ -2737,17 +2732,8 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
   };
 
   /** Which events run this week, for an org sitting in The Open. */
-  W.eventsThisWeek = function (G) {
-    const d = S.weekDef(G.week);
-    // Fixed-date events run whatever kind of week they land on; everything
-    // else only runs on a match week.
-    if (d.kind !== 'match') {
-      return S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(G.week) >= 0);
-    }
-    const weeks = S.matchWeeksOfSplit(d.split || 1);
-    const idx = weeks.indexOf(G.week);
-    return S.eventsForMatchWeek(idx < 0 ? 0 : idx, G.week);
-  };
+  /** The circuit's calendar is a plain list of weeks. Nothing is derived. */
+  W.eventsThisWeek = (G) => S.eventsInWeek(G.week);
 
   /**
    * Draw a field for one event. The player is seated first when they entered;
@@ -2767,11 +2753,16 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
       const org = G.orgs[id];
       return W.lineupOf(org) && org.cash >= event.entryFee;
     });
+    // Seed only the top of the scene, then shuffle the rest. Ranking the whole
+    // field meant `rest` was always empty and the shuffle below it was dead
+    // code: the same eight clubs turned up in the same bracket slots every
+    // single week, which is the difference between a circuit and a treadmill.
     const ranked = W.circuitStandings(G).map((r) => r.orgId).filter((id) => eligible.indexOf(id) >= 0);
-    const rest = eligible.filter((id) => ranked.indexOf(id) < 0);
+    const seeds = ranked.slice(0, Math.max(1, Math.floor(event.fieldSize / 4)));
+    const rest = eligible.filter((id) => seeds.indexOf(id) < 0);
     const keyed = rest.map((id) => ({ id: id, k: rng.float() }));
     keyed.sort((a, b) => (a.k !== b.k ? a.k - b.k : a.id < b.id ? -1 : 1));
-    const ordered = ranked.concat(keyed.map((k) => k.id));
+    const ordered = seeds.concat(keyed.map((k) => k.id));
     const field = includeYou ? [G.you] : [];
     for (let i = 0; field.length < event.fieldSize && i < ordered.length; i++) field.push(ordered[i]);
     return field;
@@ -2993,6 +2984,26 @@ tr.cutrow.down{--c:color-mix(in srgb,var(--toxic) 58%,transparent)}
         lines.push('<b>' + G.orgs[id].name + '</b> are invited up on Circuit Points.');
       }
     }
+
+    // The Open's clubs live too. Without this their seasons counter, legacy,
+    // infrastructure and reinvestment all freeze, and the amateur scene is a
+    // set of statues the player walks past.
+    const openOrder = W.circuitStandings(G).map((r) => r.orgId).filter((id) => G.orgs[id] && G.orgs[id].tier === 4);
+    openOrder.forEach((id, i) => {
+      const org = G.orgs[id];
+      const advanced = S.advanceOrgSeason(org, {
+        season: G.season, tier: 4, place: i + 1, of: Math.max(1, openOrder.length),
+        wonTitle: false, netCash: 0, investment: S.investmentBudget(org),
+      });
+      // Everything advances except standing. On the circuit, standing *is* the
+      // reputation the manager is climbing with, and letting the season-end
+      // regression drag it toward the amateur band would undo a year of
+      // tournament results every rollover — a player at 42 would be pulled
+      // back under 30 for the crime of a mid-table year. The rung ceilings are
+      // already what stop reputation running away; nothing else needs to.
+      advanced.standing = org.standing;
+      G.orgs[id] = advanced;
+    });
 
     W.reindexSeats(G);
 

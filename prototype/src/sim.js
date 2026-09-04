@@ -1339,28 +1339,28 @@
       purse: { winner: 6, finalist: 2.5, semi: 1, quarter: 0.4, entered: 0 },
       points: { winner: 100, finalist: 60, semi: 35, quarter: 18, entered: 6 },
       repBase: { winner: 3, finalist: 1.6, semi: 0.8, quarter: 0.35, entered: 0.1 },
-      everyNMatchWeeks: 1, fixedWeeks: [],
+      fixedWeeks: [3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28],
       blurb: 'Eight teams, one Saturday, one game a round. Everyone starts here.' },
     { id: 'contenders', name: 'Contenders Cup', entryFee: 3, fieldSize: 16, bestOf: 1, finalBestOf: 3,
       repGate: 12, repCap: 38,
       purse: { winner: 22, finalist: 10, semi: 4.5, quarter: 2, entered: 0 },
       points: { winner: 260, finalist: 150, semi: 85, quarter: 42, entered: 12 },
       repBase: { winner: 10, finalist: 5.5, semi: 2.6, quarter: 1.2, entered: 0.35 },
-      everyNMatchWeeks: 4, fixedWeeks: [],
+      fixedWeeks: [6, 11, 17, 23, 28, 34],
       blurb: 'Sixteen teams and a month of bragging rights. Where a name gets made.' },
     { id: 'gateway', name: 'The Gateway', entryFee: 5, fieldSize: 16, bestOf: 3, finalBestOf: 5,
       repGate: 36, repCap: 68,
       purse: { winner: 40, finalist: 18, semi: 8, quarter: 3, entered: 0 },
       points: { winner: 500, finalist: 300, semi: 170, quarter: 85, entered: 25 },
       repBase: { winner: 13, finalist: 7, semi: 3.5, quarter: 1.5, entered: 0.4 },
-      everyNMatchWeeks: 0, fixedWeeks: [12, 41],
+      fixedWeeks: [19, 42],
       blurb: 'Sixteen teams. The winner takes a seat in the Regional Circuit.' },
   ];
   S.EVENT_BY_RUNG = {}; S.CIRCUIT.forEach((e) => (S.EVENT_BY_RUNG[e.id] = e));
   S.GATEWAY_PRIZE_TIER = 3;
   S.GRASSROOTS_STIPEND = 0.5;
   S.OPEN_WAGE_MULT = 0.4;
-  S.OPEN_QUALITY_CENTRE = 62;
+  S.OPEN_QUALITY_CENTRE = 60;
   S.SEAT_BUY_IN_COST = 140;
   S.SEAT_BUY_IN_REP = 20;
 
@@ -1377,14 +1377,8 @@
     }
     return null;
   };
-  S.eventsForMatchWeek = function (idx, week) {
-    const out = [];
-    S.CIRCUIT.forEach((e) => {
-      if (e.fixedWeeks.indexOf(week) >= 0) { out.push(e); return; }
-      if (e.everyNMatchWeeks > 0 && idx % e.everyNMatchWeeks === 0) out.push(e);
-    });
-    return out.sort((a, b) => S.CIRCUIT.indexOf(b) - S.CIRCUIT.indexOf(a));
-  };
+  S.eventsInWeek = (week) => S.CIRCUIT.filter((e) => e.fixedWeeks.indexOf(week) >= 0)
+    .sort((a, b) => S.CIRCUIT.indexOf(b) - S.CIRCUIT.indexOf(a));
   S.placementOf = function (rounds, exitRound, won) {
     if (won) return 'winner';
     const fromEnd = rounds - exitRound;

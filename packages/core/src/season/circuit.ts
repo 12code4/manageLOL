@@ -57,9 +57,16 @@ export interface CircuitEvent {
   points: Readonly<Record<Placement, number>>;
   /** Reputation before the diminishing-returns factor, by placement. */
   repBase: Readonly<Record<Placement, number>>;
-  /** Runs on every Nth match week of the split. 0 = fixed weeks only. */
-  everyNMatchWeeks: number;
-  /** Absolute weeks this event runs, for fixed-date events. */
+  /**
+   * The absolute weeks of the year this event runs.
+   *
+   * Explicit, never derived. A previous version ran the Cup "every fourth
+   * match week", which meant deriving an index from the split's match weeks —
+   * and every playoff and promotion week is a match week that is *not* in that
+   * list, so the index came back −1, got clamped to 0, and 0 % 4 === 0 fired a
+   * Cup on all eight of them. Fourteen Cups a season instead of six, and the
+   * whole climb collapsed. A list cannot do that.
+   */
   fixedWeeks: readonly number[];
   blurb: string;
 }
@@ -90,8 +97,7 @@ export const CIRCUIT: readonly CircuitEvent[] = [
     purse: { winner: 6, finalist: 2.5, semi: 1, quarter: 0.4, entered: 0 },
     points: { winner: 100, finalist: 60, semi: 35, quarter: 18, entered: 6 },
     repBase: { winner: 3, finalist: 1.6, semi: 0.8, quarter: 0.35, entered: 0.1 },
-    everyNMatchWeeks: 1,
-    fixedWeeks: [],
+    fixedWeeks: [3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28],
     blurb: 'Eight teams, one Saturday, one game a round. Everyone starts here.',
   },
   {
@@ -106,8 +112,7 @@ export const CIRCUIT: readonly CircuitEvent[] = [
     purse: { winner: 22, finalist: 10, semi: 4.5, quarter: 2, entered: 0 },
     points: { winner: 260, finalist: 150, semi: 85, quarter: 42, entered: 12 },
     repBase: { winner: 10, finalist: 5.5, semi: 2.6, quarter: 1.2, entered: 0.35 },
-    everyNMatchWeeks: 4,
-    fixedWeeks: [],
+    fixedWeeks: [6, 11, 17, 23, 28, 34],
     blurb: 'Sixteen teams and a month of bragging rights. Where a name gets made.',
   },
   {
@@ -122,8 +127,7 @@ export const CIRCUIT: readonly CircuitEvent[] = [
     purse: { winner: 40, finalist: 18, semi: 8, quarter: 3, entered: 0 },
     points: { winner: 500, finalist: 300, semi: 170, quarter: 85, entered: 25 },
     repBase: { winner: 13, finalist: 7, semi: 3.5, quarter: 1.5, entered: 0.4 },
-    everyNMatchWeeks: 0,
-    fixedWeeks: [12, 41],
+    fixedWeeks: [19, 42],
     blurb: 'Sixteen teams. The winner takes a seat in the Regional Circuit.',
   },
 ];
@@ -177,18 +181,14 @@ export function nextUnlock(reputation: number): { event: CircuitEvent; short: nu
   return null;
 }
 
-/** Which rungs run in a given match-week index within a split. */
-export function eventsForMatchWeek(matchWeekIndex: number, absoluteWeek: number): CircuitEvent[] {
-  const out: CircuitEvent[] = [];
-  for (const e of CIRCUIT) {
-    if (e.fixedWeeks.includes(absoluteWeek)) {
-      out.push(e);
-      continue;
-    }
-    if (e.everyNMatchWeeks > 0 && matchWeekIndex % e.everyNMatchWeeks === 0) out.push(e);
-  }
-  // Best rung first: when two run the same week the bigger one is the story.
-  return out.sort((a, b) => CIRCUIT.indexOf(b) - CIRCUIT.indexOf(a));
+/**
+ * Which rungs run in a given week of the year. Best rung first: when two land
+ * on the same week the bigger one is the story, and the choice between a safe
+ * Weekend Open and a costly Cup is a real one.
+ */
+export function eventsInWeek(week: number): CircuitEvent[] {
+  return CIRCUIT.filter((e) => e.fixedWeeks.includes(week))
+    .sort((a, b) => CIRCUIT.indexOf(b) - CIRCUIT.indexOf(a));
 }
 
 /**
@@ -276,10 +276,13 @@ export const OPEN_WAGE_MULT = 0.4;
 /**
  * Quality centre for the floating pool's rosters.
  *
- * Deliberately high — higher than the tier-3 league's own centre. The Open's
- * clubs sign off exactly the same Onyx-I-and-above ladder the manager does,
- * so an amateur scene full of 50-rated players would be a fiction, and worse,
- * a pushover: a manager who spends their seed money on good players would
- * walk the circuit in one season and the whole climb would evaporate.
+ * High, because The Open's clubs sign off exactly the same Onyx-I-and-above
+ * ladder the manager does — an amateur scene full of 50-rated players would be
+ * a fiction, and a pushover besides. But below every league tier, because what
+ * an amateur club cannot do is *pay*: on a grassroots stipend it fields the
+ * cheap end of that ladder and keeps nobody who develops.
+ *
+ * It had been set above tier 3, which made winning the Gateway a promotion
+ * into weaker competition — the prize of the entire climb was a walkover.
  */
-export const OPEN_QUALITY_CENTRE = 62;
+export const OPEN_QUALITY_CENTRE = 60;

@@ -11,7 +11,7 @@ import {
   SEAT_BUY_IN_COST,
   canBuySeat,
   canEnter,
-  eventsForMatchWeek,
+  eventsInWeek,
   nextUnlock,
   placementOf,
   repGain,
@@ -136,16 +136,23 @@ describe('entry', () => {
 });
 
 describe('the calendar of the Open', () => {
-  it('runs a weekend open every match week and a cup every fourth', () => {
-    const weeks = Array.from({ length: 9 }, (_, i) => eventsForMatchWeek(i, 3 + i).map((e) => e.id));
-    expect(weeks.every((w) => w.includes('weekend'))).toBe(true);
-    expect(weeks.filter((w) => w.includes('contenders'))).toHaveLength(3); // indices 0, 4, 8
+  it('runs a fixed, countable number of each rung a year', () => {
+    // The bug this guards: deriving the Cup's cadence from an index into the
+    // split's match weeks fired one on every playoff and promotion week too —
+    // fourteen Cups a season instead of six, which collapsed the whole climb.
+    const counts = { weekend: 0, contenders: 0, gateway: 0 };
+    for (let w = 1; w <= 52; w++) for (const e of eventsInWeek(w)) counts[e.id]++;
+    expect(counts.weekend).toBe(18);
+    expect(counts.contenders).toBe(6);
+    expect(counts.gateway).toBe(2);
   });
 
-  it('puts the Gateway on its fixed weeks only, and leads with it', () => {
-    expect(eventsForMatchWeek(5, 12).map((e) => e.id)[0]).toBe('gateway');
-    expect(eventsForMatchWeek(5, 41).map((e) => e.id)).toContain('gateway');
-    expect(eventsForMatchWeek(5, 13).map((e) => e.id)).not.toContain('gateway');
+  it('leads with the biggest rung when two land on the same week', () => {
+    const shared = EVENT_BY_RUNG.contenders.fixedWeeks.filter((w) => EVENT_BY_RUNG.weekend.fixedWeeks.includes(w));
+    expect(shared.length).toBeGreaterThan(0);
+    expect(eventsInWeek(shared[0]!).map((e) => e.id)[0]).toBe('contenders');
+    expect(eventsInWeek(EVENT_BY_RUNG.gateway.fixedWeeks[0]!).map((e) => e.id)[0]).toBe('gateway');
+    expect(eventsInWeek(1).map((e) => e.id)).toEqual([]);
   });
 });
 
